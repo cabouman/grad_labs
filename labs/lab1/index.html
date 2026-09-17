@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 1: The Thingy Competition</title>
+<style>
+  html { background: #faf8f4; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         background: #faf8f4; color: #222; line-height: 1.5; }
+  .band { background: #cfb991; border-bottom: 4px solid #000;
+          padding: 24px 16px 18px 16px; text-align: center; }
+  .band h2 { margin: 0 0 6px 0; font-size: 1.0em; font-weight: normal; color: #3d3324; }
+  .band h1 { margin: 0; font-size: 1.5em; color: #000; }
+  .band a { color: #000; }
+  .container { max-width: 800px; margin: 28px auto; padding: 0 16px; }
+  .section { border: 2px solid #cfb991; border-radius: 14px;
+             background: #f4efe3; padding: 18px 16px 2px 16px; margin-bottom: 32px; }
+  .section > h2 { margin: 0 0 16px 8px; font-size: 1.3em; color: #3d3324; }
+  .card { background: #fff; border: 1px solid #e3dccb; border-radius: 10px;
+          padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; color: #000; border-bottom: 2px solid #cfb991; padding-bottom: 6px; }
+  a { color: #8a6d1d; text-decoration: none; }
+  a:hover { color: #000; text-decoration: underline; }
+  code { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 4px;
+         padding: 1px 5px; font-size: 0.92em; }
+  ul { margin: 8px 0; }
+  li { padding: 3px 0; }
+  .handin { border: 1px solid #cfb991; border-left: 7px solid #cfb991;
+            border-radius: 8px; background: #fffdf5;
+            padding: 12px 16px 4px 16px; margin: 18px 0; }
+  .handin .tag { display: inline-block; background: #cfb991; color: #000;
+                 border-radius: 4px; padding: 1px 9px; font-size: 0.82em;
+                 font-weight: bold; letter-spacing: 0.4px; }
+  .handin p:first-of-type { margin-top: 8px; }
+  ol.handin-list { list-style: none; padding-left: 0; margin: 10px 0; }
+  ol.handin-list li { position: relative; padding: 4px 0 4px 2.9em; }
+  ol.handin-list .dnum { position: absolute; left: 0; width: 2.9em;
+                         font-weight: bold; color: #8a6d1d; }
+  .band .nav { margin: 10px 0 0 0; font-size: 0.9em; }
+  .band .nav a { text-decoration: underline; }
+  details.module { border: 2px solid #cfb991; border-radius: 14px; background: #f4efe3;
+                   margin-bottom: 22px; }
+  details.module > summary { cursor: pointer; list-style: none; padding: 16px 18px;
+                             font-size: 1.2em; font-weight: bold; color: #3d3324; }
+  details.module > summary::-webkit-details-marker { display: none; }
+  details.module > summary::before { content: "\25B8"; color: #8a6d1d; margin-right: 10px; }
+  details.module[open] > summary::before { content: "\25BE"; }
+  details.module > summary:hover { color: #000; }
+  details.module .modulebody { padding: 0 16px 2px 16px; }
+  summary .note { display: block; font-weight: normal; font-size: 0.78em;
+                  color: #6b5c42; margin: 4px 0 0 26px; }
+  .allbtn { display: block; margin: 0 0 16px auto; background: #f4efe3; color: #3d3324;
+            border: 1px solid #cfb991; border-radius: 4px; padding: 3px 12px;
+            font-size: 0.85em; font-family: inherit; cursor: pointer; }
+  .allbtn:hover { background: #e8e0cd; }
+  .codeblock { position: relative; }
+  .codeblock pre { padding-right: 76px; }
+  .copy { position: absolute; top: 8px; right: 8px; background: #cfb991; color: #000;
+          border: 1px solid #b9ac8e; border-radius: 4px; padding: 2px 10px;
+          font-size: 0.8em; font-family: inherit; cursor: pointer; }
+  .copy:hover { background: #b9ac8e; }
+</style>
+</head>
+<body>
+
+<div class="band">
+  <h2>ECE 60141 and ECE 63700</h2>
+  <h1>Lab 1: The Thingy Competition</h1>
+  <p class="nav">
+    <a href="https://engineering.purdue.edu/~bouman/ece60141/">ECE 60141</a> &middot;
+    <a href="https://engineering.purdue.edu/~bouman/ece637/">ECE 63700</a> &middot;
+    <a href="../../index.html">Laboratory index</a>
+  </p>
+</div>
+
+<div class="container">
+
+<button class="allbtn" onclick="toggleAll(this)">Open all</button>
+
+<details class="module">
+  <summary>Overview
+    <span class="note">What the Thingy competition is, the rules, and how it is graded.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>The Idea</h3>
+    <p>
+      Your assignment is to build a <b>Thingy</b>: an application that
+      you think would be fun to have. Any Thingy. A game, a tool, a web
+      app, a toy, something useful, something completely useless &mdash;
+      it's your call.
+    </p>
+    <p>
+      The catch is that you don't write it yourself. You direct an
+      agentic AI, such as Claude, to build it for you. Your job is to
+      decide what to make, explain it clearly, look at what comes back,
+      and steer until you like it.
+    </p>
+    <p>
+      The point of this lab is simple: to let you see for yourself how
+      powerful agentic AI has become, and to break the ice &mdash; you
+      will meet your classmates through what they build. That lesson
+      will carry through every lab that follows.
+    </p>
+    <p>
+      <b>Due: the end of the first week of classes.</b> Everything in
+      this lab works on Mac, Windows, and Linux, and no setup is
+      required beyond two quick installs, so you can start today.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>The Rules</h3>
+    <ul>
+      <li>Build any application you want. There are no restrictions on
+          the topic, and creativity is encouraged.</li>
+      <li>Use an agentic AI to do the building. Claude is recommended,
+          but any agentic AI is fine.</li>
+      <li>It would be good for at least part of your Thingy to be
+          written in python, since python is the language we will use
+          all semester.</li>
+      <li>Web app, desktop app, command-line tool, notebook &mdash;
+          any form is fine.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>The Competition</h3>
+    <p>
+      This is a competition that everyone wins. In class, students take
+      turns showing their Thingy to everyone else. After each demo, the
+      audience applauds based on how much they like it. That's the
+      whole scoring system.
+    </p>
+    <p>
+      So bring something you'll enjoy showing off. The best Thingies
+      are usually the ones their creators actually wanted to exist.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Grading</h3>
+    <p>
+      Every student who builds a Thingy, shows it, and hands in the
+      file described in Step 5 receives <b>100% credit</b>. No
+      exceptions, no judging, no rubric. The applause is for glory
+      only.
+    </p>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 1: Build Your Thingy
+    <span class="note">Steps 1 to 4.  Install an editor, write the prompt, build it, and demo it.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 1: Install a Markdown Editor</h3>
+    <p>
+      <b>Markdown</b> is plain text with a few simple formatting
+      conventions, saved in a file ending in <code>.md</code>. It is
+      the standard format for writing instructions to an AI assistant,
+      and you will use it all semester. A Markdown editor shows you
+      the formatted result while you type.
+    </p>
+    <p>
+      Follow the
+      <a href="../resources/markdown-editor.html">Markdown editor
+      installation page</a> to install one on your Mac, Windows, or
+      Linux machine.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 2: Write Your Prompt</h3>
+    <p>
+      Before you talk to the AI, write down what you want. Download
+      the <a href="prompt-template.md">prompt template</a>, save it as
+      a <code>.md</code> file, and fill it in with the specifics of
+      your Thingy: what it is, its features, how it should look, and
+      what "done" means.
+    </p>
+    <p>
+      The template begins with a <b>Guidelines</b> section: standing
+      rules that apply to everything the AI produces, before any
+      specifics of your Thingy. We have filled it in with rules for
+      clear writing. Read them &mdash; they are good rules for your
+      own writing too &mdash; and change them if you disagree.
+    </p>
+    <p>
+      By the way, this is exactly how this course is built: each lab
+      page starts as a Markdown file given to Claude. You can read
+      the one for this lab here:
+      <a href="instructions.md">instructions.md</a>.
+    </p>
+    <p>
+      <div class="handin" id="D1">
+        <span class="tag">HAND IN &middot; D1</span>
+        <p>
+          Your finished prompt <code>.md</code> file, with the
+          <b>Reflection</b> section at its end filled in.
+        </p>
+      </div>
+    </p>
+    <p>
+      One more recommendation: <b>be nice to your Claude.</b> When
+      the result isn't what you wanted, explain what you meant
+      instead of just saying it's wrong. Patient, clear direction
+      gets better work &mdash; from AIs and from people &mdash; and
+      it makes the whole project more fun.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 3: Build Your Thingy</h3>
+    <p>
+      Install the Claude desktop app from
+      <a href="https://claude.ai/download">claude.ai/download</a>
+      (or use another agentic AI). The ordinary app is all you need
+      &mdash; the full command-line computing environment comes in
+      Lab 2.
+    </p>
+    <p>
+      Then drop your <code>.md</code> file into Claude and ask it to
+      build what the file describes. Look at what comes back, and
+      steer.
+    </p>
+    <p>
+      Building is an iterative loop, and the <code>.md</code> file is
+      the record of where the design stands. When you change your
+      mind about a feature, update the file and give it to Claude
+      again. You can also ask Claude to update the file to match what
+      you have agreed on. When the Thingy matches the file and you
+      like it, you are done.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 4: Show It Off</h3>
+    <p>
+      Bring your Thingy to class and demo it. Applause follows.
+    </p>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Deliverables
+    <span class="note">What to submit, and where each item comes from.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What to Hand In</h3>
+    <p>
+      Submit one file on Brightspace: your prompt
+      <code>.md</code> file. Fill in the <b>Reflection</b> section
+      after your demo and before you submit. A few sentences under
+      each of its headings is plenty:
+    </p>
+    <ul>
+      <li>A) Was this fun? Why or why not?</li>
+      <li>B) What did I learn?</li>
+      <li>C) What would I do differently?</li>
+    </ul>
+    <ol class="handin-list">
+      <li><span class="dnum"><a href="#D1">D1</a></span>
+          Your prompt <code>.md</code> file, with the Reflection
+          section filled in.</li>
+    </ol>
+    <p>
+      One <code>.md</code> file, and nothing else. No zip files, no
+      PDFs, and no code. We saw the code run in class.
+    </p>
+    <p>
+      <a href="../../index.html">Back to the laboratory index</a> &middot;
+      <a href="https://engineering.purdue.edu/~bouman/ece60141/">ECE 60141</a> &middot;
+      <a href="https://engineering.purdue.edu/~bouman/ece637/">ECE 63700</a>
+    </p>
+  </div>
+
+  </div>
+</details>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  var text = btn.nextElementSibling.innerText;
+  function done() {
+    var old = btn.textContent;
+    btn.textContent = "Copied";
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done);
+  } else {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    done();
+  }
+}
+
+function toggleAll(btn) {
+  var open = btn.textContent.indexOf("Open") === 0;
+  var list = document.querySelectorAll("details.module");
+  for (var i = 0; i < list.length; i++) { list[i].open = open; }
+  btn.textContent = open ? "Close all" : "Open all";
+}
+
+function revealHash() {
+  if (!location.hash) { return; }
+  var el = document.querySelector(location.hash);
+  if (!el) { return; }
+  var p = el.parentElement;
+  while (p) {
+    if (p.tagName === "DETAILS") { p.open = true; }
+    p = p.parentElement;
+  }
+  el.scrollIntoView();
+}
+window.addEventListener("load", revealHash);
+window.addEventListener("hashchange", revealHash);
+</script>
+
+</body>
+</html>

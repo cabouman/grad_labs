@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 5: MAP Reconstruction with Plug-and-Play</title>
+<style>
+  html { background: #faf8f4; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         background: #faf8f4; color: #222; line-height: 1.5; }
+  .band { background: #cfb991; border-bottom: 4px solid #000;
+          padding: 24px 16px 18px 16px; text-align: center; }
+  .band h2 { margin: 0 0 6px 0; font-size: 1.0em; font-weight: normal; color: #3d3324; }
+  .band h1 { margin: 0; font-size: 1.5em; color: #000; }
+  .band a { color: #000; }
+  .band .nav { margin: 10px 0 0 0; font-size: 0.9em; }
+  .band .nav a { text-decoration: underline; }
+  .container { max-width: 760px; margin: 28px auto; padding: 0 16px; }
+  .card { background: #fff; border: 1px solid #e3dccb; border-radius: 10px;
+          padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; color: #000; border-bottom: 2px solid #cfb991; padding-bottom: 6px; }
+  a { color: #8a6d1d; text-decoration: none; }
+  a:hover { color: #000; text-decoration: underline; }
+  ul, ol { margin: 8px 0; }
+  li { padding: 3px 0; }
+  code { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 4px;
+         padding: 1px 5px; font-size: 0.95em; }
+  pre { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 6px;
+        padding: 12px 14px; overflow-x: auto; font-size: 0.92em; line-height: 1.4; }
+  .tip { background: #f6f3ea; border-left: 4px solid #cfb991; padding: 10px 14px;
+         margin: 12px 0; font-size: 0.97em; }
+  .codeblock { position: relative; }
+  .codeblock pre { padding-right: 76px; }
+  .copy { position: absolute; top: 8px; right: 8px; background: #cfb991; color: #000;
+          border: 1px solid #b9ac8e; border-radius: 4px; padding: 2px 10px;
+          font-size: 0.8em; font-family: inherit; cursor: pointer; }
+  .copy:hover { background: #b9ac8e; }
+  .source { font-size: 0.9em; color: #5b5b5b; margin: 4px 0 0 0; }
+  details.module { border: 2px solid #cfb991; border-radius: 14px; background: #f4efe3;
+                   margin-bottom: 22px; }
+  details.module > summary { cursor: pointer; list-style: none; padding: 16px 18px;
+                             font-size: 1.2em; font-weight: bold; color: #3d3324; }
+  details.module > summary::-webkit-details-marker { display: none; }
+  details.module > summary::before { content: "\25B8"; color: #8a6d1d; margin-right: 10px; }
+  details.module[open] > summary::before { content: "\25BE"; }
+  details.module > summary:hover { color: #000; }
+  details.module .modulebody { padding: 0 16px 2px 16px; }
+  summary .note { display: block; font-weight: normal; font-size: 0.78em;
+                  color: #6b5c42; margin: 4px 0 0 26px; }
+  .allbtn { display: block; margin: 0 0 16px auto; background: #f4efe3; color: #3d3324;
+            border: 1px solid #cfb991; border-radius: 4px; padding: 3px 12px;
+            font-size: 0.85em; font-family: inherit; cursor: pointer; }
+  .allbtn:hover { background: #e8e0cd; }
+  .handin { border: 1px solid #cfb991; border-left: 7px solid #cfb991;
+            border-radius: 8px; background: #fffdf5;
+            padding: 12px 16px 4px 16px; margin: 18px 0; }
+  .handin .tag { display: inline-block; background: #cfb991; color: #000;
+                 border-radius: 4px; padding: 1px 9px; font-size: 0.82em;
+                 font-weight: bold; letter-spacing: 0.4px; }
+  .handin p:first-of-type { margin-top: 8px; }
+  ol.handin-list { list-style: none; padding-left: 0; margin: 10px 0; }
+  ol.handin-list li { position: relative; padding: 4px 0 4px 2.9em; }
+  ol.handin-list .dnum { position: absolute; left: 0; width: 2.9em;
+                         font-weight: bold; color: #8a6d1d; }
+</style>
+<script>
+  MathJax = { tex: { inlineMath: [['\\(', '\\)']], tags: 'ams' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+
+<div class="band">
+  <h2>ECE 60141: Foundations of Computational Imaging</h2>
+  <h1>Lab 5: MAP Reconstruction with Plug-and-Play</h1>
+  <p class="nav">
+    <a href="https://engineering.purdue.edu/~bouman/ece60141/">ECE 60141 course page</a> &middot;
+    <a href="../../index.html">Laboratory index</a>
+  </p>
+</div>
+
+<div class="container">
+
+<button class="allbtn" onclick="toggleAll(this)">Open all</button>
+
+<details class="module">
+  <summary>Overview
+    <span class="note">What the lab is about, the data, and the ground rules.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What This Lab Is About</h3>
+    <p><b>Due: Friday, Oct. 23.</b></p>
+    <p>
+      In Lab 4 you built a restoration that used a QGGMRF prior. Buried
+      inside it, without being named, was a <b>denoiser</b>. In this lab you
+      pull that denoiser out, hand it to a different algorithm, and then
+      swap it for a denoiser that was never derived from a prior at all.
+      The restoration keeps working.
+    </p>
+    <p>
+      That swap is the plug-and-play idea, and it is worth being careful
+      about. Up to now every algorithm in this course minimized a cost
+      function, and the answer was defined before the algorithm existed.
+      After the swap there is no cost function. The algorithm still
+      converges and the pictures still improve, but what it converges to
+      is a new question. Step 8 asks you to answer it for your own code.
+    </p>
+    <p>
+      The background is Chapter 9.5 on variable splitting and ADMM, and
+      Chapter 10 on plug-and-play. The notation here matches the book.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>The Data</h3>
+    <p>
+      The same image and blur kernel as Lab 3, so that your numbers can be
+      compared with the ones you already have.
+    </p>
+    <ul>
+      <li>
+        <a href="../../labs/resources/kodim23.pgm" download><b>kodim23.pgm</b></a>,
+        a 768 by 512 grayscale image, 384 KB.
+        <p class="source">
+          Source: image 23 of the Kodak Lossless True Color Image Suite,
+          released for unrestricted use.
+        </p>
+      </li>
+      <li>
+        <a href="../../labs/resources/levin09_kernels.zip" download><b>levin09_kernels.zip</b></a>,
+        the eight camera shake blur kernels, 14 KB. This lab uses kernel 1.
+        <p class="source">
+          Source: A. Levin, Y. Weiss, F. Durand, and W. T. Freeman,
+          <a href="https://webee.technion.ac.il/people/anat.levin/papers/deconvLevinEtalCVPR09.pdf">"Understanding
+          and Evaluating Blind Deconvolution Algorithms,"</a> IEEE CVPR
+          2009.
+        </p>
+      </li>
+    </ul>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>wget https://cabouman.github.io/grad_labs/labs/resources/kodim23.pgm
+wget https://cabouman.github.io/grad_labs/labs/resources/levin09_kernels.zip
+unzip levin09_kernels.zip</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Ground Rules</h3>
+    <ul>
+      <li>All code in <b>PyTorch</b>, in a single file named
+          <code>lab5.py</code>, holding functions and nothing else. Run
+          your experiments from a separate script.</li>
+      <li>You may import <code>forward</code>, <code>adjoint</code>, and
+          <code>load_pgm</code> from your <code>lab3.py</code>. Everything
+          else on this page is new.</li>
+      <li>Every function has the exact signature given here, and a
+          docstring saying what it does, what its inputs are, and what it
+          returns.</li>
+      <li>Everything in <code>float64</code>. No <code>for</code> loop over
+          pixels.</li>
+      <li>Fix the random seed for the noise and report it.</li>
+    </ul>
+    <div class="tip">
+      <b>Three sigmas, three jobs.</b> This lab has \(\sigma_w\), the noise
+      standard deviation in the data; \(\sigma_x\), the scale of the prior;
+      and \(\sigma\), a new one. The new \(\sigma\) belongs to the
+      algorithm, not to any model. Step 2 says what it does. Keep the three
+      apart in your code and in your report.
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 1: Splitting the Problem in Two
+    <span class="note">Steps 1 to 3.  Proximal maps, and the one that has a closed form.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 1: Two Models, One Optimizer</h3>
+    <p>
+      The MAP estimate you computed in Labs 3 and 4 minimizes a sum of two
+      terms,
+    </p>
+    $$
+    \hat{x} = \arg\min_x \left\{ f(x) + h(x) \right\} \ , \qquad
+    f(x) = \frac{1}{2\sigma_w^2} \| y - A x \|^2 \ ,
+    \tag{1}
+    $$
+    <p>
+      where \(f\) is the forward model term and \(h\) is the prior term.
+      They come from different places. The forward model came from physics,
+      from what the camera did. The prior came from a belief about what
+      images look like.
+    </p>
+    <p>
+      In Labs 3 and 4 you minimized the sum with one optimizer, which meant
+      the two models were welded together. Changing the prior meant
+      rederiving the gradient of the whole cost. Changing the blur meant
+      the same. This lab takes them apart, so that each model is handled by
+      its own piece of code and the two pieces only exchange images.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 2: The Proximal Map</h3>
+    <p>
+      The tool that separates them is the <b>proximal map</b>. For each of
+      the two terms, define
+    </p>
+    $$
+    F(x) = \arg\min_v \left\{ f(v)
+             + \frac{1}{2\sigma^2} \| v - x \|^2 \right\} \ , \qquad
+    H(x) = \arg\min_v \left\{ h(v)
+             + \frac{1}{2\sigma^2} \| v - x \|^2 \right\} \ ,
+    \tag{2}
+    $$
+    <p>
+      where \(\sigma\) is a parameter you choose. Read \(F(x)\) as a
+      question: starting from the image \(x\), where should I move to reduce
+      \(f\), without going far? Small \(\sigma\) means stay close to \(x\).
+      Large \(\sigma\) means go most of the way to the minimum of \(f\).
+    </p>
+    <p>
+      This is a change in kind, and it is the reason the chapter exists. A
+      cost function is an <b>objective</b>: it scores images and says which
+      are better. A proximal map is an <b>action</b>: give it an image and
+      it hands you back another image. The proximal map converts one into
+      the other.
+    </p>
+    <div class="tip">
+      <b>Look at what \(H\) actually is.</b> Write \(h(v) = -\log p(v)\) for
+      the prior. Then (2) says that \(H(x)\) is the MAP estimate of an image
+      whose prior is \(p\), given a measurement \(x\) corrupted by white
+      Gaussian noise of standard deviation \(\sigma\). In other words, the
+      proximal map of a prior is a <b>MAP denoiser</b>. You built one in
+      Lab 4 and called it a restoration with \(A = I\).
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 3: \(F\) Has a Closed Form</h3>
+    <p>
+      \(f\) is quadratic, so the minimization in (2) is a linear system. Set
+      the gradient to zero:
+    </p>
+    $$
+    \left( \frac{1}{\sigma_w^2} A^t A + \frac{1}{\sigma^2} I \right) v
+      = \frac{1}{\sigma_w^2} A^t y + \frac{1}{\sigma^2} x \ .
+    \tag{3}
+    $$
+    <p>
+      In Lab 3 you chose circular boundaries for \(A\), and now that choice
+      pays. Circular convolution is diagonalized by the DFT, so (3) becomes
+      a division, one entry at a time:
+    </p>
+    $$
+    \hat{V} = \frac{ \overline{\hat{a}} \, \hat{Y} / \sigma_w^2
+                   + \hat{X} / \sigma^2 }
+                  { | \hat{a} |^2 / \sigma_w^2 + 1 / \sigma^2 } \ ,
+    \tag{4}
+    $$
+    <p>
+      where a hat denotes the 2-D DFT, \(\hat{a}\) is the DFT of the blur
+      kernel embedded in an array the size of the image, and the bar is
+      complex conjugation. No iteration, no step size, and no convergence to
+      worry about. \(F\) is exact.
+    </p>
+    <p>Write these two functions.</p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def kernel_dft(a, shape):
+    """Return the DFT of the blur kernel, sized to the image.
+
+    Embed a in a zero array of the given shape, positioned so that this
+    DFT represents the same circular convolution as forward() in Lab 3,
+    then take the 2-D DFT.
+
+    a        (Ka, Kb) float64 tensor, odd sized
+    shape    (H, W), the image shape
+    returns  (H, W) complex128 tensor
+    """
+
+
+def prox_data(x, y, a_hat, sigma_w, sigma):
+    """Return F(x), the proximal map of the forward model term, using (4).
+
+    x        (H, W) float64 tensor, the point the map is anchored at
+    y        (H, W) float64 tensor, the measured data
+    a_hat    (H, W) complex128 tensor from kernel_dft
+    sigma_w  float, the noise standard deviation
+    sigma    float, the proximal parameter
+    returns  (H, W) float64 tensor
+    """</pre>
+    </div>
+    <div class="tip">
+      <b>Getting the centering right.</b> The kernel has to sit in the array
+      so that its center lands at index \((0,0)\), with the rest wrapping
+      around. If you place it wrong, the blur shifts and every image after
+      it is shifted too. Task 3a below catches that, and it catches it in
+      one number, which is much easier than staring at pictures.
+    </div>
+    <p>
+      <b>Task 3a. Check the DFT operator against Lab 3.</b> For a random
+      image \(u\), compare
+      <code>ifft2(fft2(u) * a_hat).real</code> with
+      <code>forward(u, a)</code> from Lab 3. Report the largest absolute
+      difference. It should be at the level of round-off.
+    </p>
+    <p>
+      <b>Task 3b. See what \(F\) does on its own.</b> Form the blurred noisy
+      data \( y = Ax + w \) with kernel 1 and \(\sigma_w = 0.02\). Compute
+      \(F(y)\) for \(\sigma = 0.01\) and for \(\sigma = 1.0\), and display
+      both next to \(y\).
+    </p>
+    <div class="handin" id="D1">
+      <span class="tag">HAND IN &middot; D1</span>
+      <p>
+        The three images \(y\), \(F(y)\) at \(\sigma = 0.01\), and \(F(y)\)
+        at \(\sigma = 1.0\), with the number from Task 3a. Add two sentences
+        explaining what \(\sigma\) did, and why the large \(\sigma\) result
+        looks the way it does even though it fits the data better.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 2: Plugging In a Denoiser
+    <span class="note">Steps 4 to 6.  Two denoisers, and the algorithm that uses them.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 4: The Denoiser You Already Have</h3>
+    <p>
+      By Step 2, \(H\) is a MAP denoiser for the prior. For the QGGMRF prior
+      of Lab 4 that means
+    </p>
+    $$
+    H(x) = \arg\min_v \left\{
+      \frac{1}{2\sigma^2} \| v - x \|^2
+      + \sum_{ \{s,r\} \in \mathcal{P} } b_{s,r} \, \rho( v_s - v_r )
+      \right\} \ ,
+    \tag{5}
+    $$
+    <p>
+      with the QGGMRF potential from Lab 4, repeated here so you do not have
+      to go looking:
+    </p>
+    $$
+    \rho( \Delta ) =
+    \frac{ |\Delta|^p }{ p\,\sigma_x^p }
+    \left(
+      \frac{ \left| \frac{\Delta}{T \sigma_x} \right|^{q-p} }
+           { 1 + \left| \frac{\Delta}{T \sigma_x} \right|^{q-p} }
+    \right) \ .
+    \tag{6}
+    $$
+    <p>
+      This is the Lab 4 problem with the blur removed. Solve it the same
+      way, with majorization on the outside and gradient descent on the
+      inside. If your Lab 4 code is organized into functions you can call,
+      call them. If it is not, this is a good moment to fix that.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def denoise_qggmrf(x, sigma, sigma_x, p, q, T, num_iters):
+    """Return H(x), the MAP denoiser of equation (5).
+
+    x          (H, W) float64 tensor, the noisy image
+    sigma      float, the noise level the denoiser assumes
+    sigma_x    float, the prior scale
+    p, q, T    floats, the QGGMRF parameters of equation (6)
+    num_iters  int, outer majorization iterations
+    returns    (H, W) float64 tensor
+    """</pre>
+    </div>
+    <p>
+      Use \(q = 2\), \(p = 1.2\), and \(T = 0.1\) throughout this lab,
+      which are the baseline values from Lab 4.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 5: PnP-ADMM</h3>
+    <p>
+      Now the two agents are put in a loop. Applying ADMM to the split
+      problem gives three lines:
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>PnP-ADMM
+
+  Initialize u = 0 and v = y
+  Until converged:
+      x = F(v - u)
+      v = H(x + u)
+      u = u + (x - v)</pre>
+    </div>
+    <p>
+      Read the loop as a negotiation between two parties who never speak
+      the same language. \(F\) knows about the camera and nothing about
+      images. \(H\) knows about images and nothing about the camera. The
+      vector \(u\) is the running record of how far apart they are, and it
+      is what forces them to agree in the end.
+    </p>
+    <p>
+      When \(F\) and \(H\) are both proximal maps, this is exactly the ADMM
+      algorithm of Chapter 9, and at convergence \(x = v\) is the minimizer
+      of (1). Nothing has been given up yet.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def pnp_admm(y, a_hat, denoiser, sigma_w, sigma, num_iters):
+    """Run the PnP-ADMM loop above.
+
+    y          (H, W) float64 tensor, the measured data
+    a_hat      (H, W) complex128 tensor from kernel_dft
+    denoiser   a function taking one (H, W) tensor and returning one,
+               which plays the role of H
+    sigma_w    float, the noise standard deviation
+    sigma      float, the proximal parameter
+    num_iters  int
+    returns    (x, history), the final image and a list of the values of
+               ||x - v|| / ||x|| at each iteration
+    """</pre>
+    </div>
+    <div class="tip">
+      <b>Why the denoiser is passed in.</b> <code>pnp_admm</code> never
+      names a prior and never sees one. It calls whatever function you hand
+      it. That is the entire mechanism of this lab, and the next step uses
+      it.
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 6: A Denoiser That Came From Nowhere</h3>
+    <p>
+      Non-local means denoises a pixel by averaging other pixels whose
+      surrounding patches look similar, wherever in the image they happen to
+      be. It was not derived from a prior. Nobody wrote down a \(p(x)\), took
+      its logarithm, and minimized anything. It is an algorithm somebody
+      invented because it works.
+    </p>
+    <p>
+      It is already installed, in the <code>scikit-image</code> package from
+      Lab 2. Wrap it so that it has the same interface as your other
+      denoiser.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>from skimage.restoration import denoise_nl_means
+
+
+def denoise_nlm(x, sigma):
+    """Return a non-local means denoising of x, as an agent for pnp_admm.
+
+    x        (H, W) float64 tensor
+    sigma    float, the noise level the denoiser assumes
+    returns  (H, W) float64 tensor
+    """
+    z = x.detach().numpy()
+    out = denoise_nl_means(z, h=0.8 * sigma, sigma=sigma,
+                           patch_size=5, patch_distance=6, fast_mode=True)
+    return torch.tensor(out, dtype=torch.float64)</pre>
+    </div>
+    <p>
+      <b>Task 6a.</b> Form the noisy image \( z = x + w \) with
+      \(\sigma_w = 0.05\), and denoise it twice at \(\sigma = 0.05\), once
+      with <code>denoise_qggmrf</code> and once with
+      <code>denoise_nlm</code>. Report the RMSE of each against the clean
+      image.
+    </p>
+    <div class="handin" id="D2">
+      <span class="tag">HAND IN &middot; D2</span>
+      <p>
+        Three images displayed over \([0,1]\): the noisy \(z\), the QGGMRF
+        denoising, and the non-local means denoising, with the two RMSE
+        values. Add one sentence on how the two differ where the image has
+        texture, such as the feathers.
+      </p>
+    </div>
+    <div class="handin" id="D3">
+      <span class="tag">HAND IN &middot; D3</span>
+      <p>
+        The specification you gave your AI assistant for
+        <code>prox_data</code> and <code>pnp_admm</code>, quoted, with any
+        corrections you had to make.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 3: Does It Work, and What Is It Doing?
+    <span class="note">Steps 7 to 9.  Deblur with both agents, then test whether the swap was legal.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 7: Deblurring Experiments</h3>
+    <p>
+      Form the data \( y = Ax + w \) with kernel 1 and
+      \(\sigma_w = 0.02\), the same as Lab 3, Step 8. Run
+      <code>pnp_admm</code> for 50 iterations twice, once with each
+      denoiser, using \(\sigma_x = 0.05\) in the QGGMRF and
+      \(\sigma = 0.02\) in both runs.
+    </p>
+    <p>Produce the following, and no more.</p>
+    <ol>
+      <li><b>Images.</b> The blurred noisy \(y\), the two PnP results, and
+          your direct MAP result from Lab 4 on the same data, all over
+          \([0,1]\).</li>
+      <li><b>Crops.</b> The same four, cropped to a 128 by 128 region
+          containing an edge and some texture. State the crop
+          coordinates.</li>
+      <li><b>Error table.</b> The RMSE of \(y\) and of each of the three
+          restorations.</li>
+      <li><b>Convergence.</b> The history \( \|x - v\| / \|x\| \) versus
+          iteration for both runs, on one plot with a log vertical
+          axis.</li>
+    </ol>
+    <div class="handin" id="D4">
+      <span class="tag">HAND IN &middot; D4</span>
+      <p>
+        The four full images and the four crops, with the crop coordinates.
+      </p>
+    </div>
+    <div class="handin" id="D5">
+      <span class="tag">HAND IN &middot; D5</span>
+      <p>
+        The error table and the convergence plot.
+      </p>
+    </div>
+    <p>
+      <b>Task 7a. Sweep \(\sigma\).</b> Repeat the non-local means run for
+      \( \sigma \in \{0.005,\ 0.02,\ 0.08\} \), keeping everything else
+      fixed. Report the RMSE of each and show the three crops.
+    </p>
+    <div class="handin" id="D6">
+      <span class="tag">HAND IN &middot; D6</span>
+      <p>
+        The three crops from the \(\sigma\) sweep with their RMSE values,
+        and two sentences on what \(\sigma\) controls here. Note that
+        \(\sigma\) is a parameter of the algorithm and not of any model, and
+        say what that means for how you would choose it in practice.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 8: Was the Swap Legal?</h3>
+    <p>
+      The algorithm converged and the pictures improved. That is not the
+      same as knowing what it computed. If both agents are proximal maps of
+      convex functions, the answer is the minimizer of (1). If they are not,
+      there may be no cost function at all, and the fixed point is defined
+      only by the algorithm.
+    </p>
+    <p>
+      Moreau settled which case you are in. An operator \(H\) is the
+      proximal map of a proper closed convex function <b>if and only if</b>
+      it is both
+    </p>
+    <ol>
+      <li><b>nonexpansive</b>, meaning
+          \( \| H(x) - H(z) \| \leq \| x - z \| \) for all \(x\) and \(z\),
+          and</li>
+      <li><b>conservative</b>, meaning \(H = \nabla \phi\) for some scalar
+          function \(\phi\).</li>
+    </ol>
+    <p>
+      Both are testable numerically on a small image, and neither needs the
+      Jacobian to be formed. Nonexpansiveness is a ratio you can sample. For
+      conservativeness, use the fact that the Jacobian of a gradient is
+      symmetric, so for any directions \(u\) and \(v\),
+    </p>
+    $$
+    u^t J v = v^t J u \ , \qquad
+    J v \approx \frac{ H(x + \epsilon v) - H(x - \epsilon v) }{ 2 \epsilon } \ .
+    \tag{7}
+    $$
+    <p>
+      <b>Task 8a.</b> On a 64 by 64 crop, with 20 random pairs and
+      \(\epsilon = 10^{-4}\), test both properties for
+      <code>denoise_qggmrf</code> and for <code>denoise_nlm</code>. For
+      nonexpansiveness report the largest value of
+      \( \|H(x) - H(z)\| / \|x - z\| \). For conservativeness report the
+      largest value of
+      \( |u^t J v - v^t J u| \, / \, ( \|u\| \|v\| ) \).
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def moreau_tests(denoiser, x, num_trials, epsilon):
+    """Test the two conditions of Moreau's theorem numerically.
+
+    denoiser    a function taking one (H, W) tensor and returning one
+    x           (H, W) float64 tensor, the point to test around
+    num_trials  int, number of random pairs
+    epsilon     float, the finite difference step
+    returns     (max_expansion, max_asymmetry), two floats
+    """</pre>
+    </div>
+    <div class="tip">
+      <b>Reading the result.</b> A finite difference has error of its own, so
+      neither number will be exactly zero. Judge them by size. If one
+      denoiser gives an asymmetry a few orders of magnitude larger than the
+      other, that difference is the answer, not the noise.
+    </div>
+    <div class="handin" id="D7">
+      <span class="tag">HAND IN &middot; D7</span>
+      <p>
+        The four numbers from Task 8a in a small table, and three sentences:
+        which of the two denoisers is a proximal map, how you can tell from
+        these numbers, and what that says about the restoration you produced
+        with the other one.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 9: Questions to Answer</h3>
+    <p>
+      Answer each in a few sentences, using your own images and numbers as
+      evidence.
+    </p>
+    <ol>
+      <li>Compare the PnP result using your QGGMRF denoiser with your
+          direct MAP result from Lab 4. They aim at the same estimate. Are
+          they the same image? Say what would make them differ, and check
+          your answer against the RMSE table.</li>
+      <li>In the PnP-ADMM loop, \(F\) is exact and costs one pair of FFTs,
+          while \(H\) is iterative and costs far more. Suppose you halved
+          the work inside <code>denoise_qggmrf</code>. What would you expect
+          to happen to the convergence plot, and why?</li>
+      <li>The non-local means denoiser has no \(\sigma_x\). Where did the
+          strength of its regularization come from in your runs, and what
+          does that say about the role of \(\sigma\) in PnP?</li>
+      <li>Suppose a colleague replaces \(H\) with a denoiser that sets every
+          pixel to the image mean. Trace the three lines of PnP-ADMM and say
+          what \(x\) converges to. What does this tell you about why
+          convergence alone is not evidence that an answer is good?</li>
+      <li>Chapter 10 goes on to consensus equilibrium, which handles more
+          than two agents. Name a third agent you would add to this
+          deblurring problem, say what it would know that \(F\) and \(H\) do
+          not, and say what its proximal map would do to an image.</li>
+    </ol>
+    <div class="handin" id="D8">
+      <span class="tag">HAND IN &middot; D8</span>
+      <p>
+        Your answers to the five questions above.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Deliverables
+    <span class="note">What to submit, and where each item comes from.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What to Hand In</h3>
+    <p>Submit two files through Brightspace.</p>
+    <ol>
+      <li>A report, as a single <b>PDF</b>, labeled "Lab 5", containing the
+          items below in this order.</li>
+      <li>Your <code>lab5.py</code>, as a plain <code>.py</code> file. Do
+          not paste the code into the report and do not send a zip
+          file.</li>
+    </ol>
+    <p>
+      Also commit your code to your <code>image-processing-labs</code>
+      repository under <code>lab5</code> and push it before you submit.
+    </p>
+    <ol class="handin-list">
+      <li><span class="dnum"></span>
+          Your name, the link to your GitHub repository, and the random
+          seed you used.</li>
+      <li><span class="dnum"><a href="#D1">D1</a></span>
+          The three images showing what \(F\) does, with the Task 3a check
+          number and two sentences.</li>
+      <li><span class="dnum"><a href="#D2">D2</a></span>
+          The three denoising images with their RMSE values, and one
+          sentence on texture.</li>
+      <li><span class="dnum"><a href="#D3">D3</a></span>
+          The specification you gave your AI assistant.</li>
+      <li><span class="dnum"><a href="#D4">D4</a></span>
+          The four deblurred images and the four crops.</li>
+      <li><span class="dnum"><a href="#D5">D5</a></span>
+          The error table and the convergence plot.</li>
+      <li><span class="dnum"><a href="#D6">D6</a></span>
+          The \(\sigma\) sweep crops with RMSE, and two sentences.</li>
+      <li><span class="dnum"><a href="#D7">D7</a></span>
+          The Moreau test table and three sentences.</li>
+      <li><span class="dnum"><a href="#D8">D8</a></span>
+          Your answers to the five questions.</li>
+    </ol>
+    <p>Concise and clear beats long.</p>
+  </div>
+
+  <div class="card">
+    <p>
+      You have now built a reconstruction whose prior can be replaced
+      without touching the algorithm, and you have checked what that
+      replacement cost you. Every method in the rest of the course fits into
+      the same frame: an agent that knows the physics, one or more agents
+      that know what the answer should look like, and a rule that makes them
+      agree.
+    </p>
+    <p>
+      <a href="../../index.html">Back to the laboratory index</a> &middot;
+      <a href="https://engineering.purdue.edu/~bouman/ece60141/">ECE 60141 course page</a>
+    </p>
+  </div>
+
+  </div>
+</details>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  var text = btn.nextElementSibling.innerText;
+  function done() {
+    var old = btn.textContent;
+    btn.textContent = "Copied";
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done);
+  } else {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    done();
+  }
+}
+
+function toggleAll(btn) {
+  var open = btn.textContent.indexOf("Open") === 0;
+  var list = document.querySelectorAll("details.module");
+  for (var i = 0; i < list.length; i++) { list[i].open = open; }
+  btn.textContent = open ? "Close all" : "Open all";
+}
+
+function revealHash() {
+  if (!location.hash) { return; }
+  var el = document.querySelector(location.hash);
+  if (!el) { return; }
+  var p = el.parentElement;
+  while (p) {
+    if (p.tagName === "DETAILS") { p.open = true; }
+    p = p.parentElement;
+  }
+  el.scrollIntoView();
+}
+window.addEventListener("load", revealHash);
+window.addEventListener("hashchange", revealHash);
+</script>
+
+</body>
+</html>

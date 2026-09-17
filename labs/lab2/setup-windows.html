@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 0: Windows Setup</title>
+<style>
+  html { background: #faf8f4; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         background: #faf8f4; color: #222; line-height: 1.5; }
+  .band { background: #cfb991; border-bottom: 4px solid #000;
+          padding: 24px 16px 18px 16px; text-align: center; }
+  .band h2 { margin: 0 0 6px 0; font-size: 1.0em; font-weight: normal; color: #3d3324; }
+  .band h1 { margin: 0; font-size: 1.5em; color: #000; }
+  .container { max-width: 760px; margin: 28px auto; padding: 0 16px; }
+  .card { background: #fff; border: 1px solid #e3dccb; border-radius: 10px;
+          padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; color: #000; border-bottom: 2px solid #cfb991; padding-bottom: 6px; }
+  a { color: #8a6d1d; text-decoration: none; }
+  a:hover { color: #000; text-decoration: underline; }
+  ul, ol { margin: 8px 0; }
+  li { padding: 3px 0; }
+  code { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 4px;
+         padding: 1px 5px; font-size: 0.95em; }
+  pre { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 6px;
+        padding: 12px 14px; overflow-x: auto; font-size: 0.92em; line-height: 1.4; }
+  .tip { background: #f6f3ea; border-left: 4px solid #cfb991; padding: 10px 14px;
+         margin: 12px 0; font-size: 0.97em; }
+</style>
+</head>
+<body>
+
+<div class="band">
+  <h2>Lab 2: Background</h2>
+  <h1>Windows Setup: Linux via WSL</h1>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h3>What You Are Installing</h3>
+    <p>
+      WSL (Windows Subsystem for Linux) runs a genuine Ubuntu Linux
+      system inside Windows. Your Linux shell, your files, your
+      python, and your labs all live inside it. Windows becomes just
+      the window frame; the work happens in Linux.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 1: Install WSL with Ubuntu</h3>
+    <ol>
+      <li>Click the Start menu, type "PowerShell", right-click it,
+          and choose <b>Run as administrator</b>.</li>
+      <li>In the PowerShell window, type:
+<pre>wsl --install</pre></li>
+      <li>Reboot when it asks. On the first launch of Ubuntu (it
+          opens by itself, or find "Ubuntu" in the Start menu), pick
+          a username and password. This is your Linux identity; the
+          password is what <code>sudo</code> will ask for.</li>
+    </ol>
+    <p>
+      You should now be looking at a prompt that ends in
+      <code>$</code>. That is bash. You are in Linux.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 2: Update and Install the Basics</h3>
+    <p>
+      Ubuntu installs software with the <code>apt</code> package
+      manager. First update the package lists, then install what the
+      lab needs:
+    </p>
+<pre>sudo apt update && sudo apt upgrade
+sudo apt install git xxd nano</pre>
+    <p>
+      That is the pattern for anything else you ever need:
+      <code>sudo apt install &lt;name&gt;</code>.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 3: Know Where Your Files Are</h3>
+    <ul>
+      <li>Your Linux home directory is where all lab work should
+          live. Type <code>cd</code> to go there and
+          <code>pwd</code> to see it.</li>
+      <li>Your Windows files are visible from Linux under
+          <code>/mnt/c/</code>, but keep the lab work on the Linux
+          side; it is faster and simpler.</li>
+      <li>In Windows File Explorer, your Linux files appear under
+          the "Linux" entry in the sidebar.</li>
+    </ul>
+    <div class="tip">
+      When you later install VS Code, add its "WSL" extension and
+      launch it from the Ubuntu shell by typing <code>code .</code>
+      Your editor then works directly on your Linux files.
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>If Anything Goes Wrong</h3>
+    <p>
+      Copy the exact error message and ask Claude (or paste it into
+      claude.ai until you have Claude Code installed). WSL problems
+      are common and almost always quickly solved. Microsoft's own
+      <a href="https://learn.microsoft.com/en-us/windows/wsl/install">WSL install guide</a>
+      is the reference if you want it.
+    </p>
+    <p><a href="index.html">Back to Lab 0</a></p>
+  </div>
+
+</div>
+
+</body>
+</html>

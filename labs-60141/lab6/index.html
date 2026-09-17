@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 6: The EM Algorithm</title>
+<style>
+  html { background: #faf8f4; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         background: #faf8f4; color: #222; line-height: 1.5; }
+  .band { background: #cfb991; border-bottom: 4px solid #000;
+          padding: 24px 16px 18px 16px; text-align: center; }
+  .band h2 { margin: 0 0 6px 0; font-size: 1.0em; font-weight: normal; color: #3d3324; }
+  .band h1 { margin: 0; font-size: 1.5em; color: #000; }
+  .band a { color: #000; }
+  .band .nav { margin: 10px 0 0 0; font-size: 0.9em; }
+  .band .nav a { text-decoration: underline; }
+  .container { max-width: 760px; margin: 28px auto; padding: 0 16px; }
+  .card { background: #fff; border: 1px solid #e3dccb; border-radius: 10px;
+          padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; color: #000; border-bottom: 2px solid #cfb991; padding-bottom: 6px; }
+  a { color: #8a6d1d; text-decoration: none; }
+  a:hover { color: #000; text-decoration: underline; }
+  ul, ol { margin: 8px 0; }
+  li { padding: 3px 0; }
+  code { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 4px;
+         padding: 1px 5px; font-size: 0.95em; }
+  pre { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 6px;
+        padding: 12px 14px; overflow-x: auto; font-size: 0.92em; line-height: 1.4; }
+  .tip { background: #f6f3ea; border-left: 4px solid #cfb991; padding: 10px 14px;
+         margin: 12px 0; font-size: 0.97em; }
+  .codeblock { position: relative; }
+  .codeblock pre { padding-right: 76px; }
+  .copy { position: absolute; top: 8px; right: 8px; background: #cfb991; color: #000;
+          border: 1px solid #b9ac8e; border-radius: 4px; padding: 2px 10px;
+          font-size: 0.8em; font-family: inherit; cursor: pointer; }
+  .copy:hover { background: #b9ac8e; }
+  table.units { border-collapse: collapse; margin: 12px 0; font-size: 0.95em; width: 100%; }
+  table.units th, table.units td { border: 1px solid #e3dccb; padding: 6px 10px; text-align: left;
+                                   vertical-align: top; }
+  table.units th { background: #f4efe3; }
+  table.units td:first-child { white-space: nowrap; font-family: "Courier New", monospace; }
+  details.module { border: 2px solid #cfb991; border-radius: 14px; background: #f4efe3;
+                   margin-bottom: 22px; }
+  details.module > summary { cursor: pointer; list-style: none; padding: 16px 18px;
+                             font-size: 1.2em; font-weight: bold; color: #3d3324; }
+  details.module > summary::-webkit-details-marker { display: none; }
+  details.module > summary::before { content: "\25B8"; color: #8a6d1d; margin-right: 10px; }
+  details.module[open] > summary::before { content: "\25BE"; }
+  details.module > summary:hover { color: #000; }
+  details.module .modulebody { padding: 0 16px 2px 16px; }
+  summary .note { display: block; font-weight: normal; font-size: 0.78em;
+                  color: #6b5c42; margin: 4px 0 0 26px; }
+  .allbtn { display: block; margin: 0 0 16px auto; background: #f4efe3; color: #3d3324;
+            border: 1px solid #cfb991; border-radius: 4px; padding: 3px 12px;
+            font-size: 0.85em; font-family: inherit; cursor: pointer; }
+  .allbtn:hover { background: #e8e0cd; }
+  .handin { border: 1px solid #cfb991; border-left: 7px solid #cfb991;
+            border-radius: 8px; background: #fffdf5;
+            padding: 12px 16px 4px 16px; margin: 18px 0; }
+  .handin .tag { display: inline-block; background: #cfb991; color: #000;
+                 border-radius: 4px; padding: 1px 9px; font-size: 0.82em;
+                 font-weight: bold; letter-spacing: 0.4px; }
+  .handin p:first-of-type { margin-top: 8px; }
+  ol.handin-list { list-style: none; padding-left: 0; margin: 10px 0; }
+  ol.handin-list li { position: relative; padding: 4px 0 4px 2.9em; }
+  ol.handin-list .dnum { position: absolute; left: 0; width: 2.9em;
+                         font-weight: bold; color: #8a6d1d; }
+</style>
+<script>
+  MathJax = { tex: { inlineMath: [['\\(', '\\)']], tags: 'ams' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+
+<div class="band">
+  <h2>ECE 60141: Foundations of Computational Imaging</h2>
+  <h1>Lab 6: The EM Algorithm</h1>
+  <p class="nav">
+    <a href="https://engineering.purdue.edu/~bouman/ece60141/">ECE 60141 course page</a> &middot;
+    <a href="../../index.html">Laboratory index</a>
+  </p>
+</div>
+
+<div class="container">
+
+<button class="allbtn" onclick="toggleAll(this)">Open all</button>
+
+<details class="module">
+  <summary>Overview
+    <span class="note">What the lab is about, and the ground rules.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What This Lab Is About</h3>
+    <p><b>Due: Friday, Nov. 13.</b></p>
+    <p>
+      Every estimate you have computed in this course used data you could
+      see. The EM algorithm computes maximum likelihood estimates when part
+      of the data is missing, and here the missing part is the answer key.
+      Each data point came from one of several Gaussian clusters, and nobody
+      records which. EM estimates the cluster parameters anyway, which makes
+      it a clustering algorithm. Then you will use it to answer a harder
+      question that has no obvious likelihood at all: how many clusters are
+      there?
+    </p>
+    <p>
+      This lab also teaches something about building software with an AI. In
+      the earlier labs the page handed you the exact signature of every
+      function. This one does not, and that is deliberate. Here the program
+      has real structure, so you will design it yourself: for each piece you
+      write the specification, saying what it computes, what goes in, and
+      what comes out, and only then does the AI write the code. Writing a
+      specification precise enough that a stranger could implement it is the
+      skill this lab grades.
+    </p>
+    <p>
+      The background is Chapter 12. The notation here matches the book.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Ground Rules</h3>
+    <ul>
+      <li>Use the <code>labs</code> conda environment from Lab 2. All code
+          in python, using numpy or PyTorch.</li>
+      <li>Every experiment on this page is fully specified: the data, the
+          initialization, and the number of iterations. Follow it exactly,
+          so your numbers can be compared with everyone else's.</li>
+      <li>Seed every random number generator with 0 unless the step says
+          otherwise, for example
+          <code>rng = np.random.default_rng(0)</code>. State in your report
+          which generator you used.</li>
+      <li>Each function comes with checks. Run them. If a check fails, the
+          code is wrong, and it is your job to get it fixed.</li>
+      <li>Keep your code in your <code>image-processing-labs</code>
+          repository, in a directory named <code>lab6</code>.</li>
+    </ul>
+    <div class="tip">
+      <b>Directing an AI well.</b> Hand it one specification at a time,
+      together with the equations from this page that it implements. Then
+      read the code and compare it line by line against those equations.
+      Code that runs without an error message is not the same as code that
+      is correct, and this lab has two failure modes that produce no error
+      message at all. Step 7 names them.
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 1: The Model and the Algorithm
+    <span class="note">Steps 1 to 3.  Where EM comes from, in three short steps.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 1: The Model</h3>
+    <p>
+      Let \( \{X_n\}_{n=1}^{N} \) be i.i.d. discrete labels taking values in
+      \( \{0, \cdots, M-1\} \) with \( P\{X_n = m\} = \pi_m \). Let
+      \( \{Y_n\}_{n=1}^{N} \), with \( Y_n \in \mathbb{R}^p \), be
+      conditionally independent Gaussian random vectors given the labels,
+      with \( Y_n \sim N(\mu_{x_n}, R_{x_n}) \). Write
+      \( \theta_m = (\mu_m, R_m) \) for the parameters of component \( m \),
+      so that
+    </p>
+    $$
+    p(y_n | \theta_m) = \frac{1}{(2\pi)^{p/2} |R_m|^{1/2}}
+    \exp\left\{ -\frac{1}{2} (y_n - \mu_m)^t R_m^{-1} (y_n - \mu_m) \right\} ,
+    \tag{1}
+    $$
+    <p>
+      and the full parameter vector is
+      \( \theta = (\pi_0, \mu_0, R_0, \cdots, \pi_{M-1}, \mu_{M-1}, R_{M-1}) \).
+    </p>
+    <p>
+      The labels are never observed. Summing them out gives the Gaussian
+      mixture distribution
+    </p>
+    $$
+    p(y_n | \theta) = \sum_{m=0}^{M-1} \pi_m \, p(y_n | \theta_m) ,
+    \tag{2}
+    $$
+    <p>
+      and, since the samples are i.i.d., the log likelihood of the whole
+      data set is
+    </p>
+    $$
+    \log p(y | M, \theta) = \sum_{n=1}^{N}
+    \log \left( \sum_{m=0}^{M-1} \pi_m \, p(y_n | \theta_m) \right) .
+    \tag{3}
+    $$
+    <p>
+      We want the \( \theta \) that maximizes (3). Direct maximization is
+      hard, and the reason is visible in the formula: there is a sum inside
+      the logarithm, so the log does not distribute and nothing separates.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 2: What You Could Do If You Knew the Labels</h3>
+    <p>
+      Suppose for a moment that the labels \( x_n \) were observed. Then
+      estimation would be easy, and it is worth seeing how easy, because EM
+      is built directly on this case.
+    </p>
+    <p>
+      Everything the ML estimate needs to know about labeled data is
+      contained in three statistics per class:
+    </p>
+    $$
+    N_m = \sum_{n=1}^{N} \delta(x_n - m) , \qquad
+    b_m = \sum_{n=1}^{N} y_n \, \delta(x_n - m) , \qquad
+    S_m = \sum_{n=1}^{N} y_n y_n^t \, \delta(x_n - m) ,
+    \tag{4}
+    $$
+    <p>
+      where \( \delta(\cdot) \) is 1 at zero and 0 elsewhere. So \( N_m \)
+      counts the points in class \( m \), \( b_m \) sums them, and
+      \( S_m \) sums their outer products. Chapter 12 shows that these are
+      the natural sufficient statistics of the complete-data distribution,
+      and that the ML estimates are simple functions of them:
+    </p>
+    $$
+    \hat{\pi}_m = \frac{N_m}{N} , \qquad
+    \hat{\mu}_m = \frac{b_m}{N_m} , \qquad
+    \hat{R}_m = \frac{S_m}{N_m} - \frac{b_m b_m^t}{N_m^2} .
+    \tag{5}
+    $$
+    <p>
+      These are just the class fraction, the class sample mean, and the
+      class sample covariance. Keep (4) and (5) in view for the next step.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 3: The EM Updates</h3>
+    <p>
+      The labels are not observed, so the statistics (4) cannot be computed.
+      The EM idea is one sentence: replace each statistic by its expected
+      value given the observed data and the current parameter estimate, then
+      apply (5) as if the expected statistics were the real thing.
+    </p>
+    <p>
+      The expectation of \( \delta(X_n - m) \) given \( Y = y \) is the
+      posterior probability that sample \( n \) belongs to class \( m \).
+      The <b>E-step</b> computes it for every \( n \) and \( m \):
+    </p>
+    $$
+    P_{n,m} \leftarrow P\{ X_n = m \,|\, Y = y, \theta \}
+    = \frac{ \pi_m \, p(y_n | \theta_m) }
+           { \displaystyle \sum_{j=0}^{M-1} \pi_j \, p(y_n | \theta_j) } .
+    \tag{6}
+    $$
+    <p>
+      These are the <b>soft assignments</b>. Sample \( n \) has partial
+      membership \( P_{n,m} \) in cluster \( m \), and
+      \( \sum_m P_{n,m} = 1 \). The expected statistics are then (4) with
+      \( \delta(x_n - m) \) replaced by \( P_{n,m} \):
+    </p>
+    $$
+    \bar{N}_m \leftarrow \sum_{n=1}^{N} P_{n,m} , \qquad
+    \bar{b}_m \leftarrow \sum_{n=1}^{N} y_n P_{n,m} , \qquad
+    \bar{S}_m \leftarrow \sum_{n=1}^{N} y_n y_n^t P_{n,m} ,
+    \tag{7}
+    $$
+    <p>and the <b>M-step</b> is (5) applied to the expected statistics:</p>
+    $$
+    \pi_m \leftarrow \frac{\bar{N}_m}{N} , \qquad
+    \mu_m \leftarrow \frac{\bar{b}_m}{\bar{N}_m} , \qquad
+    R_m \leftarrow \frac{\bar{S}_m}{\bar{N}_m}
+       - \frac{\bar{b}_m \bar{b}_m^t}{\bar{N}_m^2} .
+    \tag{8}
+    $$
+    <p>
+      One EM iteration is one E-step followed by one M-step. Chapter 12
+      proves the property that makes the algorithm usable: each iteration
+      increases the log likelihood (3), or leaves it unchanged. It never
+      decreases. That property is also the best test you have of whether
+      your code is right, and you will check it numerically in Step 7.
+    </p>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 2: Specify It, Then Build It
+    <span class="note">Steps 4 to 7.  The data, two derivations by hand, and four specifications.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 4: Generate the Data</h3>
+    <p>
+      Generate \( N = 500 \) samples from a Gaussian mixture with
+      \( p = 2 \), \( M = 3 \), and \( \pi = [0.4, 0.4, 0.2] \), means
+    </p>
+    $$
+    \mu_0 = \begin{bmatrix} 2 \\ 2 \end{bmatrix} , \qquad
+    \mu_1 = \begin{bmatrix} -2 \\ -2 \end{bmatrix} , \qquad
+    \mu_2 = \begin{bmatrix} 5.5 \\ 2 \end{bmatrix} ,
+    \tag{9}
+    $$
+    <p>and covariances</p>
+    $$
+    R_0 = \begin{bmatrix} 1 & 0.1 \\ 0.1 & 1 \end{bmatrix} , \qquad
+    R_1 = \begin{bmatrix} 1 & -0.1 \\ -0.1 & 1 \end{bmatrix} , \qquad
+    R_2 = \begin{bmatrix} 1 & 0.2 \\ 0.2 & 0.5 \end{bmatrix} .
+    \tag{10}
+    $$
+    <p>
+      Draw each label \( x_n \) from \( \pi \), then draw \( y_n \) from
+      \( N(\mu_{x_n}, R_{x_n}) \). Save both \( y \), of shape
+      \( 500 \times 2 \), and the true labels \( x \) to a file. You will
+      reuse this exact data set in every remaining step, so generate it once
+      and load it after that.
+    </p>
+    <div class="handin" id="D1">
+      <span class="tag">HAND IN &middot; D1</span>
+      <p>
+        A scatter plot of the 500 samples, with the three true classes in
+        three colors and a legend. Use equal axis scaling, so that the
+        covariances are not distorted by the aspect ratio.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 5: Derive Two Things by Hand</h3>
+    <p>
+      Do this step without AI help. Both derivations are short, and they are
+      what make the rest of the lab make sense rather than being a sequence
+      of formulas to type in.
+    </p>
+    <ol>
+      <li><b>The E-step.</b> Derive equation (6). Start from Bayes' rule for
+          \( P\{X_n = m \,|\, Y = y, \theta\} \), and use the fact that the
+          pairs \( (Y_n, X_n) \) are independent across \( n \) to show that
+          the posterior for \( X_n \) depends on \( y \) only through
+          \( y_n \).</li>
+      <li><b>The M-step reduces to Step 2.</b> Show that if the soft
+          assignments are hard, meaning \( P_{n,m} = \delta(x_n - m) \) for
+          known labels \( x_n \), then the expected statistics (7) equal the
+          complete-data statistics (4), so the M-step (8) reproduces the
+          labeled ML estimates (5) exactly.</li>
+    </ol>
+    <div class="tip">
+      <b>The second derivation is also a test.</b> You will turn it into a
+      numerical check in Step 7. That is the general habit worth taking from
+      this lab: a derivation that ends in an equality is a test case waiting
+      to be written.
+    </div>
+    <div class="handin" id="D2">
+      <span class="tag">HAND IN &middot; D2</span>
+      <p>
+        Both derivations, handwritten or typeset, a few lines each.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 6: Write the Specifications</h3>
+    <p>
+      Now design the implementation. Do not ask the AI for "an EM program."
+      Break the algorithm into the four functions below, and write a
+      specification for each one <em>before any code exists</em>. A
+      specification has three parts:
+    </p>
+    <ul>
+      <li><b>What it does</b>, in a few sentences, naming the equation
+          numbers from this page that it implements.</li>
+      <li><b>Inputs</b>: every input, with its meaning, type, and array
+          shape.</li>
+      <li><b>Outputs</b>: every output, with its meaning, type, and array
+          shape.</li>
+    </ul>
+    <p>
+      The decomposition is fixed, so that everyone's code has the same
+      structure. The interfaces, meaning the exact inputs, outputs, and
+      shapes, are yours to design.
+    </p>
+    <table class="units">
+      <tr><th>Function</th><th>What it computes</th></tr>
+      <tr><td>e_step</td>
+          <td>The posterior class probabilities \( P_{n,m} \) of equation
+              (6), for every sample and every class.</td></tr>
+      <tr><td>m_step</td>
+          <td>The expected statistics \( \bar{N}_m \), \( \bar{b}_m \),
+              \( \bar{S}_m \) of equation (7), and from them the updated
+              parameters of equation (8).</td></tr>
+      <tr><td>log_likelihood</td>
+          <td>The log likelihood of equation (3), for a given data set and
+              parameter vector.</td></tr>
+      <tr><td>run_em</td>
+          <td>The outer loop. Alternates <code>e_step</code> and
+              <code>m_step</code> until the log likelihood stops improving
+              by more than a tolerance, or a maximum iteration count is
+              reached. Records the log likelihood after every
+              iteration.</td></tr>
+    </table>
+    <div class="tip">
+      <b>A test of a specification.</b> Could a classmate who has read this
+      page, but cannot ask you any questions, implement your function and
+      have it work with the other three? If not, the specification is
+      incomplete. The usual thing missing is a shape.
+    </div>
+    <div class="handin" id="D3">
+      <span class="tag">HAND IN &middot; D3</span>
+      <p>
+        The four specifications, verbatim. These are a graded part of the
+        lab, not a preliminary.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 7: Build and Test</h3>
+    <p>
+      Hand the AI one specification at a time, and test each function before
+      you build the next.
+    </p>
+    <p>
+      Two implementation requirements apply to everyone, and both exist
+      because of failures that produce no error message.
+    </p>
+    <ul>
+      <li>Compute (3) and the E-step (6) <b>in the log domain</b>, using a
+          log-sum-exp function. Computing \( p(y_n|\theta_m) \) directly
+          underflows to zero for points far from a component mean, and then
+          (6) divides zero by zero.</li>
+      <li>After each covariance update in (8), add \( \epsilon I \) to
+          \( R_m \) with \( \epsilon = 10^{-6} \). Without it, a component
+          that collects only a few points produces a singular covariance and
+          the log likelihood runs off to infinity.</li>
+    </ul>
+    <p>Run these four checks.</p>
+    <ol>
+      <li><b><code>e_step</code>.</b> Every row of \( P_{n,m} \) sums to
+          one, to within numerical precision. Include a test point placed
+          far from all component means, where an implementation that skipped
+          the log domain returns NaN.</li>
+      <li><b><code>m_step</code>.</b> Feed it the hard assignments
+          \( P_{n,m} = \delta(x_n - m) \) built from the true labels of
+          Step 4. By your second derivation in Step 5, the output must equal
+          the class fractions, class sample means, and class sample
+          covariances computed directly from the labeled data. Verify that
+          it does.</li>
+      <li><b><code>log_likelihood</code>.</b> For \( M = 1 \), the mixture
+          (2) is a single Gaussian. Check the function against a direct
+          evaluation of the Gaussian log density summed over the
+          samples.</li>
+      <li><b><code>run_em</code>.</b> The recorded log likelihood is
+          nondecreasing from one iteration to the next. Report the largest
+          decrease you observe, which should be zero or a rounding-level
+          negative number. Also check that if you initialize at the true
+          parameters of Step 4, the parameters stay close to the true
+          values.</li>
+    </ol>
+    <div class="handin" id="D4">
+      <span class="tag">HAND IN &middot; D4</span>
+      <p>
+        The result of each of the four checks, with the numbers.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 3: Run It, and Watch It Get Stuck
+    <span class="note">Steps 8 and 9.  Clustering, and what happens when you start somewhere else.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 8: Run EM</h3>
+    <p>
+      Run EM on the data from Step 4, with \( M = 3 \), exactly 20
+      iterations with the tolerance set to zero, and the initialization
+    </p>
+    $$
+    \pi \leftarrow [1/3, 1/3, 1/3] , \qquad
+    R_m \leftarrow \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}
+    \ \mbox{ for } m = 0, 1, 2 ,
+    \tag{11}
+    $$
+    <p>
+      with \( \mu_0, \mu_1, \mu_2 \) set to the first three sample vectors
+      produced in Step 4.
+    </p>
+    <div class="tip">
+      <b>The labels EM produces are not the labels you generated.</b> The
+      mixture likelihood does not care which component is called 0, so EM
+      will land on some permutation of the components. Before you compare
+      anything, find the correspondence between estimated and true
+      components that best matches their means, and apply it.
+    </div>
+    <div class="handin" id="D5">
+      <span class="tag">HAND IN &middot; D5</span>
+      <p>
+        A plot of \( \log p(y | M, \theta) \) versus iteration number, for
+        iterations 1 through 20.
+      </p>
+    </div>
+    <div class="handin" id="D6">
+      <span class="tag">HAND IN &middot; D6</span>
+      <p>
+        A table of the estimated \( \pi_m \), \( \mu_m \), and \( R_m \),
+        each placed next to the true value it corresponds to, using the
+        correspondence you found.
+      </p>
+    </div>
+    <div class="handin" id="D7">
+      <span class="tag">HAND IN &middot; D7</span>
+      <p>
+        A scatter plot of the data colored by the hard label
+        \( \hat{x}_n = \arg\max_m P_{n,m} \), with the estimated mean of
+        each component marked, and the fraction of samples whose hard label
+        disagrees with the true label from Step 4.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 9: Initialization and Local Maxima</h3>
+    <p>
+      The log likelihood of a mixture has many local maxima, and EM finds
+      only the one nearest to where it starts. Every iteration goes uphill,
+      the algorithm is working exactly as proved, and the answer can still
+      be poor. That is worth seeing once, deliberately, rather than
+      discovering it in a project.
+    </p>
+    <p>
+      Repeat Step 8 five more times with \( M = 3 \), keeping \( \pi \) and
+      \( R_m \) as in (11), but choosing the three initial means as three
+      distinct data points drawn at random from the 500 samples. Use seeds
+      0, 1, 2, 3, 4 for the five runs. Run 20 iterations each.
+    </p>
+    <div class="handin" id="D8">
+      <span class="tag">HAND IN &middot; D8</span>
+      <p>
+        One plot with all five log likelihood curves plus the curve from
+        Step 8, on the same axes with a legend, and a table of the final log
+        likelihood for all six runs.
+      </p>
+    </div>
+    <div class="handin" id="D9">
+      <span class="tag">HAND IN &middot; D9</span>
+      <p>
+        The hard-label scatter plot for whichever run reached the
+        <em>lowest</em> final log likelihood, with one sentence describing
+        what that solution did with the clusters.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 4: How Many Clusters Are There?
+    <span class="note">Steps 10 and 11.  A question the likelihood cannot answer on its own.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 10: Choosing the Number of Clusters</h3>
+    <p>
+      So far you told the algorithm that \( M = 3 \). In practice nobody
+      tells you. And you cannot choose \( M \) by maximizing the likelihood,
+      because any order-\( M \) model is a special case of an
+      order-\( (M+1) \) model, so the maximized likelihood can only go up
+      with \( M \). Left alone, the likelihood will happily give every data
+      point its own cluster.
+    </p>
+    <p>
+      The fix is to add a penalty that grows with the number of parameters.
+      The <b>minimum description length</b> criterion is
+    </p>
+    $$
+    MDL(M, \theta) = -\log p(y | M, \theta) + \frac{1}{2} L(M) \log(Np) ,
+    \tag{12}
+    $$
+    <p>
+      where \( L(M) \) is the number of real numbers needed to specify
+      \( \theta \). Each component needs 1 number for \( \pi_m \), \( p \)
+      numbers for \( \mu_m \), and \( (p+1)p/2 \) numbers for the symmetric
+      matrix \( R_m \), and one number is redundant because the \( \pi_m \)
+      sum to one. So
+    </p>
+    $$
+    L(M) = M \left( 1 + p + \frac{(p+1)p}{2} \right) - 1 .
+    \tag{13}
+    $$
+    <p>
+      To find \( \hat{M} \), start with more components than you expect and
+      remove them one at a time.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>Order estimation by merging
+
+  Initialize M_o to the largest order you will consider, and
+  initialize theta
+  For M = M_o down to 1:
+      Run EM to produce theta*(M)
+      Record MDL(M) using (12)
+      Merge two components of theta*(M) to initialize order M-1
+  Select M_hat as the value of M minimizing MDL(M)</pre>
+    </div>
+    <p>
+      Merge the pair of components \( (l, m) \) that minimizes the distance
+    </p>
+    $$
+    d(l,m) = \frac{N \pi_l}{2}
+      \log\left( \frac{|R_{(l,m)}|}{|R_l|} \right)
+      + \frac{N \pi_m}{2}
+      \log\left( \frac{|R_{(l,m)}|}{|R_m|} \right) ,
+    \tag{14}
+    $$
+    <p>where the merged component has parameters</p>
+    $$
+    \pi_{(l,m)} = \pi_l + \pi_m , \qquad
+    \mu_{(l,m)} = \frac{\pi_l \mu_l + \pi_m \mu_m}{\pi_l + \pi_m} ,
+    \tag{15}
+    $$
+    $$
+    R_{(l,m)} = \frac{
+      \pi_l \left( R_l + (\mu_l - \mu_{(l,m)})(\mu_l - \mu_{(l,m)})^t \right)
+      + \pi_m \left( R_m + (\mu_m - \mu_{(l,m)})(\mu_m - \mu_{(l,m)})^t \right)
+    }{\pi_l + \pi_m} .
+    \tag{16}
+    $$
+    <p>
+      This distance upper bounds the increase in MDL caused by the merge, so
+      merging the closest pair gives up as little as possible at each
+      reduction in order. After the merge, the merged parameters become the
+      new component and the others carry over unchanged.
+    </p>
+    <p>
+      Three more functions are needed, and you specify them the same way you
+      did in Step 6, saying what they compute, what goes in, and what comes
+      out, before any code.
+    </p>
+    <table class="units">
+      <tr><th>Function</th><th>What it computes</th></tr>
+      <tr><td>mdl</td>
+          <td>The MDL value of equations (12) and (13), using your
+              <code>log_likelihood</code>.</td></tr>
+      <tr><td>merge_closest</td>
+          <td>Finds the pair minimizing (14), merges it using (15) and (16),
+              and returns the order-\( (M-1) \) parameter vector.</td></tr>
+      <tr><td>estimate_order</td>
+          <td>The search loop above, using <code>run_em</code>,
+              <code>mdl</code>, and <code>merge_closest</code>.</td></tr>
+    </table>
+    <p>
+      Run it on the data from Step 4 with \( M_o = 9 \), the initialization
+      \( \pi \leftarrow [1/9, \cdots, 1/9] \), \( R_m \leftarrow I \) for
+      all \( m \), and \( \mu_0 \) through \( \mu_8 \) set to the first nine
+      sample vectors from Step 4. Run 20 EM iterations for each value of
+      \( M \).
+    </p>
+    <div class="handin" id="D10">
+      <span class="tag">HAND IN &middot; D10</span>
+      <p>
+        The three additional specifications, verbatim.
+      </p>
+    </div>
+    <div class="handin" id="D11">
+      <span class="tag">HAND IN &middot; D11</span>
+      <p>
+        A plot of the MDL value versus the cumulative number of EM
+        iterations over the whole run. Plot the MDL value after each EM
+        iteration, and when an iteration is followed by a merge, also plot
+        the value immediately after the merge, so that merge steps show two
+        points. Mark the merge locations.
+      </p>
+    </div>
+    <div class="handin" id="D12">
+      <span class="tag">HAND IN &middot; D12</span>
+      <p>
+        A plot of \( MDL(M) \) versus \( M \) for \( M = 1, \cdots, 9 \),
+        with the minimizing \( \hat{M} \) labeled, and a statement of
+        whether \( \hat{M} \) equals the true value \( M = 3 \).
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 11: Questions to Answer</h3>
+    <p>
+      Answer each in a few sentences, using your own plots and numbers as
+      evidence.
+    </p>
+    <ol>
+      <li>Compare the estimated parameters from Step 8 to the true values.
+          Which are estimated most accurately, and which least? Give a
+          reason based on the data, not on the algorithm.</li>
+      <li>In Step 9, did every initialization reach the same final log
+          likelihood? What does the spread of final values tell you about
+          the shape of the likelihood surface, and what would you do about
+          it in a real application?</li>
+      <li>The likelihood of a Gaussian mixture has no finite maximum. You
+          can drive it to infinity by putting a component on a single data
+          point and shrinking its covariance. Explain how the
+          \( \epsilon I \) term of Step 7 prevents this, and what you give
+          up by using it.</li>
+      <li>In (12) the penalty grows like \( \log(Np) \). What happens to
+          \( \hat{M} \) as you collect more data from the same distribution,
+          and why is that the behavior you want?</li>
+      <li>Step 10 estimates \( \theta \) for each \( M \) by starting from a
+          merge of the previous solution rather than from a fresh
+          initialization. Give one advantage and one risk of doing it that
+          way.</li>
+      <li>Which of your seven specifications needed revision after you saw
+          the code or a failed check? What was missing from the original
+          version?</li>
+    </ol>
+    <div class="handin" id="D13">
+      <span class="tag">HAND IN &middot; D13</span>
+      <p>
+        Your answers to the six questions above.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Deliverables
+    <span class="note">What to submit, and where each item comes from.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What to Hand In</h3>
+    <p>Submit two files through Brightspace.</p>
+    <ol>
+      <li>A report, as a single <b>PDF</b>, labeled "Lab 6", containing the
+          items below in this order.</li>
+      <li>Your code, as plain <code>.py</code> files. Do not paste the code
+          into the report and do not send a zip file.</li>
+    </ol>
+    <p>
+      Also commit your code to your <code>image-processing-labs</code>
+      repository under <code>lab6</code> and push it before you submit.
+    </p>
+    <ol class="handin-list">
+      <li><span class="dnum"></span>
+          Your name, the link to your GitHub repository, and which random
+          number generator you used.</li>
+      <li><span class="dnum"><a href="#D1">D1</a></span>
+          The scatter plot of the generated data.</li>
+      <li><span class="dnum"><a href="#D2">D2</a></span>
+          Your two hand derivations.</li>
+      <li><span class="dnum"><a href="#D3">D3</a></span>
+          Your four specifications, verbatim.</li>
+      <li><span class="dnum"><a href="#D4">D4</a></span>
+          The results of the four checks, with the numbers.</li>
+      <li><span class="dnum"><a href="#D5">D5</a></span>
+          The log likelihood plot for the 20 iterations.</li>
+      <li><span class="dnum"><a href="#D6">D6</a></span>
+          The estimated against true parameter table.</li>
+      <li><span class="dnum"><a href="#D7">D7</a></span>
+          The hard-label scatter plot, with the disagreement fraction.</li>
+      <li><span class="dnum"><a href="#D8">D8</a></span>
+          The six log likelihood curves and the table of final values.</li>
+      <li><span class="dnum"><a href="#D9">D9</a></span>
+          The scatter plot for the worst run, with one sentence.</li>
+      <li><span class="dnum"><a href="#D10">D10</a></span>
+          The three additional specifications, verbatim.</li>
+      <li><span class="dnum"><a href="#D11">D11</a></span>
+          The MDL against cumulative EM iterations plot, with the merges
+          marked.</li>
+      <li><span class="dnum"><a href="#D12">D12</a></span>
+          The MDL against \( M \) plot, with \( \hat{M} \) labeled and the
+          comparison to the true value.</li>
+      <li><span class="dnum"><a href="#D13">D13</a></span>
+          Your answers to the six questions.</li>
+    </ol>
+    <p>Concise and clear beats long.</p>
+  </div>
+
+  <div class="card">
+    <p>
+      EM is the standard tool for fitting models with hidden variables, and
+      the pattern you used here, expected sufficient statistics in place of
+      observed ones, carries far beyond Gaussian mixtures. So does the other
+      habit this lab asked for: writing down what a piece of code must do
+      before anything writes it.
+    </p>
+    <p>
+      <a href="../../index.html">Back to the laboratory index</a> &middot;
+      <a href="https://engineering.purdue.edu/~bouman/ece60141/">ECE 60141 course page</a>
+    </p>
+  </div>
+
+  </div>
+</details>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  var text = btn.nextElementSibling.innerText;
+  function done() {
+    var old = btn.textContent;
+    btn.textContent = "Copied";
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done);
+  } else {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    done();
+  }
+}
+
+function toggleAll(btn) {
+  var open = btn.textContent.indexOf("Open") === 0;
+  var list = document.querySelectorAll("details.module");
+  for (var i = 0; i < list.length; i++) { list[i].open = open; }
+  btn.textContent = open ? "Close all" : "Open all";
+}
+
+function revealHash() {
+  if (!location.hash) { return; }
+  var el = document.querySelector(location.hash);
+  if (!el) { return; }
+  var p = el.parentElement;
+  while (p) {
+    if (p.tagName === "DETAILS") { p.open = true; }
+    p = p.parentElement;
+  }
+  el.scrollIntoView();
+}
+window.addEventListener("load", revealHash);
+window.addEventListener("hashchange", revealHash);
+</script>
+
+</body>
+</html>

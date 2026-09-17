@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 2: Background</title>
+<style>
+  html { background: #faf8f4; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         background: #faf8f4; color: #222; line-height: 1.5; }
+  .band { background: #cfb991; border-bottom: 4px solid #000;
+          padding: 24px 16px 18px 16px; text-align: center; }
+  .band h2 { margin: 0 0 6px 0; font-size: 1.0em; font-weight: normal; color: #3d3324; }
+  .band h1 { margin: 0; font-size: 1.5em; color: #000; }
+  .band a { color: #000; }
+  .container { max-width: 760px; margin: 28px auto; padding: 0 16px; }
+  .section { border: 2px solid #cfb991; border-radius: 14px;
+             background: #f4efe3; padding: 18px 16px 2px 16px; margin-bottom: 32px; }
+  .section > h2 { margin: 0 0 16px 8px; font-size: 1.3em; color: #3d3324; }
+  .card { background: #fff; border: 1px solid #e3dccb; border-radius: 10px;
+          padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; color: #000; border-bottom: 2px solid #cfb991; padding-bottom: 6px; }
+  a { color: #8a6d1d; text-decoration: none; }
+  a:hover { color: #000; text-decoration: underline; }
+  ul, ol { margin: 8px 0; }
+  li { padding: 3px 0; }
+  code { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 4px;
+         padding: 1px 5px; font-size: 0.95em; }
+  pre { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 6px;
+        padding: 12px 14px; overflow-x: auto; font-size: 0.92em; line-height: 1.4; }
+  .tip { background: #f6f3ea; border-left: 4px solid #cfb991; padding: 10px 14px;
+         margin: 12px 0; font-size: 0.97em; }
+  .handin { border: 1px solid #cfb991; border-left: 7px solid #cfb991;
+            border-radius: 8px; background: #fffdf5;
+            padding: 12px 16px 4px 16px; margin: 18px 0; }
+  .handin .tag { display: inline-block; background: #cfb991; color: #000;
+                 border-radius: 4px; padding: 1px 9px; font-size: 0.82em;
+                 font-weight: bold; letter-spacing: 0.4px; }
+  .handin p:first-of-type { margin-top: 8px; }
+  ol.handin-list { list-style: none; padding-left: 0; margin: 10px 0; }
+  ol.handin-list li { position: relative; padding: 4px 0 4px 2.9em; }
+  ol.handin-list .dnum { position: absolute; left: 0; width: 2.9em;
+                         font-weight: bold; color: #8a6d1d; }
+  .band .nav { margin: 10px 0 0 0; font-size: 0.9em; }
+  .band .nav a { text-decoration: underline; }
+  details.module { border: 2px solid #cfb991; border-radius: 14px; background: #f4efe3;
+                   margin-bottom: 22px; }
+  details.module > summary { cursor: pointer; list-style: none; padding: 16px 18px;
+                             font-size: 1.2em; font-weight: bold; color: #3d3324; }
+  details.module > summary::-webkit-details-marker { display: none; }
+  details.module > summary::before { content: "\25B8"; color: #8a6d1d; margin-right: 10px; }
+  details.module[open] > summary::before { content: "\25BE"; }
+  details.module > summary:hover { color: #000; }
+  details.module .modulebody { padding: 0 16px 2px 16px; }
+  summary .note { display: block; font-weight: normal; font-size: 0.78em;
+                  color: #6b5c42; margin: 4px 0 0 26px; }
+  .allbtn { display: block; margin: 0 0 16px auto; background: #f4efe3; color: #3d3324;
+            border: 1px solid #cfb991; border-radius: 4px; padding: 3px 12px;
+            font-size: 0.85em; font-family: inherit; cursor: pointer; }
+  .allbtn:hover { background: #e8e0cd; }
+  .codeblock { position: relative; }
+  .codeblock pre { padding-right: 76px; }
+  .copy { position: absolute; top: 8px; right: 8px; background: #cfb991; color: #000;
+          border: 1px solid #b9ac8e; border-radius: 4px; padding: 2px 10px;
+          font-size: 0.8em; font-family: inherit; cursor: pointer; }
+  .copy:hover { background: #b9ac8e; }
+</style>
+</head>
+<body>
+
+<div class="band">
+  <h2>ECE 60141 and ECE 63700</h2>
+  <h1>Lab 2: Background &mdash; git, conda, python, and PyTorch</h1>
+  <p class="nav">
+    <a href="https://engineering.purdue.edu/~bouman/ece60141/">ECE 60141</a> &middot;
+    <a href="https://engineering.purdue.edu/~bouman/ece637/">ECE 63700</a> &middot;
+    <a href="../../index.html">Laboratory index</a>
+  </p>
+</div>
+
+<div class="container">
+
+<button class="allbtn" onclick="toggleAll(this)">Open all</button>
+
+<details class="module">
+  <summary>Overview
+    <span class="note">What the lab is about and the ground rules.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What This Lab Is About</h3>
+    <p>
+      Before we can process images, you need a working computing
+      environment and a clear picture of what a computer actually does
+      with your data. This lab gives you both. By the end you will
+      have a Linux shell, an ASCII editor, git and GitHub, a conda
+      environment with python and PyTorch, and an agentic AI you can
+      drive from the command line. You will also understand something
+      most students never learn: what is actually inside a file.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Ground Rules</h3>
+    <p>
+      Everyone in this class works in a Linux bash shell. Linux is
+      the common language of scientific computing, and when you use
+      it, you have no choice but to understand what is going on.
+      That is the point.
+    </p>
+    <p>
+      Every step below is done in your own account, on your own
+      machine. Keep your work in the GitHub repository you create in
+      Step 5, and commit as you go.
+    </p>
+    <div class="tip">
+      <b>The most important rule of this lab:</b> when something
+      doesn't work, ask your AI assistant to help you debug it.
+      Copy the error message into Claude and ask what it means.
+      Learning to get unstuck this way is one of the main skills this
+      lab teaches.
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 1: Your Tools
+    <span class="note">Steps 1 to 7.  A shell, an editor, an IDE, git, conda, and an agentic AI.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 1: Set Up Your Shell</h3>
+    <p>Follow the setup page for your computer:</p>
+    <ul>
+      <li><a href="setup-windows.html">Windows setup</a> &mdash;
+          install WSL, which gives you a real Ubuntu Linux system
+          inside Windows.</li>
+      <li><a href="setup-mac.html">Mac setup</a> &mdash; your Mac is
+          already Unix underneath; install iTerm2 and Homebrew.</li>
+      <li><b>Linux</b> &mdash; you already have a bash shell; open a
+          terminal and skip ahead.</li>
+    </ul>
+    <p>
+      When you are done, you will have a terminal window with a bash
+      (or zsh) prompt. The two shells accept the same commands, so
+      from here on we just say "the shell."
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 2: Edit ASCII Files</h3>
+    <p>
+      Everything on a computer is stored as <b>bytes</b>. A byte is
+      an 8-bit number representing a value from 0 to 255. A text file
+      is nothing more than a sequence of bytes, and <b>ASCII</b> is
+      the standard mapping from byte values to characters. For
+      example, the byte 01001000 can be interpreted as the integer
+      72, or, through the ASCII mapping, as the character "H".
+    </p>
+    <p>
+      Bytes are usually written in <b>hexadecimal</b> (base 16),
+      which uses the digits 0&ndash;9 and a&ndash;f. One byte is
+      exactly two hex digits, so 01001000 = decimal 72 = hex 48.
+    </p>
+    <p>
+      To create a text file, you use an <b>ASCII editor</b>: a
+      program that saves exactly the bytes of the characters you
+      type, and nothing else. The simplest one is <b>nano</b>, which
+      runs inside the shell. It is preinstalled on Ubuntu and macOS;
+      if it is missing, install it with
+      <code>sudo apt install nano</code> (Linux/WSL) or
+      <code>brew install nano</code> (Mac). There are also graphical
+      ASCII editors such as
+      <a href="https://www.sublimetext.com/">Sublime Text</a>, which
+      you may prefer.
+    </p>
+    <p>
+      The Markdown editor you installed in Lab 1 is also an ASCII
+      editor: a <code>.md</code> file is an ordinary ASCII text file,
+      and the editor just adds a formatted preview. If you skipped
+      that install, see the
+      <a href="../resources/markdown-editor.html">Markdown editor
+      installation page</a> (Mac, Windows, and Linux).
+    </p>
+    <p>Now create a file. Type:</p>
+<pre>nano hello.txt</pre>
+    <p>
+      Enter the text "Hello, world", press Ctrl-O and Enter to save,
+      and Ctrl-X to exit (the commands are listed at the bottom of
+      the screen; see the
+      <a href="https://www.nano-editor.org/dist/latest/nano.html">nano
+      manual</a> for more). Look at what you made:
+    </p>
+<pre>more hello.txt
+xxd hello.txt</pre>
+    <p>
+      <code>more</code> interprets the bytes as ASCII and prints your
+      characters. <code>xxd</code> shows the raw bytes in hex, with
+      the ASCII interpretation on the right. Find hex 48 &mdash;
+      that is your "H". The file contains the bytes of the
+      characters you typed and nothing more. (The full ASCII table
+      is at <code>man ascii</code>.)
+    </p>
+    <div class="handin" id="D1">
+      <span class="tag">HAND IN &middot; D1</span>
+      <p>
+        The <code>xxd</code> output for your <code>hello.txt</code>,
+        with one sentence saying what the bytes are.
+      </p>
+    </div>
+    <p>
+      Now do the same thing with a word processor. Type
+      "Hello, world" into Microsoft Word or Google Docs and save it
+      in your working directory as <code>hello.docx</code>. Compare:
+    </p>
+<pre>more hello.docx
+xxd hello.docx | head
+ls -l hello.txt hello.docx</pre>
+    <p>
+      This time <code>more</code> prints garbage, <code>xxd</code>
+      shows thousands of bytes of formatting machinery, and
+      <code>ls -l</code> shows a file thousands of times larger than
+      your 13 characters. Word saved a document
+      <em>containing</em> your text &mdash; not the text itself.
+      That is why code is always written with an ASCII editor, and
+      never with Word or Google Docs.
+    </p>
+    <div class="handin" id="D2">
+      <span class="tag">HAND IN &middot; D2</span>
+      <p>
+        The <code>ls -l</code> sizes of <code>hello.txt</code> and
+        <code>hello.docx</code>, with one sentence saying why they
+        differ so much.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 3: Install an IDE</h3>
+    <p>
+      An <b>IDE</b> (integrated development environment) is an ASCII
+      editor combined with the tools you need for real programming:
+      syntax coloring, search, running and debugging code. You will
+      write most of your python in an IDE.
+    </p>
+    <p>
+      Install one now &mdash; see the
+      <a href="ide-setup.html">IDE installation page</a> for
+      step-by-step instructions. We recommend
+      <a href="https://code.visualstudio.com/">VS Code</a>; the
+      alternative is
+      <a href="https://www.jetbrains.com/pycharm/">PyCharm
+      Professional</a>, which is free for Purdue students.
+    </p>
+    <p>
+      Then use it. From your shell, type
+      <code>code hello.txt</code> to open your file in VS Code. Edit
+      the text, save it, and confirm in the shell with
+      <code>more hello.txt</code> that your change is in the file.
+      The IDE looks fancier than nano, but underneath it is doing the
+      same thing: saving your bytes.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 4: Learn Your Way Around the Shell</h3>
+    <p>These commands are most of what you need all semester:</p>
+    <ul>
+      <li><code>pwd</code>, <code>ls</code>, <code>cd</code> &mdash; where am I, what is here, go somewhere</li>
+      <li><code>mkdir</code>, <code>cp</code>, <code>mv</code>, <code>rm</code> &mdash; make, copy, move, remove</li>
+      <li><code>cat</code>, <code>less</code>, <code>head</code> &mdash; look at file contents</li>
+      <li><code>grep</code> &mdash; search inside files</li>
+      <li><code>ls -l</code> &mdash; list files <em>with their sizes in bytes</em> (remember this one)</li>
+      <li><code>man &lt;command&gt;</code> &mdash; the manual for any command</li>
+    </ul>
+    <p>
+      Exercise: make a directory called <code>lab2</code>, move your
+      <code>hello.txt</code> into it, and use <code>ls -l</code> to
+      find the file's size in bytes. Can you explain the exact
+      number you see?
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 5: git and GitHub</h3>
+    <p>
+      git keeps the history of your code; GitHub stores it in the
+      cloud. You will use both in every lab.
+    </p>
+    <ol>
+      <li>Create a free account at
+          <a href="https://github.com/">github.com</a> if you don't
+          have one.</li>
+      <li>In your shell, set your identity:
+<pre>git config --global user.name "Your Name"
+git config --global user.email "you@purdue.edu"</pre></li>
+      <li>Create an SSH key and add it to GitHub (ask Claude, or
+          follow GitHub's
+          <a href="https://docs.github.com/en/authentication/connecting-to-github-with-ssh">SSH guide</a>).</li>
+      <li>On GitHub, create a new private repository called
+          <code>image-processing-labs</code>, then clone it:
+<pre>git clone git@github.com:YOUR-USERNAME/image-processing-labs.git</pre></li>
+      <li>Move your <code>lab2</code> directory into the repository,
+          then commit and push:
+<pre>git add lab2
+git commit -m "Lab 2 first commit"
+git push</pre></li>
+    </ol>
+    <p>
+      Refresh the GitHub page in your browser and see your files in
+      the cloud. From now on, all your lab work lives in this
+      repository.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 6: conda, python, and PyTorch</h3>
+    <p>
+      conda manages python environments, so each project gets its own
+      python and its own packages without conflicts. Install
+      <b>Miniconda</b> (a lean version of Anaconda) by following the
+      instructions at
+      <a href="https://www.anaconda.com/docs/getting-started/miniconda/install">Miniconda installation</a>
+      for Linux (on WSL) or macOS. Then create the course environment:
+    </p>
+<pre>conda create -n labs python numpy matplotlib scikit-image
+conda activate labs
+pip install torch</pre>
+    <p>Verify that everything works:</p>
+<pre>python -c "import torch; print(torch.__version__)"</pre>
+    <p>
+      If that prints a version number, python and PyTorch are alive.
+      Remember to <code>conda activate labs</code> whenever you start
+      a new shell.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 7: Claude from the Command Line</h3>
+    <p>
+      Install <a href="https://claude.com/claude-code">Claude Code</a>
+      by following the instructions on that page, then run
+      <code>claude</code> in your shell. You now have an agentic AI
+      living in the same environment as your code. This is how you
+      will build things all semester: describe what you want, read
+      what it writes, test it, and steer.
+    </p>
+    <p>
+      If you prefer another agentic AI, that is fine too &mdash; the
+      skills transfer.
+    </p>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 2: What Is Inside a File
+    <span class="note">Steps 8 to 10.  Write a program, make an image, and read its bytes.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 8: Write and Run a python Program</h3>
+    <p>
+      This step teaches the basic cycle you will repeat all semester:
+      edit a program in the IDE, run it in the shell, and check the
+      result. Write this one yourself, without AI &mdash; it is
+      short, and you need to feel the cycle once with your own hands.
+    </p>
+    <p>
+      Open a new file with <code>code char_count.py</code> and type
+      in this program:
+    </p>
+<pre>import sys
+
+filename = sys.argv[1]
+with open(filename, "rb") as f:
+    data = f.read()
+
+print(filename, "contains", len(data), "bytes")
+for b in sorted(set(data)):
+    print("byte", b, "= hex", format(b, "02x"), "=", repr(chr(b)), "occurs", data.count(b), "times")</pre>
+    <p>Save it, then run it on the file you made in Step 2:</p>
+<pre>python char_count.py hello.txt</pre>
+    <p>
+      It prints the size of the file in bytes and, for each distinct
+      byte, its decimal value, its hex value, its ASCII character,
+      and its count. Check the total against <code>ls -l</code>.
+      They should agree exactly. Commit the script to your
+      repository.
+    </p>
+    <div class="handin" id="D3">
+      <span class="tag">HAND IN &middot; D3</span>
+      <p>
+        The output of <code>char_count.py</code> on
+        <code>hello.txt</code>, next to the matching
+        <code>ls -l</code> line.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 9: Convert an Image to Grayscale</h3>
+    <p>
+      An uncompressed grayscale image is also just bytes: one byte
+      per pixel, 0 for black up to 255 for white. In this step you
+      make one, using a python library.
+    </p>
+    <p>
+      <b>9a. Download an image.</b> The
+      <a href="https://r0k.us/graphics/kodak/">Kodak test images</a>
+      are a classic set of 24 high-quality color images released for
+      unrestricted use. Pick one and download it from your shell,
+      for example:
+    </p>
+<pre>wget https://r0k.us/graphics/kodak/kodak/kodim23.png</pre>
+    <p>
+      Check that it arrived with <code>ls -l</code>.
+    </p>
+    <p>
+      <b>9b. Write the conversion program.</b> Real work builds on
+      libraries. The scikit-image library that you installed in
+      Step 6 reads images, converts color to grayscale, and writes
+      files, all in a few lines. Open a new file with
+      <code>code convert_2_grayscale.py</code> and type in:
+    </p>
+<pre>from skimage import io, color, util
+
+img = io.imread("kodim23.png")          # color image: H x W x 3 bytes
+gray = util.img_as_ubyte(color.rgb2gray(img))   # grayscale: H x W bytes
+io.imsave("kodim23.pgm", gray)
+print(gray.shape)</pre>
+    <p>
+      <b>9c. Run it.</b>
+    </p>
+<pre>python convert_2_grayscale.py</pre>
+    <p>
+      It prints the image dimensions (height, width) and writes a new
+      file. Confirm with <code>ls -l</code> that
+      <code>kodim23.pgm</code> exists. PGM ("portable graymap") is an
+      uncompressed image format: a short ASCII header followed by
+      exactly one byte per pixel.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 10: Look Inside the Image File</h3>
+    <p>
+      You created this image, so now open it up the same way you
+      opened <code>hello.txt</code>.
+    </p>
+    <p>
+      <b>10a. Read the header.</b> Run
+      <code>xxd kodim23.pgm | head</code>. The header is ASCII, so
+      you can read it with your own eyes: "P5", then the width and
+      height as text, then 255. After that the raw pixel bytes begin.
+    </p>
+    <div class="handin" id="D4">
+      <span class="tag">HAND IN &middot; D4</span>
+      <p>
+        The first lines of <code>xxd</code> on your PGM file, with
+        the header marked.
+      </p>
+    </div>
+    <p>
+      <b>10b. Predict the file size.</b> The file should be
+      (header bytes) + height &times; width, since each pixel is one
+      byte. Compute the number from the dimensions your program
+      printed, then check it with <code>ls -l</code>. For a color
+      PPM file it would be height &times; width &times; 3, since
+      each pixel needs three bytes.
+    </p>
+    <div class="handin" id="D5">
+      <span class="tag">HAND IN &middot; D5</span>
+      <p>
+        Your file size prediction, showing the arithmetic, next to
+        the actual size from <code>ls -l</code>.
+      </p>
+    </div>
+    <p>
+      <b>10c. Commit.</b> Add <code>convert_2_grayscale.py</code>
+      and your results to your repository, commit, and push.
+    </p>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Deliverables
+    <span class="note">What to submit, and where each item comes from.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What to Hand In</h3>
+    <p>
+      Prepare a report as a single <b>PDF document</b> and submit it
+      through Brightspace. Label it clearly ("Lab 2") and include:
+    </p>
+    <ol class="handin-list">
+      <li><span class="dnum"></span>
+          Your name, and the link to your GitHub repository.</li>
+      <li><span class="dnum"><a href="#D1">D1</a></span>
+          The <code>xxd</code> output for your
+          <code>hello.txt</code>, with one sentence saying what the
+          bytes are.</li>
+      <li><span class="dnum"><a href="#D2">D2</a></span>
+          The <code>ls -l</code> sizes of <code>hello.txt</code> and
+          <code>hello.docx</code>, with one sentence saying why they
+          differ so much.</li>
+      <li><span class="dnum"><a href="#D3">D3</a></span>
+          The output of <code>char_count.py</code> on
+          <code>hello.txt</code>, next to the matching
+          <code>ls -l</code> line.</li>
+      <li><span class="dnum"><a href="#D4">D4</a></span>
+          The first lines of <code>xxd</code> on your PGM file, with
+          the header marked.</li>
+      <li><span class="dnum"><a href="#D5">D5</a></span>
+          Your file size prediction, showing the arithmetic, next to
+          the actual size from <code>ls -l</code>.</li>
+      <li><span class="dnum"></span>
+          A short paragraph on any place you used Claude to get
+          unstuck: what went wrong, and how you resolved it.</li>
+    </ol>
+    <p>
+      Screenshots of your shell are fine throughout. There is no
+      page limit, but concise and clear beats long.
+    </p>
+  </div>
+
+  <div class="card">
+    <p>
+      You now have the complete toolchain for the semester, and you
+      know what an image really is: an array of bytes. Everything
+      that follows is arithmetic on those bytes.
+    </p>
+    <p>
+      <a href="../../index.html">Back to the laboratory index</a> &middot;
+      <a href="https://engineering.purdue.edu/~bouman/ece60141/">ECE 60141</a> &middot;
+      <a href="https://engineering.purdue.edu/~bouman/ece637/">ECE 63700</a>
+    </p>
+  </div>
+
+  </div>
+</details>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  var text = btn.nextElementSibling.innerText;
+  function done() {
+    var old = btn.textContent;
+    btn.textContent = "Copied";
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done);
+  } else {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    done();
+  }
+}
+
+function toggleAll(btn) {
+  var open = btn.textContent.indexOf("Open") === 0;
+  var list = document.querySelectorAll("details.module");
+  for (var i = 0; i < list.length; i++) { list[i].open = open; }
+  btn.textContent = open ? "Close all" : "Open all";
+}
+
+function revealHash() {
+  if (!location.hash) { return; }
+  var el = document.querySelector(location.hash);
+  if (!el) { return; }
+  var p = el.parentElement;
+  while (p) {
+    if (p.tagName === "DETAILS") { p.open = true; }
+    p = p.parentElement;
+  }
+  el.scrollIntoView();
+}
+window.addEventListener("load", revealHash);
+window.addEventListener("hashchange", revealHash);
+</script>
+
+</body>
+</html>

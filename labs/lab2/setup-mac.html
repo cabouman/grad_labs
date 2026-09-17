@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 0: Mac Setup</title>
+<style>
+  html { background: #faf8f4; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         background: #faf8f4; color: #222; line-height: 1.5; }
+  .band { background: #cfb991; border-bottom: 4px solid #000;
+          padding: 24px 16px 18px 16px; text-align: center; }
+  .band h2 { margin: 0 0 6px 0; font-size: 1.0em; font-weight: normal; color: #3d3324; }
+  .band h1 { margin: 0; font-size: 1.5em; color: #000; }
+  .container { max-width: 760px; margin: 28px auto; padding: 0 16px; }
+  .card { background: #fff; border: 1px solid #e3dccb; border-radius: 10px;
+          padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; color: #000; border-bottom: 2px solid #cfb991; padding-bottom: 6px; }
+  a { color: #8a6d1d; text-decoration: none; }
+  a:hover { color: #000; text-decoration: underline; }
+  ul, ol { margin: 8px 0; }
+  li { padding: 3px 0; }
+  code { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 4px;
+         padding: 1px 5px; font-size: 0.95em; }
+  pre { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 6px;
+        padding: 12px 14px; overflow-x: auto; font-size: 0.92em; line-height: 1.4; }
+  .tip { background: #f6f3ea; border-left: 4px solid #cfb991; padding: 10px 14px;
+         margin: 12px 0; font-size: 0.97em; }
+</style>
+</head>
+<body>
+
+<div class="band">
+  <h2>Lab 2: Background</h2>
+  <h1>Mac Setup: iTerm2 and Homebrew</h1>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h3>Good News</h3>
+    <p>
+      macOS is Unix underneath, so your Mac already has a shell and
+      most of what this class needs. You just need a good terminal
+      and a package manager.
+    </p>
+    <div class="tip">
+      Your Mac's default shell is zsh rather than bash. For
+      everything in this class the commands are identical, so don't
+      worry about the difference.
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 1: Install iTerm2</h3>
+    <p>
+      The built-in Terminal app works, but
+      <a href="https://iterm2.com/">iTerm2</a> is nicer. Download
+      it, drag it to Applications, and open it. You should see a
+      prompt ending in <code>%</code>. That is your shell.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 2: Install Homebrew</h3>
+    <p>
+      <a href="https://brew.sh/">Homebrew</a> is the standard
+      package manager for the Mac. Follow the one-line install
+      command on its home page, and let it install the Xcode command
+      line tools if it asks (that also gives you git).
+    </p>
+    <p>Then install the small tools the lab uses:</p>
+<pre>brew install git</pre>
+    <p>
+      That is the pattern for anything else you ever need:
+      <code>brew install &lt;name&gt;</code>. The <code>xxd</code>
+      and <code>nano</code> commands used in the lab are already on
+      your Mac.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>If Anything Goes Wrong</h3>
+    <p>
+      Copy the exact error message and ask Claude (or paste it into
+      claude.ai until you have Claude Code installed). Homebrew
+      problems are common and almost always quickly solved.
+    </p>
+    <p><a href="index.html">Back to Lab 0</a></p>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installing a Markdown Editor</title>
+<style>
+  html { background: #faf8f4; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         background: #faf8f4; color: #222; line-height: 1.5; }
+  .band { background: #cfb991; border-bottom: 4px solid #000;
+          padding: 24px 16px 18px 16px; text-align: center; }
+  .band h2 { margin: 0 0 6px 0; font-size: 1.0em; font-weight: normal; color: #3d3324; }
+  .band h1 { margin: 0; font-size: 1.5em; color: #000; }
+  .band a { color: #000; }
+  .container { max-width: 760px; margin: 28px auto; padding: 0 16px; }
+  .card { background: #fff; border: 1px solid #e3dccb; border-radius: 10px;
+          padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; color: #000; border-bottom: 2px solid #cfb991; padding-bottom: 6px; }
+  a { color: #8a6d1d; text-decoration: none; }
+  a:hover { color: #000; text-decoration: underline; }
+  code { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 4px;
+         padding: 1px 5px; font-size: 0.92em; }
+  ul { margin: 8px 0; }
+  li { padding: 3px 0; }
+</style>
+</head>
+<body>
+
+<div class="band">
+  <h2>ECE 60141 and ECE 63700</h2>
+  <h1>Installing a Markdown Editor</h1>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h3>What Markdown Is</h3>
+    <p>
+      <b>Markdown</b> is plain text with a few simple conventions:
+      <code>#</code> starts a heading, <code>-</code> starts a bullet,
+      <code>**bold**</code> makes bold text. A Markdown file has the
+      extension <code>.md</code>, and it is an ordinary ASCII text
+      file &mdash; you can read it in any editor. A Markdown editor
+      simply adds a formatted preview alongside the text.
+    </p>
+    <p>
+      Markdown is the standard format for writing instructions to an
+      AI assistant, and we will use it throughout the course.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Two Ways to Go</h3>
+    <p>
+      You have two good options, and either one is fine for this
+      course:
+    </p>
+    <ul>
+      <li><b>A lightweight Markdown editor.</b> A small app that does
+          one thing: it shows the Markdown text and the formatted
+          result side by side. Easiest to learn, and all you need for
+          writing prompts. The recommended app differs by
+          platform &mdash; see below.</li>
+      <li><b>VS Code.</b> A full programming editor that also
+          previews Markdown. It is heavier, but it is the same editor
+          we recommend for python later in the course, so one install
+          serves the whole semester.</li>
+    </ul>
+    <p>
+      If you are unsure, start with the lightweight editor. You can
+      always add VS Code in Lab 2.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Option 1: A Lightweight Editor</h3>
+    <ul>
+      <li><b>Mac:</b> <a href="https://macdown.uranusjr.com/">MacDown</a>
+          (free). Download it, open the disk image, and drag MacDown
+          into your Applications folder. If macOS refuses to open it
+          the first time, right-click the app and choose Open.</li>
+      <li><b>Windows:</b>
+          <a href="https://ghostwriter.kde.org/">ghostwriter</a>
+          (free). Download the Windows installer from the ghostwriter
+          page and run it.</li>
+      <li><b>Linux:</b>
+          <a href="https://ghostwriter.kde.org/">ghostwriter</a>
+          (free). Install it with your package manager, for example
+          <code>sudo apt install ghostwriter</code> on Ubuntu.</li>
+    </ul>
+    <p>
+      MacDown shows the text and the formatted result in two panes at
+      once. In ghostwriter, open the preview pane from the View menu
+      (or press F9).
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Option 2: VS Code</h3>
+    <p>
+      <a href="https://code.visualstudio.com/">Visual Studio Code</a>
+      is free and runs on all three platforms.
+    </p>
+    <ul>
+      <li><b>Mac:</b> download the app from
+          <a href="https://code.visualstudio.com/">code.visualstudio.com</a>,
+          open the downloaded file, and drag VS Code into your
+          Applications folder.</li>
+      <li><b>Windows:</b> download the installer from
+          <a href="https://code.visualstudio.com/">code.visualstudio.com</a>
+          and run it, accepting the defaults.</li>
+      <li><b>Linux:</b> download the <code>.deb</code> or
+          <code>.rpm</code> package from
+          <a href="https://code.visualstudio.com/">code.visualstudio.com</a>
+          and install it with your package manager, or use
+          <code>sudo snap install --classic code</code>.</li>
+    </ul>
+    <p>
+      To preview a Markdown file in VS Code, press
+      <b>Cmd+Shift+V</b> on a Mac or <b>Ctrl+Shift+V</b> on Windows
+      or Linux.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Try It</h3>
+    <p>
+      Whichever editor you chose, create a new file, save it as
+      <code>test.md</code>, and type a heading and a few bullets:
+    </p>
+    <p>
+      <code># My Test File</code><br>
+      <code>- first item</code><br>
+      <code>- second item</code>
+    </p>
+    <p>
+      Open the preview. You should see your text formatted, with the
+      heading large and the bullets indented. You now have a working
+      Markdown editor.
+    </p>
+    <p><a href="../../index.html">Back to the laboratory index</a></p>
+  </div>
+
+</div>
+
+</body>
+</html>

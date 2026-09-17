@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 2: IDE Installation</title>
+<style>
+  html { background: #faf8f4; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         background: #faf8f4; color: #222; line-height: 1.5; }
+  .band { background: #cfb991; border-bottom: 4px solid #000;
+          padding: 24px 16px 18px 16px; text-align: center; }
+  .band h2 { margin: 0 0 6px 0; font-size: 1.0em; font-weight: normal; color: #3d3324; }
+  .band h1 { margin: 0; font-size: 1.5em; color: #000; }
+  .container { max-width: 760px; margin: 28px auto; padding: 0 16px; }
+  .card { background: #fff; border: 1px solid #e3dccb; border-radius: 10px;
+          padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; color: #000; border-bottom: 2px solid #cfb991; padding-bottom: 6px; }
+  a { color: #8a6d1d; text-decoration: none; }
+  a:hover { color: #000; text-decoration: underline; }
+  ul, ol { margin: 8px 0; }
+  li { padding: 3px 0; }
+  code { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 4px;
+         padding: 1px 5px; font-size: 0.95em; }
+</style>
+</head>
+<body>
+
+<div class="band">
+  <h2>Lab 2: Background</h2>
+  <h1>Installing an IDE</h1>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h3>VS Code (recommended)</h3>
+    <ol>
+      <li>Download and install from
+          <a href="https://code.visualstudio.com/">code.visualstudio.com</a>.</li>
+      <li><b>Windows:</b> open VS Code, go to Extensions (the blocks
+          icon on the left), search for "WSL", and install the WSL
+          extension. This lets VS Code edit the files inside your
+          Linux system. From your Ubuntu shell, type
+          <code>code .</code> to open the current directory.</li>
+      <li><b>Mac:</b> open VS Code, press Cmd-Shift-P, type "shell
+          command", and select <b>Shell Command: Install 'code'
+          command in PATH</b>. After that, <code>code filename</code>
+          works from your shell.</li>
+      <li>Install the "Python" extension (same Extensions panel) for
+          syntax coloring and running python code.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>PyCharm Professional (free for Purdue students)</h3>
+    <ol>
+      <li>Sign up for the
+          <a href="https://www.jetbrains.com/academy/student-pack/">JetBrains
+          student pack</a> using your purdue.edu email address. This
+          gives you the Professional edition at no cost.</li>
+      <li>Download and install
+          <a href="https://www.jetbrains.com/pycharm/download/">PyCharm
+          Professional</a> and sign in with your JetBrains account.</li>
+      <li><b>Windows:</b> in a new project's interpreter settings,
+          choose "WSL" so PyCharm uses the python inside your Linux
+          system.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <p>
+      Either IDE is fine. The lab instructions assume VS Code and its
+      <code>code</code> command; PyCharm users open files through the
+      PyCharm interface instead.
+    </p>
+    <p><a href="index.html">Back to Lab 2</a></p>
+  </div>
+
+</div>
+
+</body>
+</html>
