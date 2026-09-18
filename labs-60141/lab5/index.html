@@ -835,18 +835,19 @@ def denoise_dnn(v, sigma_n):
       </p>
     </div>
     <p>
-      <b>Task 11a. Sweep the denoiser noise level \(\sigma_n\).</b> Repeat the
-      DRUNet run for \( \sigma_n \in \{0.02,\ 0.05,\ 0.08\} \), keeping
-      \( \sigma_p = 0.05 \) and everything else fixed. Report the RMSE of each
+      <b>Task 11a. Sweep the forward-model prox parameter \(\sigma_p\).</b>
+      Repeat the DRUNet run for \( \sigma_p \in \{0.025,\ 0.05,\ 0.10\} \) &mdash;
+      the good value \(0.05\), and then halved and doubled &mdash; keeping
+      \( \sigma_n = 0.03 \) and everything else fixed. Report the RMSE of each
       and show the three crops.
     </p>
     <div class="handin" id="D6">
       <span class="tag">HAND IN &middot; D6</span>
       <p>
-        The three crops from the \(\sigma_n\) sweep with their RMSE values,
-        and two sentences on what \(\sigma_n\) controls here. Note that
-        \(\sigma_n\) is a parameter of the algorithm and not of any model, and
-        say what that means for how you would choose it in practice.
+        The three crops from the \(\sigma_p\) sweep with their RMSE values, and
+        two sentences on what \(\sigma_p\) controls: which direction
+        over-regularizes and which under-regularizes, and what that means for
+        choosing \(\sigma_p\) in practice.
       </p>
     </div>
   </div>
@@ -994,7 +995,7 @@ def denoise_dnn(v, sigma_n):
       <li><span class="dnum"><a href="#D5">D5</a></span>
           The error table and the convergence plot.</li>
       <li><span class="dnum"><a href="#D6">D6</a></span>
-          The \(\sigma_n\) sweep crops with RMSE, and two sentences.</li>
+          The \(\sigma_p\) sweep crops with RMSE, and two sentences.</li>
       <li><span class="dnum"><a href="#D7">D7</a></span>
           The equilibrium conditions, the residuals, the
           \(\sigma_p = \sigma_n\) crops, and three sentences.</li>
