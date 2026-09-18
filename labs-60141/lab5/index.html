@@ -105,11 +105,19 @@
       function, and the answer was defined before the algorithm existed.
       After the swap there is no cost function. The algorithm still
       converges and the pictures still improve, but what it converges to
-      is a new question. Step 8 asks you to answer it for your own code.
+      is a new question. Step 12 asks you to answer it for your own code.
     </p>
     <p>
       The background is Chapter 9.5 on variable splitting and ADMM, and
       Chapter 10 on plug-and-play. The notation here matches the book.
+    </p>
+    <p>
+      Plug-and-play was introduced in
+      <a href="https://engineering.purdue.edu/~bouman/publications/orig-pdf/GlobalSIP2013a.pdf">S.&nbsp;V.&nbsp;Venkatakrishnan, C.&nbsp;A.&nbsp;Bouman, and B.&nbsp;Wohlberg, &ldquo;Plug-and-Play Priors for Model Based Reconstruction,&rdquo; IEEE GlobalSIP, 2013</a>.
+      The consensus-equilibrium view used in Step 3 is
+      <a href="https://engineering.purdue.edu/~bouman/publications/orig-pdf/SIIMS01.pdf">G.&nbsp;T.&nbsp;Buzzard, S.&nbsp;H.&nbsp;Chan, S.&nbsp;Sreehari, and C.&nbsp;A.&nbsp;Bouman, &ldquo;Plug-and-Play Unplugged: Optimization-Free Reconstruction using Consensus Equilibrium,&rdquo; SIAM J. Imaging Sci., 2018</a>.
+      A recent overview is
+      <a href="https://engineering.purdue.edu/~bouman/publications/orig-pdf/spm2023.pdf">U.&nbsp;S.&nbsp;Kamilov, C.&nbsp;A.&nbsp;Bouman, G.&nbsp;T.&nbsp;Buzzard, and B.&nbsp;Wohlberg, &ldquo;Plug-and-Play Methods for Integrating Physical and Learned Models in Computational Imaging,&rdquo; IEEE Signal Processing Magazine, 2023</a>.
     </p>
   </div>
 
@@ -161,14 +169,17 @@ unzip levin09_kernels.zip</pre>
           returns.</li>
       <li>Everything in <code>float64</code>. No <code>for</code> loop over
           pixels.</li>
+      <li>Step 9 uses the <code>deepinv</code> package for the pretrained
+          denoiser. Install it once with <code>pip install deepinv</code>.</li>
       <li>Fix the random seed for the noise and report it.</li>
     </ul>
     <div class="tip">
-      <b>Three sigmas, three jobs.</b> This lab has \(\sigma_w\), the noise
-      standard deviation in the data; \(\sigma_x\), the scale of the prior;
-      and \(\sigma\), a new one. The new \(\sigma\) belongs to the
-      algorithm, not to any model. Step 2 says what it does. Keep the three
-      apart in your code and in your report.
+      <b>Four sigmas, four jobs.</b> This lab has \(\sigma_w\), the noise
+      standard deviation in the data; \(\sigma_x\), the scale of the QGGMRF
+      prior; \(\sigma_p\), the forward-model proximal parameter; and
+      \(\sigma_n\), the noise level the denoiser assumes. \(\sigma_w\) and
+      \(\sigma_x\) describe models; \(\sigma_p\) and \(\sigma_n\) belong to the
+      algorithm. Keep all four apart in your code and in your report.
     </div>
   </div>
 
@@ -176,8 +187,8 @@ unzip levin09_kernels.zip</pre>
 </details>
 
 <details class="module">
-  <summary>Module 1: Splitting the Problem in Two
-    <span class="note">Steps 1 to 3.  Proximal maps, and the one that has a closed form.</span>
+  <summary>Module 1: Splitting and the PnP Algorithm
+    <span class="note">Steps 1 to 5.  The proximal maps, the PnP algorithm, and its equilibrium.</span>
   </summary>
   <div class="modulebody">
 
@@ -214,17 +225,23 @@ unzip levin09_kernels.zip</pre>
       the two terms, define
     </p>
     $$
-    F(x) = \arg\min_v \left\{ f(v)
-             + \frac{1}{2\sigma^2} \| v - x \|^2 \right\} \ , \qquad
-    H(x) = \arg\min_v \left\{ h(v)
-             + \frac{1}{2\sigma^2} \| v - x \|^2 \right\} \ ,
+    \begin{aligned}
+    F(v) &= \arg\min_x \left\{ f(x)
+             + \frac{1}{2\sigma_p^2} \| x - v \|^2 \right\} \ , \\[4pt]
+    H(v) &= \arg\min_x \left\{ h(x)
+             + \frac{1}{2\sigma_n^2} \| x - v \|^2 \right\} \ .
+    \end{aligned}
     \tag{2}
     $$
     <p>
-      where \(\sigma\) is a parameter you choose. Read \(F(x)\) as a
-      question: starting from the image \(x\), where should I move to reduce
-      \(f\), without going far? Small \(\sigma\) means stay close to \(x\).
-      Large \(\sigma\) means go most of the way to the minimum of \(f\).
+      Read \(F(v)\) as a question: starting from the image \(v\), where should
+      I move to reduce \(f\), without going far? The parameter \(\sigma_p\)
+      sets how far. Small \(\sigma_p\) stays close to \(v\); large
+      \(\sigma_p\) goes most of the way to the minimum of \(f\). \(H(v)\) asks
+      the same of the prior term \(h\), with its own parameter \(\sigma_n\).
+      In the plain ADMM of Chapter 9 these two are one shared penalty
+      parameter; this lab keeps them separate, \(\sigma_p\) for the forward
+      model and \(\sigma_n\) for the denoiser, so you can tune each on its own.
     </p>
     <p>
       This is a change in kind, and it is the reason the chapter exists. A
@@ -234,166 +251,20 @@ unzip levin09_kernels.zip</pre>
       the other.
     </p>
     <div class="tip">
-      <b>Look at what \(H\) actually is.</b> Write \(h(v) = -\log p(v)\) for
-      the prior. Then (2) says that \(H(x)\) is the MAP estimate of an image
-      whose prior is \(p\), given a measurement \(x\) corrupted by white
-      Gaussian noise of standard deviation \(\sigma\). In other words, the
-      proximal map of a prior is a <b>MAP denoiser</b>. You built one in
-      Lab 4 and called it a restoration with \(A = I\).
+      <b>Look at what \(H\) actually is.</b> Write \(h(x) = -\log p(x)\) for
+      the prior. Then (2) says that \(H(v)\) is the MAP estimate of an image
+      whose prior is \(p\), given a measurement \(v\) corrupted by white
+      Gaussian noise of standard deviation \(\sigma_n\). In other words, the
+      proximal map of a prior is a <b>MAP denoiser</b>, and \(\sigma_n\) is
+      the noise level it assumes. You built one in Lab 4 with \(A = I\).
     </div>
   </div>
 
   <div class="card">
-    <h3>Step 3: \(F\) Has a Closed Form</h3>
+    <h3>Step 3: The PnP Algorithm and Its Equilibrium</h3>
     <p>
-      \(f\) is quadratic, so the minimization in (2) is a linear system. Set
-      the gradient to zero:
-    </p>
-    $$
-    \left( \frac{1}{\sigma_w^2} A^t A + \frac{1}{\sigma^2} I \right) v
-      = \frac{1}{\sigma_w^2} A^t y + \frac{1}{\sigma^2} x \ .
-    \tag{3}
-    $$
-    <p>
-      In Lab 3 you chose circular boundaries for \(A\), and now that choice
-      pays. Circular convolution is diagonalized by the DFT, so (3) becomes
-      a division, one entry at a time:
-    </p>
-    $$
-    \hat{V} = \frac{ \overline{\hat{a}} \, \hat{Y} / \sigma_w^2
-                   + \hat{X} / \sigma^2 }
-                  { | \hat{a} |^2 / \sigma_w^2 + 1 / \sigma^2 } \ ,
-    \tag{4}
-    $$
-    <p>
-      where a hat denotes the 2-D DFT, \(\hat{a}\) is the DFT of the blur
-      kernel embedded in an array the size of the image, and the bar is
-      complex conjugation. No iteration, no step size, and no convergence to
-      worry about. \(F\) is exact.
-    </p>
-    <p>Write these two functions.</p>
-    <div class="codeblock">
-      <button class="copy" onclick="copyCode(this)">Copy</button>
-<pre>def kernel_dft(a, shape):
-    """Return the DFT of the blur kernel, sized to the image.
-
-    Embed a in a zero array of the given shape, positioned so that this
-    DFT represents the same circular convolution as forward() in Lab 3,
-    then take the 2-D DFT.
-
-    a        (Ka, Kb) float64 tensor, odd sized
-    shape    (H, W), the image shape
-    returns  (H, W) complex128 tensor
-    """
-
-
-def prox_data(x, y, a_hat, sigma_w, sigma):
-    """Return F(x), the proximal map of the forward model term, using (4).
-
-    x        (H, W) float64 tensor, the point the map is anchored at
-    y        (H, W) float64 tensor, the measured data
-    a_hat    (H, W) complex128 tensor from kernel_dft
-    sigma_w  float, the noise standard deviation
-    sigma    float, the proximal parameter
-    returns  (H, W) float64 tensor
-    """</pre>
-    </div>
-    <div class="tip">
-      <b>Getting the centering right.</b> The kernel has to sit in the array
-      so that its center lands at index \((0,0)\), with the rest wrapping
-      around. If you place it wrong, the blur shifts and every image after
-      it is shifted too. Task 3a below catches that, and it catches it in
-      one number, which is much easier than staring at pictures.
-    </div>
-    <p>
-      <b>Task 3a. Check the DFT operator against Lab 3.</b> For a random
-      image \(u\), compare
-      <code>ifft2(fft2(u) * a_hat).real</code> with
-      <code>forward(u, a)</code> from Lab 3. Report the largest absolute
-      difference. It should be at the level of round-off.
-    </p>
-    <p>
-      <b>Task 3b. See what \(F\) does on its own.</b> Form the blurred noisy
-      data \( y = Ax + w \) with kernel 1 and \(\sigma_w = 0.02\). Compute
-      \(F(y)\) for \(\sigma = 0.01\) and for \(\sigma = 1.0\), and display
-      both next to \(y\).
-    </p>
-    <div class="handin" id="D1">
-      <span class="tag">HAND IN &middot; D1</span>
-      <p>
-        The three images \(y\), \(F(y)\) at \(\sigma = 0.01\), and \(F(y)\)
-        at \(\sigma = 1.0\), with the number from Task 3a. Add two sentences
-        explaining what \(\sigma\) did, and why the large \(\sigma\) result
-        looks the way it does even though it fits the data better.
-      </p>
-    </div>
-  </div>
-
-  </div>
-</details>
-
-<details class="module">
-  <summary>Module 2: Plugging In a Denoiser
-    <span class="note">Steps 4 to 6.  Two denoisers, and the algorithm that uses them.</span>
-  </summary>
-  <div class="modulebody">
-
-  <div class="card">
-    <h3>Step 4: The Denoiser You Already Have</h3>
-    <p>
-      By Step 2, \(H\) is a MAP denoiser for the prior. For the QGGMRF prior
-      of Lab 4 that means
-    </p>
-    $$
-    H(x) = \arg\min_v \left\{
-      \frac{1}{2\sigma^2} \| v - x \|^2
-      + \sum_{ \{s,r\} \in \mathcal{P} } b_{s,r} \, \rho( v_s - v_r )
-      \right\} \ ,
-    \tag{5}
-    $$
-    <p>
-      with the QGGMRF potential from Lab 4, repeated here so you do not have
-      to go looking:
-    </p>
-    $$
-    \rho( \Delta ) =
-    \frac{ |\Delta|^p }{ p\,\sigma_x^p }
-    \left(
-      \frac{ \left| \frac{\Delta}{T \sigma_x} \right|^{q-p} }
-           { 1 + \left| \frac{\Delta}{T \sigma_x} \right|^{q-p} }
-    \right) \ .
-    \tag{6}
-    $$
-    <p>
-      This is the Lab 4 problem with the blur removed. Solve it the same
-      way, with majorization on the outside and gradient descent on the
-      inside. If your Lab 4 code is organized into functions you can call,
-      call them. If it is not, this is a good moment to fix that.
-    </p>
-    <div class="codeblock">
-      <button class="copy" onclick="copyCode(this)">Copy</button>
-<pre>def denoise_qggmrf(x, sigma, sigma_x, p, q, T, num_iters):
-    """Return H(x), the MAP denoiser of equation (5).
-
-    x          (H, W) float64 tensor, the noisy image
-    sigma      float, the noise level the denoiser assumes
-    sigma_x    float, the prior scale
-    p, q, T    floats, the QGGMRF parameters of equation (6)
-    num_iters  int, outer majorization iterations
-    returns    (H, W) float64 tensor
-    """</pre>
-    </div>
-    <p>
-      Use \(q = 2\), \(p = 1.2\), and \(T = 0.1\) throughout this lab,
-      which are the baseline values from Lab 4.
-    </p>
-  </div>
-
-  <div class="card">
-    <h3>Step 5: PnP-ADMM</h3>
-    <p>
-      Now the two agents are put in a loop. Applying ADMM to the split
-      problem gives three lines:
+      Put the two proximal maps in a loop. Applying ADMM to the split cost (1)
+      gives three lines, and this loop is the whole algorithm:
     </p>
     <div class="codeblock">
       <button class="copy" onclick="copyCode(this)">Copy</button>
@@ -406,28 +277,496 @@ def prox_data(x, y, a_hat, sigma_w, sigma):
       u = u + (x - v)</pre>
     </div>
     <p>
-      Read the loop as a negotiation between two parties who never speak
-      the same language. \(F\) knows about the camera and nothing about
-      images. \(H\) knows about images and nothing about the camera. The
-      vector \(u\) is the running record of how far apart they are, and it
-      is what forces them to agree in the end.
+      Read it as a negotiation between two parties who never speak the same
+      language. \(F\) knows the camera and nothing about images; \(H\) knows
+      images and nothing about the camera. The vector \(u\) is the running
+      record of how far apart they are, and it is what forces them to agree.
     </p>
     <p>
-      When \(F\) and \(H\) are both proximal maps, this is exactly the ADMM
-      algorithm of Chapter 9, and at convergence \(x = v\) is the minimizer
-      of (1). Nothing has been given up yet.
+      <b>The equilibrium.</b> Ask what the loop settles on. At a fixed point the
+      last line, \( u \leftarrow u + (x - v) \), leaves \(u\) unchanged, so
+      \( x = v \). Write \(x^*\) for that common value and \(u^*\) for the final
+      \(u\). The first two lines then read
+    </p>
+    $$
+    x^* = F( x^* - u^* ) \ , \qquad x^* = H( x^* + u^* ) \ ,
+    \tag{3}
+    $$
+    <p>
+      or, equivalently, \( F(x^* - u^*) = H(x^* + u^*) \): the forward-model
+      agent and the denoiser agent return the same image when each is offset
+      from \(x^*\) by \(\mp u^*\). These are the <b>consensus equilibrium</b>
+      (CE) conditions of Chapter 10. They, not a cost function, are what defines
+      the solution \(x^*\). The next two steps ask what this solution is
+      (Step 4), and how the loop reaches it (Step 5).
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 4: What the Equilibrium Is</h3>
+    <p>
+      <b>When both maps are proximal maps, the equilibrium is the MAP estimate.</b>
+      Suppose \(F\) and \(H\) are the proximal maps of \(f\) and \(h\), and give
+      them the same parameter, \( \sigma_p = \sigma_n = \sigma \). The first
+      condition, \( x^* = F(x^* - u^*) \), says \(x^*\) is the image that
+      minimizes \( f(x) + \frac{1}{2\sigma^2}\| x - (x^* - u^*) \|^2 \). Setting
+      the gradient of that to zero at \(x^*\),
+    </p>
+    $$
+    \nabla f(x^*) + \frac{1}{\sigma^2}\bigl( x^* - (x^* - u^*) \bigr)
+      = \nabla f(x^*) + \frac{1}{\sigma^2} u^* = 0 \ .
+    $$
+    <p>The second condition, \( x^* = H(x^* + u^*) \), gives the same way</p>
+    $$
+    \nabla h(x^*) + \frac{1}{\sigma^2}\bigl( x^* - (x^* + u^*) \bigr)
+      = \nabla h(x^*) - \frac{1}{\sigma^2} u^* = 0 \ .
+    $$
+    <p>Add the two equations. The \(u^*\) terms cancel:</p>
+    $$
+    \nabla f(x^*) + \nabla h(x^*) = 0 \ .
+    $$
+    <p>
+      So \(x^*\) is a stationary point of \( f + h \) &mdash; the same image that
+      minimizes the MAP cost (1). The equilibrium (3) and the optimization of (1)
+      have the same solution, and the extra vector is just the scaled gradient,
+      \( u^* = -\sigma^2 \nabla f(x^*) \). This is the ADMM of Chapter 9; nothing
+      has been given up.
+    </p>
+    <p>
+      <b>When \(H\) is a general denoiser, only an equilibrium is left.</b> The
+      point of plug-and-play is to replace \(H\) with an action &mdash; a
+      denoiser designed or trained to remove white Gaussian noise &mdash; that is
+      not the proximal map of any prior. Moreau's theorem says an operator is the
+      proximal map of a proper closed convex cost only if it has two properties:
+      it is nonexpansive, and it is a gradient, meaning \( H = \nabla \phi \) for
+      some scalar function \(\phi\). A trained denoiser is generally not a
+      gradient &mdash; its Jacobian is not symmetric &mdash; and its
+      nonexpansiveness cannot be checked. So there is no cost (1) to minimize, and
+      \(x^*\) is defined only by the equilibrium (3). This is the central idea of
+      the lab: an ADMM-shaped loop whose \(H\) is not a proximal map, solving an
+      equilibrium rather than an optimization.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 5: The Fixed Point and the Mann Iteration</h3>
+    <p>
+      Does the loop reach the equilibrium (3), and is the three-line form the
+      best way to reach it? Reorganize (3) into a fixed-point equation. Change
+      variables to \( w_1 = x - u \) and \( w_2 = x + u \). The two equilibrium
+      conditions become
+    </p>
+    $$
+    ( 2F - I )\, w_1^* = w_2^* \ , \qquad ( 2H - I )\, w_2^* = w_1^* \ ,
+    $$
+    <p>
+      where the reflected operator \( 2F - I \) sends the anchor to twice
+      \(F\)'s output minus itself, and likewise \( 2H - I \). Substituting
+      \(w_2^*\) into the second equation leaves a fixed point of the single
+      operator \( T = ( 2H - I )( 2F - I ) \),
+    </p>
+    $$
+    T w_1^* = w_1^* \ , \qquad T = ( 2H - I )( 2F - I ) \ .
+    \tag{4}
+    $$
+    <p>
+      There are robust algorithms for finding a fixed point of an operator. We
+      use the <b>Mann iteration</b>,
+    </p>
+    $$
+    w_1 \leftarrow ( 1 - \rho )\, w_1 + \rho\, T w_1 \ , \qquad \rho \in ( 0, 1 ) \ .
+    $$
+    <p>
+      Once it converges, recover the reconstruction from
+      \( w_2^* = ( 2F - I ) w_1^* \) and \( x^* = ( w_1^* + w_2^* ) / 2 \). In
+      full:
     </p>
     <div class="codeblock">
       <button class="copy" onclick="copyCode(this)">Copy</button>
-<pre>def pnp_admm(y, a_hat, denoiser, sigma_w, sigma, num_iters):
+<pre>PnP with Mann iteration
+
+  Initialize w1
+  Until converged:
+      w1_new = (2H - I)(2F - I) w1     # apply F, then H, with reflections
+      w1     = (1 - rho) * w1 + rho * w1_new
+  w2 = (2F - I) w1
+  x  = (w1 + w2) / 2
+  Return x</pre>
+    </div>
+    <p>
+      When \( \rho = \tfrac{1}{2} \) this is exactly the PnP-ADMM loop of Step 3.
+      Larger \(\rho\) takes a longer step toward the fixed point and usually
+      converges faster; \( \rho = 0.8 \) is a common practical choice.
+    </p>
+    <p>
+      <b>Convergence.</b> The guarantee, from Chapter 10 and the
+      proximal-operator appendix, is this: <b>if \(T\) is nonexpansive and has a
+      fixed point, the Mann iteration converges to a solution of the equilibrium
+      (3).</b> A proximal map is firmly nonexpansive, which makes its reflected
+      operator \( 2H - I \) nonexpansive, so when \(F\) and \(H\) are proximal
+      maps \(T\) is nonexpansive and convergence is assured.
+    </p>
+    <p>
+      <b>The catch.</b> For a trained denoiser you cannot check that \(T\) is
+      nonexpansive; it would mean bounding the network's response over all image
+      pairs. So the theorem does not apply, and the faster-with-larger-\(\rho\)
+      behavior comes with no guarantee either &mdash; one reviewer of the
+      original paper renamed the method &ldquo;plug-and-pray.&rdquo; In practice
+      the loop almost always converges, and you confirm it empirically, which you
+      do in Module 4.
+    </p>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 2: The Forward Model: Linear and Shift-Invariant
+    <span class="note">Steps 6 and 7.  Computing F(v) for a linear A, and by FFT.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 6: The Forward Model, Any Linear A</h3>
+    <p>
+      \(f\) is quadratic, so the minimization in (2) is a linear system.
+      Setting the gradient of
+      \( \frac{1}{2\sigma_w^2}\|y-Ax\|^2 + \frac{1}{2\sigma_p^2}\|x-v\|^2 \)
+      with respect to \(x\) to zero gives
+    </p>
+    $$
+    M x = \frac{1}{\sigma_w^2} A^t y + \frac{1}{\sigma_p^2} v \ , \qquad
+    M = \frac{1}{\sigma_w^2} A^t A + \frac{1}{\sigma_p^2} I \ ,
+    \tag{5}
+    $$
+    <p>
+      and \( F(v) \) is the solution \(x\).
+    </p>
+    <p>
+      Take \(A\) to be any linear
+      operator. From (5),
+      \( F(v) = M^{-1}\!\left( \frac{1}{\sigma_w^2} A^t y
+      + \frac{1}{\sigma_p^2} v \right) \). Rewrite it so the answer is the
+      anchor \(v\) plus a correction. Add and subtract
+      \( \frac{1}{\sigma_w^2} A^t A v \) on the right-hand side of (5):
+    </p>
+    $$
+    \frac{1}{\sigma_w^2} A^t y + \frac{1}{\sigma_p^2} v
+    = \frac{1}{\sigma_w^2} A^t ( y - A v )
+    + \underbrace{\left( \frac{1}{\sigma_w^2} A^t A
+      + \frac{1}{\sigma_p^2} I \right)}_{M} v \ .
+    $$
+    <p>
+      Multiplying through by \( M^{-1} \) gives the closed form for \(F\):
+    </p>
+    $$
+    F(v) = v + M^{-1}\, \frac{1}{\sigma_w^2}\, A^t ( y - A v ) \ .
+    \tag{6}
+    $$
+    <p>
+      This is the form to remember. \(F\) keeps the anchor image \(v\) and
+      adds a correction built from the <b>data error</b> \( y - A v \):
+      back-project the error with \( A^t \), then filter it with \( M^{-1} \).
+      In particular, if \( A v = y \) exactly, the data error is zero, the
+      correction vanishes, and \( F(v) = v \): any image that already
+      reproduces the data is a fixed point of the proximal map. More generally,
+      the closer \(v\) is to fitting the data the less \(F\) moves it, and the
+      further away, the larger the correction. A current estimate plus a
+      filtered back-projection of the data residual is the shape of nearly
+      every model-based update in this course. Nothing in (6) used any special structure of \(A\), so it holds
+      for any linear forward model. For a general \(A\), the one hard part is
+      applying \( M^{-1} \), which means solving the linear system (5).
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 7: Computing F(v) by FFT</h3>
+    <p>
+      Now let \(A\) be the blur: a linear shift-invariant filter, applied with
+      the circular boundaries you chose in Lab 3. This one structural fact turns
+      \( M^{-1} \) from a matrix inverse into a division, and \(F\) into a few
+      FFTs. The rest of this step builds that, one piece at a time.
+    </p>
+    <p>
+      <b>Circular convolution becomes multiplication.</b> The convolution
+      theorem says that circular convolution in the image domain is pointwise
+      multiplication in the DFT domain. Let \(\hat{a}\) be the 2-D DFT of the
+      blur kernel, placed in an array the size of the image with its center at
+      index \((0,0)\) (the code below does that placement). Writing a hat for
+      the 2-D DFT and \(\odot\) for the entrywise product, applying the blur is
+      a multiply,
+    </p>
+    $$
+    \widehat{A u} = \hat{a} \odot \hat{u} \ .
+    $$
+    <p>
+      The adjoint \(A^t\) is the same filter run in reverse; in the DFT domain
+      that is multiplication by the complex conjugate \(\overline{\hat{a}}\)
+      (the bar), and applying \(A\) and then \(A^t\) multiplies by
+      \( |\hat{a}|^2 \):
+    </p>
+    $$
+    \widehat{A^t u} = \overline{\hat{a}} \odot \hat{u} \ , \qquad
+    \widehat{A^t A\, u} = |\hat{a}|^2 \odot \hat{u} \ .
+    $$
+    <p>
+      <b>\(M\) becomes a real array, so \(M^{-1}\) is a division.</b> Recall
+      \( M = \frac{1}{\sigma_w^2} A^t A + \frac{1}{\sigma_p^2} I \). Each term is
+      now a multiply in the DFT domain, so \(M\) itself multiplies by the real,
+      positive array
+    </p>
+    $$
+    \hat{m} = \frac{|\hat{a}|^2}{\sigma_w^2} + \frac{1}{\sigma_p^2} \ .
+    $$
+    <p>
+      Since \(M\) is a pointwise multiply by \(\hat{m}\), \(M^{-1}\) is the
+      pointwise divide by \(\hat{m}\) &mdash; no matrix inverse and no linear
+      solve.
+    </p>
+    <p>
+      <b>Assemble the update form (6) in the DFT domain.</b> The update form is
+      \( F(v) = v + M^{-1}\, \frac{1}{\sigma_w^2}\, A^t ( y - A v ) \). Take the
+      DFT of each piece, with \( \hat{V} = \mathrm{DFT}(v) \) and
+      \( \hat{Y} = \mathrm{DFT}(y) \): the residual \( y - A v \) transforms to
+      \( \hat{Y} - \hat{a}\,\hat{V} \); back-projecting with \(A^t\) multiplies
+      by \( \overline{\hat{a}} \); the \( 1/\sigma_w^2 \) is a scalar; and
+      \(M^{-1}\) divides by \(\hat{m}\). Transform back with the inverse DFT,
+      keeping the real part because \(v\) and \(y\) are real:
+    </p>
+    $$
+    F(v) = v + \operatorname{Re}\!\left( \mathrm{IDFT}\!\left[
+    \frac{ \overline{\hat{a}} \, ( \hat{Y} - \hat{a}\,\hat{V} ) / \sigma_w^2 }
+         { \hat{m} } \right] \right) \ .
+    $$
+    <p>
+      No iteration, no step size, nothing to converge. Computing the small
+      correction this way is also more stable than solving (5) as the single
+      ratio \( ( \overline{\hat{a}}\hat{Y}/\sigma_w^2
+      + \hat{V}/\sigma_p^2 ) / \hat{m} \), which builds the answer from two
+      large terms that nearly cancel and lose precision when \(\sigma_w\) is
+      small.
+    </p>
+    <p>
+      Both functions are given here. In <code>prox_data</code>, <code>denom</code>
+      is \(\hat{m}\); <code>Av</code> is the blur \(A v\) (multiply by
+      \(\hat{a}\), transform back); <code>resid_hat</code> is
+      \( \hat{Y} - \hat{a}\,\hat{V} \); and <code>corr</code> is the bracket
+      above, transformed back to the image.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def kernel_dft(a, shape):
+    """Return the DFT of the blur kernel, sized to the image.
+
+    Embed the odd-sized kernel in a zero array of the image shape and roll
+    it so the kernel center lands at index (0,0).  Then
+    ifft2(fft2(u) * a_hat).real equals forward(u, a) from Lab 3, and
+    ifft2(a_hat.conj() * fft2(u)).real equals adjoint(u, a).
+
+    a        (Ka, Kb) float64 tensor, odd sized
+    shape    (H, W), the image shape
+    returns  (H, W) complex128 tensor
+    """
+    H, W = shape
+    Ka, Kb = a.shape
+    ac = torch.zeros(shape, dtype=a.dtype)
+    ac[:Ka, :Kb] = a
+    ac = torch.roll(ac, shifts=(-(Ka // 2), -(Kb // 2)), dims=(0, 1))
+    return torch.fft.fft2(ac)
+
+
+def prox_data(v, y, a_hat, sigma_w, sigma_p):
+    """Return F(v), the proximal map of the forward model term.
+
+    Uses the update form F(v) = v + M^{-1} (1/sigma_w^2) A^t (y - A v),
+    with M = (1/sigma_w^2) A^t A + (1/sigma_p^2) I, entirely in the DFT domain.
+
+    v        (H, W) float64 tensor, the anchor point
+    y        (H, W) float64 tensor, the measured data
+    a_hat    (H, W) complex128 tensor from kernel_dft
+    sigma_w  float, the noise standard deviation
+    sigma_p  float, the forward-model proximal parameter
+    returns  (H, W) float64 tensor
+    """
+    denom = a_hat.abs() ** 2 / sigma_w ** 2 + 1.0 / sigma_p ** 2   # M in the DFT
+    Av = torch.fft.ifft2(a_hat * torch.fft.fft2(v)).real          # A v
+    resid_hat = torch.fft.fft2(y - Av)                            # DFT(y - A v)
+    corr = torch.fft.ifft2(a_hat.conj() * resid_hat
+                           / sigma_w ** 2 / denom).real
+    return v + corr</pre>
+    </div>
+    <div class="tip">
+      <b>Getting the centering right.</b> The kernel has to sit in the array
+      so that its center lands at index \((0,0)\), with the rest wrapping
+      around, which is what the <code>roll</code> above does. Place it wrong
+      and the blur shifts, and every image after it is shifted too. Task 7a
+      catches that in one number, which is easier than staring at pictures.
+    </div>
+    <p>
+      <b>Task 7a. Check the DFT operator against Lab 3.</b> For a random
+      image \(u\), compare
+      <code>ifft2(fft2(u) * a_hat).real</code> with
+      <code>forward(u, a)</code> from Lab 3. Report the largest absolute
+      difference. It should be at the level of round-off.
+    </p>
+    <p>
+      <b>Task 7b. See what \(F\) does on its own.</b> Form the blurred noisy
+      data \( y = Ax + w \) with kernel 1 and \(\sigma_w = 0.02\). Compute
+      \(F(y)\) for \(\sigma_p = 0.01\) and for \(\sigma_p = 1.0\), and display
+      both next to \(y\).
+    </p>
+    <div class="handin" id="D1">
+      <span class="tag">HAND IN &middot; D1</span>
+      <p>
+        The three images \(y\), \(F(y)\) at \(\sigma_p = 0.01\), and \(F(y)\)
+        at \(\sigma_p = 1.0\), with the number from Task 7a. Add two sentences
+        explaining what \(\sigma_p\) did, and why the large \(\sigma_p\) result
+        looks the way it does even though it fits the data better.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 3: Plugging In a Denoiser
+    <span class="note">Steps 8 to 10.  Two denoisers, and the loop in code.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 8: The MAP Denoiser You Already Have</h3>
+    <p>
+      By Step 2, \(H\) is a MAP denoiser for the prior. For the QGGMRF prior
+      of Lab 4 that means
+    </p>
+    $$
+    H(v) = \arg\min_x \left\{
+      \sum_{ \{s,r\} \in \mathcal{P} } b_{s,r} \, \rho( x_s - x_r )
+      + \frac{1}{2\sigma_n^2} \| x - v \|^2
+      \right\} \ ,
+    \tag{7}
+    $$
+    <p>
+      with the QGGMRF potential from Lab 4, repeated here so you do not have
+      to go looking:
+    </p>
+    $$
+    \rho( \Delta ) =
+    \frac{ |\Delta|^p }{ p\,\sigma_x^p }
+    \left(
+      \frac{ \left| \frac{\Delta}{T \sigma_x} \right|^{q-p} }
+           { 1 + \left| \frac{\Delta}{T \sigma_x} \right|^{q-p} }
+    \right) \ .
+    \tag{8}
+    $$
+    <p>
+      This is the Lab 4 problem with the blur removed. Solve it the same
+      way, with majorization on the outside and gradient descent on the
+      inside. If your Lab 4 code is organized into functions you can call,
+      call them. If it is not, this is a good moment to fix that.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def denoise_qggmrf(v, sigma_n, sigma_x, p, q, T, num_iters):
+    """Return H(v), the MAP denoiser of equation (7).
+
+    v          (H, W) float64 tensor, the noisy image (the anchor)
+    sigma_n    float, the noise level the denoiser assumes
+    sigma_x    float, the prior scale
+    p, q, T    floats, the QGGMRF parameters of equation (8)
+    num_iters  int, outer majorization iterations
+    returns    (H, W) float64 tensor
+    """</pre>
+    </div>
+    <p>
+      Use \(p = 2.0\), \(q = 1.2\), and \(T = 1.0\) throughout this lab, the
+      values from Lab 4.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 9: A Deep Neural Network Denoiser</h3>
+    <p>
+      A deep denoiser is also not derived from a prior. It was trained on many
+      pairs of clean and noisy images to remove noise, and it does that well.
+      But nobody wrote down a \(p(x)\), took its logarithm, or minimized
+      anything. It is a function fit to data, and you plug it in as \(H\)
+      exactly as you did the QGGMRF denoiser.
+    </p>
+    <p>
+      Use DRUNet, a pretrained denoising network from the
+      <code>deepinv</code> library. It takes an image and a noise level
+      \(\sigma_n\), the same interface as your other denoiser. Install it once
+      with <code>pip install deepinv</code>; the pretrained grayscale weights
+      download on first use (about 125 MB). It runs on the CPU, a few seconds
+      per call on this image.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>import deepinv as dinv
+
+# Load the pretrained grayscale DRUNet once.  The labs run in float64, so
+# force the model to float32 with .float(); otherwise its weights load as
+# float64 and the noise-level channel will not match the input.
+_drunet = dinv.models.DRUNet(in_channels=1, out_channels=1,
+                             pretrained="download").float().eval()
+
+
+def denoise_dnn(v, sigma_n):
+    """Return a DRUNet denoising of v, as an agent for pnp_admm.
+
+    v        (H, W) float64 tensor in [0, 1], the noisy image
+    sigma_n  float, the noise level the denoiser assumes, on the [0, 1] scale
+    returns  (H, W) float64 tensor
+    """
+    with torch.no_grad():
+        out = _drunet(v.to(torch.float32)[None, None], float(sigma_n))
+    return out[0, 0].to(torch.float64)</pre>
+    </div>
+    <div class="tip">
+      <b>The units are \([0,1]\).</b> Feed the image and \(\sigma_n\) on the
+      same \([0,1]\) scale you use everywhere else, not \([0,255]\). The
+      input must be four dimensional, \((\text{batch}, \text{channel}, H, W)\);
+      the wrapper adds and removes those two axes for you.
+    </div>
+    <p>
+      <b>Task 9a.</b> Form the noisy image \( z = x + w \) with
+      \(\sigma_w = 0.05\), and denoise it twice at \(\sigma_n = 0.05\): once
+      with <code>denoise_qggmrf</code> (use \(\sigma_x = 0.05\) and 20
+      majorization iterations) and once with <code>denoise_dnn</code>. Report
+      the RMSE of each against the clean image.
+    </p>
+    <div class="handin" id="D2">
+      <span class="tag">HAND IN &middot; D2</span>
+      <p>
+        Three images displayed over \([0,1]\): the noisy \(z\), the QGGMRF
+        denoising, and the DRUNet denoising, with the two RMSE values. Add
+        one sentence on how the two differ where the image has texture, such
+        as the feathers.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 10: The PnP Loop in Code</h3>
+    <p>
+      Now that you have \(F\) (Step 7) and the two denoisers that play \(H\),
+      assemble the loop of Step 3 in code.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def pnp_admm(y, a_hat, denoiser, sigma_w, sigma_p, num_iters):
     """Run the PnP-ADMM loop above.
 
     y          (H, W) float64 tensor, the measured data
     a_hat      (H, W) complex128 tensor from kernel_dft
-    denoiser   a function taking one (H, W) tensor and returning one,
-               which plays the role of H
+    denoiser   a function taking one (H, W) tensor and returning one, which
+               plays the role of H.  Its own noise level sigma_n is baked in
+               (build it as, e.g., lambda z: denoise_dnn(z, sigma_n)).
     sigma_w    float, the noise standard deviation
-    sigma      float, the proximal parameter
+    sigma_p    float, the forward-model proximal parameter (used by F)
     num_iters  int
     returns    (x, history), the final image and a list of the values of
                ||x - v|| / ||x|| at each iteration
@@ -439,61 +778,12 @@ def prox_data(x, y, a_hat, sigma_w, sigma):
       it. That is the entire mechanism of this lab, and the next step uses
       it.
     </div>
-  </div>
-
-  <div class="card">
-    <h3>Step 6: A Denoiser That Came From Nowhere</h3>
-    <p>
-      Non-local means denoises a pixel by averaging other pixels whose
-      surrounding patches look similar, wherever in the image they happen to
-      be. It was not derived from a prior. Nobody wrote down a \(p(x)\), took
-      its logarithm, and minimized anything. It is an algorithm somebody
-      invented because it works.
-    </p>
-    <p>
-      It is already installed, in the <code>scikit-image</code> package from
-      Lab 2. Wrap it so that it has the same interface as your other
-      denoiser.
-    </p>
-    <div class="codeblock">
-      <button class="copy" onclick="copyCode(this)">Copy</button>
-<pre>from skimage.restoration import denoise_nl_means
-
-
-def denoise_nlm(x, sigma):
-    """Return a non-local means denoising of x, as an agent for pnp_admm.
-
-    x        (H, W) float64 tensor
-    sigma    float, the noise level the denoiser assumes
-    returns  (H, W) float64 tensor
-    """
-    z = x.detach().numpy()
-    out = denoise_nl_means(z, h=0.8 * sigma, sigma=sigma,
-                           patch_size=5, patch_distance=6, fast_mode=True)
-    return torch.tensor(out, dtype=torch.float64)</pre>
-    </div>
-    <p>
-      <b>Task 6a.</b> Form the noisy image \( z = x + w \) with
-      \(\sigma_w = 0.05\), and denoise it twice at \(\sigma = 0.05\), once
-      with <code>denoise_qggmrf</code> and once with
-      <code>denoise_nlm</code>. Report the RMSE of each against the clean
-      image.
-    </p>
-    <div class="handin" id="D2">
-      <span class="tag">HAND IN &middot; D2</span>
-      <p>
-        Three images displayed over \([0,1]\): the noisy \(z\), the QGGMRF
-        denoising, and the non-local means denoising, with the two RMSE
-        values. Add one sentence on how the two differ where the image has
-        texture, such as the feathers.
-      </p>
-    </div>
     <div class="handin" id="D3">
       <span class="tag">HAND IN &middot; D3</span>
       <p>
         The specification you gave your AI assistant for
-        <code>prox_data</code> and <code>pnp_admm</code>, quoted, with any
-        corrections you had to make.
+        <code>denoise_qggmrf</code> and <code>pnp_admm</code>, quoted, with
+        any corrections you had to make.
       </p>
     </div>
   </div>
@@ -502,32 +792,34 @@ def denoise_nlm(x, sigma):
 </details>
 
 <details class="module">
-  <summary>Module 3: Does It Work, and What Is It Doing?
-    <span class="note">Steps 7 to 9.  Deblur with both agents, then test whether the swap was legal.</span>
+  <summary>Module 4: Does It Work, and What Is It Doing?
+    <span class="note">Steps 11 to 13.  Deblur with both agents, read off the equilibrium, and answer for your code.</span>
   </summary>
   <div class="modulebody">
 
   <div class="card">
-    <h3>Step 7: Deblurring Experiments</h3>
+    <h3>Step 11: Deblurring Experiments</h3>
     <p>
-      Form the data \( y = Ax + w \) with kernel 1 and
-      \(\sigma_w = 0.02\), the same as Lab 3, Step 8. Run
-      <code>pnp_admm</code> for 50 iterations twice, once with each
-      denoiser, using \(\sigma_x = 0.05\) in the QGGMRF and
-      \(\sigma = 0.02\) in both runs.
+      Form the data \( y = Ax + w \) with kernel 1 and \(\sigma_w = 0.02\).
+      Run <code>pnp_admm</code> for 50 iterations twice, once with each
+      denoiser: the QGGMRF denoiser (\(\sigma_x = 0.05\)) and the DRUNet
+      denoiser. Use the forward-model prox parameter \(\sigma_p = 0.05\) and
+      the denoiser noise level \(\sigma_n = 0.03\) in both runs. Build each
+      denoiser as a one-argument closure that fixes \(\sigma_n\), for example
+      <code>lambda z: denoise_dnn(z, 0.03)</code>. Also compute your direct
+      MAP reconstruction from Lab 4 on the same data, as a baseline.
     </p>
     <p>Produce the following, and no more.</p>
     <ol>
       <li><b>Images.</b> The blurred noisy \(y\), the two PnP results, and
-          your direct MAP result from Lab 4 on the same data, all over
-          \([0,1]\).</li>
+          the direct Lab 4 MAP result, all over \([0,1]\).</li>
       <li><b>Crops.</b> The same four, cropped to a 128 by 128 region
           containing an edge and some texture. State the crop
           coordinates.</li>
       <li><b>Error table.</b> The RMSE of \(y\) and of each of the three
           restorations.</li>
       <li><b>Convergence.</b> The history \( \|x - v\| / \|x\| \) versus
-          iteration for both runs, on one plot with a log vertical
+          iteration for both PnP runs, on one plot with a log vertical
           axis.</li>
     </ol>
     <div class="handin" id="D4">
@@ -543,109 +835,108 @@ def denoise_nlm(x, sigma):
       </p>
     </div>
     <p>
-      <b>Task 7a. Sweep \(\sigma\).</b> Repeat the non-local means run for
-      \( \sigma \in \{0.005,\ 0.02,\ 0.08\} \), keeping everything else
-      fixed. Report the RMSE of each and show the three crops.
+      <b>Task 11a. Sweep the denoiser noise level \(\sigma_n\).</b> Repeat the
+      DRUNet run for \( \sigma_n \in \{0.02,\ 0.05,\ 0.08\} \), keeping
+      \( \sigma_p = 0.05 \) and everything else fixed. Report the RMSE of each
+      and show the three crops.
     </p>
     <div class="handin" id="D6">
       <span class="tag">HAND IN &middot; D6</span>
       <p>
-        The three crops from the \(\sigma\) sweep with their RMSE values,
-        and two sentences on what \(\sigma\) controls here. Note that
-        \(\sigma\) is a parameter of the algorithm and not of any model, and
+        The three crops from the \(\sigma_n\) sweep with their RMSE values,
+        and two sentences on what \(\sigma_n\) controls here. Note that
+        \(\sigma_n\) is a parameter of the algorithm and not of any model, and
         say what that means for how you would choose it in practice.
       </p>
     </div>
   </div>
 
   <div class="card">
-    <h3>Step 8: Was the Swap Legal?</h3>
+    <h3>Step 12: Reading Off the Equilibrium</h3>
     <p>
-      The algorithm converged and the pictures improved. That is not the
-      same as knowing what it computed. If both agents are proximal maps of
-      convex functions, the answer is the minimizer of (1). If they are not,
-      there may be no cost function at all, and the fixed point is defined
-      only by the algorithm.
+      Step 3 defined the solution as the equilibrium (3). Here you read that
+      equilibrium off your own runs.
     </p>
     <p>
-      Moreau settled which case you are in. An operator \(H\) is the
-      proximal map of a proper closed convex function <b>if and only if</b>
-      it is both
+      When \(F\) and \(H\) are both proximal maps, PnP-ADMM is ordinary ADMM
+      and its solution is the minimizer of (1); with the trained DRUNet
+      denoiser there is no such cost. Step 3 showed that in both cases the loop
+      settles on the consensus equilibrium (3), so that is what your runs
+      converge to.
     </p>
-    <ol>
-      <li><b>nonexpansive</b>, meaning
-          \( \| H(x) - H(z) \| \leq \| x - z \| \) for all \(x\) and \(z\),
-          and</li>
-      <li><b>conservative</b>, meaning \(H = \nabla \phi\) for some scalar
-          function \(\phi\).</li>
-    </ol>
     <p>
-      Both are testable numerically on a small image, and neither needs the
-      Jacobian to be formed. Nonexpansiveness is a ratio you can sample. For
-      conservativeness, use the fact that the Jacobian of a gradient is
-      symmetric, so for any directions \(u\) and \(v\),
+      <b>A second fingerprint.</b> There is an easy way to test whether the
+      DRUNet denoiser is a proximal map, and it falls out of the parameters. If
+      \(F\) and \(H\) were proximal maps of fixed costs, then setting
+      \(\sigma_p = \sigma_n\) makes them a single ADMM penalty, and ADMM theory
+      says the penalty changes only how fast the loop converges, not the image
+      it converges to. So the reconstruction would be the same whatever the
+      shared value. Task 12b checks whether the DRUNet reconstruction obeys
+      that; if it does not, the denoiser is not the proximal map of any fixed
+      cost.
     </p>
-    $$
-    u^t J v = v^t J u \ , \qquad
-    J v \approx \frac{ H(x + \epsilon v) - H(x - \epsilon v) }{ 2 \epsilon } \ .
-    \tag{7}
-    $$
     <p>
-      <b>Task 8a.</b> On a 64 by 64 crop, with 20 random pairs and
-      \(\epsilon = 10^{-4}\), test both properties for
-      <code>denoise_qggmrf</code> and for <code>denoise_nlm</code>. For
-      nonexpansiveness report the largest value of
-      \( \|H(x) - H(z)\| / \|x - z\| \). For conservativeness report the
-      largest value of
-      \( |u^t J v - v^t J u| \, / \, ( \|u\| \|v\| ) \).
+      <b>Task 12a.</b> The quantity \( \|x - v\| / \|x\| \) from your
+      convergence plot (D5) is the <b>equilibrium residual</b>: it measures how
+      far the two agents are from agreeing, \(x = v\). As it falls toward zero,
+      the iterates approach a solution of (3). Report its final value for both
+      runs, and say whether each reached equilibrium.
     </p>
-    <div class="codeblock">
-      <button class="copy" onclick="copyCode(this)">Copy</button>
-<pre>def moreau_tests(denoiser, x, num_trials, epsilon):
-    """Test the two conditions of Moreau's theorem numerically.
-
-    denoiser    a function taking one (H, W) tensor and returning one
-    x           (H, W) float64 tensor, the point to test around
-    num_trials  int, number of random pairs
-    epsilon     float, the finite difference step
-    returns     (max_expansion, max_asymmetry), two floats
-    """</pre>
-    </div>
-    <div class="tip">
-      <b>Reading the result.</b> A finite difference has error of its own, so
-      neither number will be exactly zero. Judge them by size. If one
-      denoiser gives an asymmetry a few orders of magnitude larger than the
-      other, that difference is the answer, not the noise.
-    </div>
+    <p>
+      <b>Task 12b.</b> Run the DRUNet PnP twice with the two agents set to the
+      same parameter, \( \sigma_p = \sigma_n = 0.03 \) and
+      \( \sigma_p = \sigma_n = 0.10 \). Report the RMSE of each and show the two
+      crops. Are the two reconstructions the same?
+    </p>
     <div class="handin" id="D7">
       <span class="tag">HAND IN &middot; D7</span>
       <p>
-        The four numbers from Task 8a in a small table, and three sentences:
-        which of the two denoisers is a proximal map, how you can tell from
-        these numbers, and what that says about the restoration you produced
-        with the other one.
+        The consensus equilibrium conditions (3) that your PnP solution
+        satisfies; the final \( \|x - v\| / \|x\| \) for both runs from D5; and
+        the two crops and RMSE values from Task 12b. Then three sentences:
+        whether the iteration reached equilibrium; whether the two Task 12b
+        reconstructions match, and what that says about whether DRUNet is a
+        proximal map; and which of the three reconstructions (the Lab 4 MAP, the
+        QGGMRF-PnP, and the DRUNet-PnP) is best from your images and error table
+        (D4, D5).
       </p>
+    </div>
+    <div class="tip">
+      <b>Optional, if you have time: proximal-gradient PnP.</b> PnP-ADMM is not
+      the only way to reach an equilibrium. In proximal-gradient PnP, each
+      iteration takes one gradient step on the forward-model term and then
+      applies the denoiser,
+      \( x \leftarrow H\!\left( x - s\, A^t ( A x - y ) \right) \), with a step
+      size small enough for stability, \( 0 \lt s \lt 2 / \max_\omega
+      |\hat{a}(\omega)|^2 \). It uses only \(A\), \(A^t\), and the denoiser, and
+      needs no proximal map for \(F\). Implement it, run it on the same data
+      with the DRUNet denoiser, and compare its reconstruction and its
+      per-iteration change against the PnP-ADMM run.
     </div>
   </div>
 
   <div class="card">
-    <h3>Step 9: Questions to Answer</h3>
+    <h3>Step 13: Questions to Answer</h3>
     <p>
       Answer each in a few sentences, using your own images and numbers as
       evidence.
     </p>
     <ol>
       <li>Compare the PnP result using your QGGMRF denoiser with your
-          direct MAP result from Lab 4. They aim at the same estimate. Are
-          they the same image? Say what would make them differ, and check
-          your answer against the RMSE table.</li>
+          direct MAP result from Lab 4. When \(\sigma_p = \sigma_n\) they
+          target the same MAP estimate (Step 4); at the operating point here,
+          with \(\sigma_p \neq \sigma_n\), they need not. Are they the same
+          image? Say what would make them differ, and check your answer against
+          the RMSE table.</li>
       <li>In the PnP-ADMM loop, \(F\) is exact and costs one pair of FFTs,
           while \(H\) is iterative and costs far more. Suppose you halved
           the work inside <code>denoise_qggmrf</code>. What would you expect
           to happen to the convergence plot, and why?</li>
-      <li>The non-local means denoiser has no \(\sigma_x\). Where did the
-          strength of its regularization come from in your runs, and what
-          does that say about the role of \(\sigma\) in PnP?</li>
+      <li>The DRUNet denoiser has no prior you can write down and no
+          \(\sigma_x\). Where does the strength of its regularization come
+          from in your runs? Name the two knobs you can turn &mdash; the
+          forward-model prox parameter and the denoiser variance &mdash; and
+          say what that means for how you tune a PnP reconstruction.</li>
       <li>Suppose a colleague replaces \(H\) with a denoiser that sets every
           pixel to the image mean. Trace the three lines of PnP-ADMM and say
           what \(x\) converges to. What does this tell you about why
@@ -691,7 +982,7 @@ def denoise_nlm(x, sigma):
           Your name, the link to your GitHub repository, and the random
           seed you used.</li>
       <li><span class="dnum"><a href="#D1">D1</a></span>
-          The three images showing what \(F\) does, with the Task 3a check
+          The three images showing what \(F\) does, with the Task 7a check
           number and two sentences.</li>
       <li><span class="dnum"><a href="#D2">D2</a></span>
           The three denoising images with their RMSE values, and one
@@ -703,9 +994,10 @@ def denoise_nlm(x, sigma):
       <li><span class="dnum"><a href="#D5">D5</a></span>
           The error table and the convergence plot.</li>
       <li><span class="dnum"><a href="#D6">D6</a></span>
-          The \(\sigma\) sweep crops with RMSE, and two sentences.</li>
+          The \(\sigma_n\) sweep crops with RMSE, and two sentences.</li>
       <li><span class="dnum"><a href="#D7">D7</a></span>
-          The Moreau test table and three sentences.</li>
+          The equilibrium conditions, the residuals, the
+          \(\sigma_p = \sigma_n\) crops, and three sentences.</li>
       <li><span class="dnum"><a href="#D8">D8</a></span>
           Your answers to the five questions.</li>
     </ol>
