@@ -205,7 +205,7 @@ unzip levin09_kernels.zip</pre>
       Write the MAP cost function in the general pairwise form
     </p>
     $$
-    f(x) = \frac{1}{2\sigma_y^2} \| y - A x \|^2
+    f(x) = \frac{1}{2\sigma_w^2} \| y - A x \|^2
          + \frac{1}{2} \sum_{s} \sum_{r \in \partial s} b_{s,r}\,
            \rho\!\left( x_s - x_r \right) \ ,
     \tag{1}
@@ -473,7 +473,7 @@ def rho_prime(delta, sigma_x, p, q, T):
   <div class="card">
     <h3>Step 4: Building the Surrogate</h3>
     <p>
-      The data term \( \frac{1}{2\sigma_y^2}\|y - Ax\|^2 \) is already
+      The data term \( \frac{1}{2\sigma_w^2}\|y - Ax\|^2 \) is already
       quadratic, so leave it alone. Only the prior term needs replacing.
     </p>
     <p>
@@ -571,7 +571,7 @@ def rho_prime(delta, sigma_x, p, q, T):
     <p>The surrogate MAP cost is then</p>
     $$
     Q( x; x^\prime ) =
-    \frac{1}{2\sigma_y^2} \| y - A x \|^2
+    \frac{1}{2\sigma_w^2} \| y - A x \|^2
     + \frac{1}{2} \sum_{s} \sum_{r \in \partial s} \tilde{b}_{s,r}\,
       \left( x_s - x_r \right)^2 \ .
     \tag{13}
@@ -688,7 +688,7 @@ def rho_prime(delta, sigma_x, p, q, T):
     </p>
     $$
     \left[ \nabla f( x ) \right]_s =
-    - \frac{1}{\sigma_y^2} \left[ A^{t} ( y - A x ) \right]_s
+    - \frac{1}{\sigma_w^2} \left[ A^{t} ( y - A x ) \right]_s
     + \sum_{r \in \partial s} b_{s,r}\, \rho^\prime( x_s - x_r ) \ .
     \tag{16}
     $$
@@ -719,7 +719,7 @@ def rho_prime(delta, sigma_x, p, q, T):
     </p>
     $$
     g^{t} H g =
-    \frac{1}{\sigma_y^2} \| A g \|^2
+    \frac{1}{\sigma_w^2} \| A g \|^2
     + \sum_{s} \sum_{r \in \partial s} \tilde{b}_{s,r}\,
       ( g_s - g_r )^2 \ .
     \tag{18}
@@ -776,7 +776,7 @@ def rho_prime(delta, sigma_x, p, q, T):
       <button class="copy" onclick="copyCode(this)">Copy</button>
 <pre>Steepest descent with a surrogate step size
 
-  Given: y, A, sigma_y, sigma_x, p, q, T, N iterations, omega in (0, 2)
+  Given: y, A, sigma_w, sigma_x, p, q, T, N iterations, omega in (0, 2)
   Initialize x = y
   Record the TRUE cost f(x) from (1) and (3)
   For k = 0 to N-1:
@@ -821,17 +821,15 @@ def neighbor_diffs(x):
     """
 
 
-def surrogate_weights(x, sigma_x, p, q, T, prior):
+def surrogate_weights(x, sigma_x, p, q, T):
     """Return the b_tilde coefficients of equations (14) and (15).
 
     Used inside optimal_step_size to form the surrogate Hessian.
-    prior    "qggmrf" or "gaussian"; for "gaussian" the result is the
-             constant b / (2 sigma_x^2) of equation (12)
     returns  (8, H, W) float64 tensor, zero where the pair is invalid
     """
 
 
-def true_cost(x, y, a, sigma_y, sigma_x, p, q, T, prior):
+def true_cost(x, y, a, sigma_w, sigma_x, p, q, T):
     """Return the true cost f(x) of equation (1).
 
     Differentiable in x, so torch.autograd can take its gradient.  Floor
@@ -845,7 +843,7 @@ def true_cost(x, y, a, sigma_y, sigma_x, p, q, T, prior):
     """
 
 
-def true_gradient(x, y, a, sigma_y, sigma_x, p, q, T, prior):
+def true_gradient(x, y, a, sigma_w, sigma_x, p, q, T):
     """Return the gradient of the true cost, equation (16).
 
     Computed with torch.autograd.grad(true_cost(x, ...), x).  x must have
@@ -857,19 +855,19 @@ def true_gradient(x, y, a, sigma_y, sigma_x, p, q, T, prior):
     """
 
 
-def optimal_step_size(x, g, a, sigma_y, sigma_x, p, q, T, prior):
+def optimal_step_size(x, g, a, sigma_w, sigma_x, p, q, T):
     """Return the exact surrogate step size alpha* of equations (17)-(18).
 
     Builds the surrogate weights at x and uses one projection A g to form
     the denominator g^t H g.  g is the gradient from true_gradient.  The
-    denominator uses only A g, the surrogate weights at x, and sigma_y; it
+    denominator uses only A g, the surrogate weights at x, and sigma_w; it
     does not use y.
 
     returns  float64 scalar tensor
     """
 
 
-def reconstruct(y, a, sigma_y, sigma_x, p, q, T, num_iters, omega, prior):
+def reconstruct(y, a, sigma_w, sigma_x, p, q, T, num_iters, omega):
     """Steepest descent with the surrogate step size, starting at y.
 
     Each iteration: g = true_gradient(x); alpha = optimal_step_size(x, g);
@@ -897,10 +895,11 @@ def reconstruct(y, a, sigma_y, sigma_x, p, q, T, num_iters, omega, prior):
       Give your AI assistant a specification, not a description. At a
       minimum it needs equations (1), (3), (4), (14), (15), (16), (17), and
       (18), the neighborhood and its weights, the signatures above, and the
-      pseudocode in Step 5. Require float64, no pixel loops, and the
-      <code>prior</code> argument so that the Gaussian and QGGMRF runs go
-      through the identical steepest descent loop and cost reporting. If you
-      build the code in parts, write a separate specification for each part.
+      pseudocode in Step 5. Require float64 and no pixel loops. There is one
+      potential, the QGGMRF; the Gaussian MRF is the same potential at a large
+      \( T \), so every run goes through the identical steepest descent loop
+      and cost reporting. If you build the code in parts, write a separate
+      specification for each part.
     </p>
     <div class="handin" id="D4">
       <span class="tag">HAND IN &middot; D4</span>
@@ -932,70 +931,72 @@ def reconstruct(y, a, sigma_y, sigma_x, p, q, T, num_iters, omega, prior):
     <h3>Step 7: Experiments</h3>
     <p>Everybody runs the same problem, so the results can be compared.</p>
     <p>
-      <b>The goal of this step is to confirm and explain that, at the shared
-      \( \sigma_x \), your QGGMRF reconstruction is sharper at the edges than
-      the Gaussian one while the flat regions stay just as smooth.</b> If
-      your Gaussian and QGGMRF reconstructions look the same, the QGGMRF is
-      not working and something is wrong.
+      <b>This step shows two things. First, at its best \( \sigma_x \) the
+      QGGMRF (\( T = 1 \)) gives a sharper edge and a lower RMSE than the
+      Gaussian MRF (\( T = 100 \)). Second, each prior has a best
+      \( \sigma_x \): halving it or doubling it makes the reconstruction
+      worse.</b> If the QGGMRF and the Gaussian reconstructions look the same,
+      the QGGMRF is not working and something is wrong.
     </p>
     <p>
-      The image is scaled to \( [0,1] \). Both the image and the data average
-      about \( 0.5 \). Use <code>kodim23.pgm</code> in \( [0,1] \) as
-      \( x_{\text{true}} \), and form
+      The image is scaled to \( [0,1] \). Use <code>kodim23.pgm</code> in
+      \( [0,1] \) as \( x_{\text{true}} \), and form
     </p>
     $$
     y = A\, x_{\text{true}} + w \ , \qquad
-    w \sim N( 0, \sigma_y^2 I ) \ .
+    w \sim N( 0, \sigma_w^2 I ) \ .
     \tag{19}
     $$
     <p>
       Here \( A \) is convolution with Levin kernel 1 and circular
-      boundaries, exactly as in Lab 3. Do not clip \( y \). Set the noise
-      level from a signal to noise ratio \( \mathrm{SNR} \) in decibels,
-      which the mbirtorch software calls <code>snr_db</code>,
+      boundaries, exactly as in Lab 3. Add noise with standard deviation
+      \( \sigma_w = 0.01 \), that is, one percent of the \( [0,1] \) range,
+      and do not clip \( y \). Use the same \( \sigma_w \) in the cost, so the
+      reconstruction is given the true noise level. The noise is deliberately
+      small, so the reconstruction is limited by the blur and not by the
+      noise; this is where the edge-preserving prior helps most. (In the
+      mbirtorch software this noise standard deviation is called
+      <code>sigma_y</code>.)
     </p>
-    $$
-    \sigma_y = 0.5 \cdot 10^{-\,\mathrm{SNR}/20} \ .
-    \tag{20}
-    $$
     <p>
-      Use the same \( \sigma_y \) in the cost, that is, assume the noise
-      level is known. Set the prior scale from the average image value,
+      Both priors use the one QGGMRF potential. The prior is set by \( T \):
+      \( T = 1.0 \) is the QGGMRF, the edge-preserving prior;
+      \( T = 100 \) is the Gaussian MRF, because at this large \( T \) the
+      potential is quadratic over the whole range of differences in the image.
+      Fix \( p = 2.0 \), \( q = 1.2 \), the over-relaxation factor
+      \( \omega = 1 \), and \( N = 50 \) iterations in every run.
     </p>
-    $$
-    \sigma_x = 0.2 \cdot 0.5 = 0.1 \ .
-    \tag{21}
-    $$
     <p>
-      Fix \( p = 2.0 \), \( q = 1.2 \), and \( T = 1.0 \) in every run.
-      Unless a run says otherwise, use \( N = 100 \) iterations, the
-      over-relaxation factor \( \omega = 1 \), \( \mathrm{SNR} = 30 \), and
-      \( \sigma_x = 0.1 \). The two knobs you change are \( \sigma_x \), the
-      regularization, and \( \mathrm{SNR} \), the noise level.
+      For each prior you run three values of \( \sigma_x \): a center value,
+      half of it, and twice it. The center values, \( 0.015 \) for the QGGMRF
+      and \( 0.036 \) for the Gaussian MRF, are near the \( \sigma_x \) that
+      minimizes RMSE for each prior.
+    </p>
+    <table class="runs">
+      <tr><th>Run</th><th>Prior</th><th>\( T \)</th><th>\( \sigma_x \)</th></tr>
+      <tr><td>R1</td><td>Gaussian MRF</td><td>100</td><td>\( 0.036 \) (center)</td></tr>
+      <tr><td>R2</td><td>QGGMRF</td><td>1</td><td>\( 0.015 \) (center)</td></tr>
+      <tr><td>R3</td><td>QGGMRF</td><td>1</td><td>\( 0.0075 \) (center / 2)</td></tr>
+      <tr><td>R4</td><td>QGGMRF</td><td>1</td><td>\( 0.030 \) (center &times; 2)</td></tr>
+      <tr><td>R5</td><td>Gaussian MRF</td><td>100</td><td>\( 0.018 \) (center / 2)</td></tr>
+      <tr><td>R6</td><td>Gaussian MRF</td><td>100</td><td>\( 0.072 \) (center &times; 2)</td></tr>
+    </table>
+    <p>
+      R1 and R2 are the best of each prior. R3 and R4 change \( \sigma_x \)
+      around the QGGMRF center; R5 and R6 change it around the Gaussian center.
     </p>
     <p>
       Pick one \( 128 \times 128 \) crop containing a sharp, high contrast
       edge. Use the same crop in every image figure and state its
       coordinates.
     </p>
-    <table class="runs">
-      <tr><th>Run</th><th>Prior</th><th>Parameters</th></tr>
-      <tr><td>R1</td><td>Gaussian</td><td>baseline: \( \sigma_x = 0.1 \), \( \mathrm{SNR} = 30 \)</td></tr>
-      <tr><td>R2</td><td>QGGMRF</td><td>baseline: \( \sigma_x = 0.1 \), \( \mathrm{SNR} = 30 \)</td></tr>
-      <tr><td>R3, R4</td><td>QGGMRF</td><td>\( \sigma_x = 0.02 \) and \( \sigma_x = 0.5 \)</td></tr>
-      <tr><td>R5, R6</td><td>QGGMRF</td><td>\( \mathrm{SNR} = 20 \) and \( \mathrm{SNR} = 40 \)</td></tr>
-    </table>
-    <p>
-      R3 through R6 change one knob at a time from the baseline. R3 and R4
-      change the regularization at fixed noise. R5 and R6 change the noise at
-      fixed regularization.
-    </p>
     <div class="handin" id="D6">
       <span class="tag">HAND IN &middot; D6</span>
       <p>
         Four images with the same gray scale: \( x_{\text{true}} \), \( y \),
-        the R1 reconstruction, and the R2 reconstruction. Then the same four
-        as your \( 128 \times 128 \) crop, with the crop coordinates stated.
+        the R1 Gaussian MRF reconstruction, and the R2 QGGMRF reconstruction.
+        Then the same four as your \( 128 \times 128 \) crop, with the crop
+        coordinates stated.
       </p>
     </div>
     <div class="handin" id="D7">
@@ -1009,7 +1010,10 @@ def reconstruct(y, a, sigma_y, sigma_x, p, q, T, num_iters, omega, prior):
     <div class="handin" id="D8">
       <span class="tag">HAND IN &middot; D8</span>
       <p>
-        The crops for R3 through R6, each labeled with its parameter value.
+        The \( \sigma_x \) study. For each prior, the three crops at
+        \( \sigma_x \) center / 2, center, and center &times; 2 &mdash; R3, R2,
+        R4 for the QGGMRF and R5, R1, R6 for the Gaussian MRF &mdash; each
+        labeled with its \( \sigma_x \) and its RMSE.
       </p>
     </div>
     <div class="handin" id="D9">
@@ -1037,19 +1041,20 @@ def reconstruct(y, a, sigma_y, sigma_x, p, q, T, num_iters, omega, prior):
       numbers. These are the point of the lab.
     </p>
     <ol>
-      <li>Compare the R1 and R2 crops and the edge profile. Describe the
-          difference at the edge and the difference in the flat regions. Use
-          your influence function plot from D1 to explain why the two priors
-          treat the edge differently.</li>
+      <li>Compare the R1 Gaussian MRF and R2 QGGMRF crops and the edge
+          profile. Describe the difference at the edge and the difference in
+          the flat regions. Use your influence function plot from D1 to
+          explain why the two priors treat the edge differently.</li>
       <li>Did the lower RMSE go with the reconstruction that looks better to
           you? If not, say what RMSE is failing to measure.</li>
-      <li>What does \( \sigma_x \) control? Use R3 and R4, and say what
-          happens in the limits of very small and very large
-          \( \sigma_x \).</li>
-      <li>What does \( \mathrm{SNR} \) control? Use R5 and R6, and say what
-          happens to the reconstruction as the noise rises and falls. Give
-          the \( \sigma_y \) that each \( \mathrm{SNR} \) implies from
-          equation (20).</li>
+      <li>What does \( \sigma_x \) control? Use R3 and R4 for the QGGMRF and
+          R5 and R6 for the Gaussian MRF, and say what happens in the limits
+          of very small and very large \( \sigma_x \).</li>
+      <li>The QGGMRF reaches its best RMSE at a smaller \( \sigma_x \) (R2,
+          \( 0.015 \)) than the Gaussian MRF does (R1, \( 0.036 \)). A smaller
+          \( \sigma_x \) is a stronger prior. Explain why the edge-preserving
+          prior can regularize the flat regions this much harder without
+          blurring the edge, using your influence function plot from D1.</li>
       <li>Why is \( p = 2 \) required by the algorithm, while \( q \) is a
           free modeling choice? Answer in terms of the surrogate needing a
           bounded second derivative at \( \Delta = 0 \).</li>
@@ -1111,7 +1116,7 @@ def reconstruct(y, a, sigma_y, sigma_x, p, q, T, num_iters, omega, prior):
       <li><span class="dnum"><a href="#D7">D7</a></span>
           The edge profile plot.</li>
       <li><span class="dnum"><a href="#D8">D8</a></span>
-          The parameter sweep crops for R3 through R6.</li>
+          The \( \sigma_x \) study: three crops per prior, with RMSE.</li>
       <li><span class="dnum"><a href="#D9">D9</a></span>
           The image of the summed surrogate weights.</li>
       <li><span class="dnum"><a href="#D10">D10</a></span>
