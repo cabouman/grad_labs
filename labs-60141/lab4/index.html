@@ -193,6 +193,65 @@ unzip levin09_kernels.zip</pre>
   </div>
 </details>
 
+<details class="module" open>
+  <summary>Parameters for the Experiments
+    <span class="note">The settings for every hand-in item, in one place.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Parameters for Every Experiment</h3>
+    <p>
+      Every reconstruction in this lab uses the same image and blur.
+      The image is <code>kodim23.pgm</code> on \([0,1]\), and \(A\) is
+      convolution with Levin kernel 1 and circular boundaries. The potential
+      always uses \( p = 2.0 \) and \( q = 1.2 \), and \(x\) is left
+      unconstrained.
+    </p>
+    <div class="tip">
+      <b>You generate the noise.</b> Draw a noise image \(w\) with standard
+      deviation \( \sigma_w \), add it to the blurred signal to form the data
+      \( y = A x_{\text{true}} + w \), and reconstruct from that \(y\). Fix and
+      report the random seed. The symbol \( \sigma_w \) does two separate jobs,
+      set to one value in this lab: it is the standard deviation of the noise
+      you add, and it is the noise level the cost assumes in its data term
+      \( \frac{1}{2\sigma_w^2}\|y - Ax\|^2 \). In general these two need not be
+      equal.
+    </div>
+    <p>
+      The table lists the settings for each hand-in item. Every experiment
+      below points back to this table by its deliverable number, so you do
+      not have to search the text for a number.
+    </p>
+    <table class="runs">
+      <tr>
+        <th>Item</th><th>Experiment</th><th>Noise \( \sigma_w \)</th>
+        <th>\( T \)</th><th>\( \sigma_x \)</th><th>Iterations</th>
+      </tr>
+      <tr><td class="grp">D1</td><td>Potential &amp; influence plots (Task 2a)</td>
+          <td>none *</td><td>1</td><td>0.2 *</td><td>plot only</td></tr>
+      <tr><td class="grp">D3</td><td>Surrogate plot (Task 4b)</td>
+          <td>none *</td><td>1</td><td>0.2 *</td><td>plot only</td></tr>
+      <tr><td class="grp">D5</td><td>Cost decreases each step (Task 6a)</td>
+          <td>0.02</td><td>1</td><td>0.015</td><td>\( N = 50 \), \( \omega = 1 \)</td></tr>
+      <tr><td class="grp">D6&ndash;D10</td><td>Reconstruction runs R1&ndash;R6 (Step 7)</td>
+          <td>0.02</td><td>1 or 100 &dagger;</td><td>see the run table in Step 7</td>
+          <td>\( N = 50 \), \( \omega = 1 \)</td></tr>
+    </table>
+    <p class="source">
+      * The two shape plots (D1, D3) draw \( \rho \) as a function of \( \Delta \)
+      and use \( \sigma_x = 0.2 \) only to make the potential's two regimes
+      visible. They are not reconstructions and use no data. The
+      reconstructions use the smaller \( \sigma_x \) values in the run table.
+      <br>
+      &dagger; \( T = 1 \) is the QGGMRF (edge preserving); \( T = 100 \) is the
+      Gaussian MRF, the same potential made quadratic over the whole range.
+    </p>
+  </div>
+
+  </div>
+</details>
+
 <details class="module">
   <summary>Module 1: The Prior That Does Not Blur Edges
     <span class="note">Steps 1 and 2.  What goes wrong with a quadratic, and the potential that fixes it.</span>
@@ -949,13 +1008,15 @@ def reconstruct(y, a, sigma_w, sigma_x, p, q, T, num_iters, omega):
     $$
     <p>
       Here \( A \) is convolution with Levin kernel 1 and circular
-      boundaries, exactly as in Lab 3. Add noise with standard deviation
-      \( \sigma_w = 0.01 \), that is, one percent of the \( [0,1] \) range,
-      and do not clip \( y \). Use the same \( \sigma_w \) in the cost, so the
-      reconstruction is given the true noise level. The noise is deliberately
-      small, so the reconstruction is limited by the blur and not by the
-      noise; this is where the edge-preserving prior helps most. (In the
-      mbirtorch software this noise standard deviation is called
+      boundaries, exactly as in Lab 3. Draw a noise image \(w\) with standard
+      deviation \( \sigma_w = 0.02 \), that is, two percent of the \( [0,1] \)
+      range, add it to \( A x_{\text{true}} \) to form \(y\), and do not clip
+      \( y \). Use the same \( \sigma_w \) in the cost, so the
+      reconstruction is given the true noise level. This is the same noise
+      level as the deblurring problem in Lab 3, so the three labs pose the same
+      problem. The noise is small, so the reconstruction is limited by the blur
+      and not by the noise, which is where the edge-preserving prior helps most.
+      (In the mbirtorch software this noise standard deviation is called
       <code>sigma_y</code>.)
     </p>
     <p>
