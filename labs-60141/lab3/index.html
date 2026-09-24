@@ -205,7 +205,7 @@ unzip levin09_kernels.zip</pre>
   </div>
 </details>
 
-<details class="module" open>
+<details class="module">
   <summary>Parameters for the Experiments
     <span class="note">The settings for every hand-in item, in one place.</span>
   </summary>
@@ -244,13 +244,14 @@ unzip levin09_kernels.zip</pre>
       <tr><td class="grp">D1, D2</td><td>Forward, adjoint, and checks (Tasks 3a, 3b)</td>
           <td>kernel 1</td><td>none</td><td>&mdash;</td><td>&mdash;</td></tr>
       <tr><td class="grp">D8</td><td>Denoising (Step 7)</td>
-          <td>\( I \)</td><td>0.05</td><td>0.01, 0.05, 0.25 *</td><td>50</td></tr>
+          <td>\( I \)</td><td>0.05</td><td>0.018, 0.036, 0.072 *</td><td>50</td></tr>
       <tr><td class="grp">D9</td><td>Deconvolution (Step 8)</td>
-          <td>kernel 1</td><td>0.02</td><td>0.01, 0.05, 0.25 *</td><td>50</td></tr>
+          <td>kernel 1</td><td>0.02</td><td>0.018, 0.036, 0.072 *</td><td>50</td></tr>
     </table>
     <p class="source">
-      * In both experiments \( \sigma_x = 0.05 \) is the good value, 0.01
-      over-regularizes, and 0.25 under-regularizes. The deconvolution uses less
+      * In both experiments \( \sigma_x = 0.036 \) is the good value, which is
+      also the value used for the Gaussian MRF in Lab 4; 0.018 over-regularizes,
+      and 0.072 under-regularizes. The deconvolution uses less
       noise than the denoising, because the blur already removes most of the
       high frequency content. You may stop a run early when the per-iteration
       image change \( \mathrm{NRMSE}_n \) falls below 0.2%.
@@ -845,22 +846,23 @@ check5 = (auto - cost_grad(z.detach(), y_small, a, sigma_w, sigma_x)).abs().max(
       Reconstruct at three values of \(\sigma_x\),
     </p>
     $$
-    \sigma_x \in \{\, 0.01,\ 0.05,\ 0.25 \,\} \ ,
+    \sigma_x \in \{\, 0.018,\ 0.036,\ 0.072 \,\} \ ,
     $$
     <p>
       using \(\sigma_w = 0.05\) and the step size \(\alpha\) from (11). Run
       each for 50 iterations, which is enough for convergence here (see the
-      stopping rule below). Here \(\sigma_x = 0.05\) is a good value,
-      \(\sigma_x = 0.01\) is over-regularized (one fifth of the good value),
-      and \(\sigma_x = 0.25\) is under-regularized (five times it). Produce
-      the following, and no more.
+      stopping rule below). Here \(\sigma_x = 0.036\) is a good value,
+      \(\sigma_x = 0.018\) is over-regularized (half the good value),
+      and \(\sigma_x = 0.072\) is under-regularized (twice it). This is the
+      same \(\sigma_x\) grid as the deblurring in Step 8 and as the Gaussian
+      MRF in Lab 4. Produce the following, and no more.
     </p>
     <p>
       <b>Choosing \(\sigma_x\).</b> \(\sigma_x\) sets the strength of the
       prior, since \(b_{s,r} \propto 1/\sigma_x^2\), so a smaller
       \(\sigma_x\) is a stronger prior. Too small and the result is
       over-smoothed and detail is erased. Too large and the noise passes
-      through. Of the three, \(\sigma_x = 0.05\) gives the lowest RMSE
+      through. Of the three, \(\sigma_x = 0.036\) gives the lowest RMSE
       against the clean image \(x\). It is larger than the prediction-error
       standard deviation from Task 4a, because the best \(\sigma_x\) must also
       suppress noise, not only match the prior.
@@ -874,14 +876,14 @@ check5 = (auto - cost_grad(z.detach(), y_small, a, sigma_w, sigma_x)).abs().max(
     <p>
       The cost decreasing tells you only that the code has no bug. The image
       change tells you the reconstruction has converged. Stop when
-      \( \mathrm{NRMSE}_n < 0.002 \), that is 0.2%. For \(\sigma_x = 0.05\)
+      \( \mathrm{NRMSE}_n < 0.002 \), that is 0.2%. For \(\sigma_x = 0.036\)
       this happens well within 50 iterations.
     </p>
     <ol>
       <li><b>Images.</b> The noisy image \(y\) and the three restored images
-          \(\hat{x}\), for \(\sigma_x = 0.01,\ 0.05,\ 0.25\), all displayed
+          \(\hat{x}\), for \(\sigma_x = 0.018,\ 0.036,\ 0.072\), all displayed
           with the same gray scale over \([0,1]\).</li>
-      <li><b>Convergence.</b> For \(\sigma_x = 0.05\) only, a two-panel figure:
+      <li><b>Convergence.</b> For \(\sigma_x = 0.036\) only, a two-panel figure:
           (a) the cost \(c(x^{(n)})\) versus \(n\), which decreases at every
           step; (b) \( \mathrm{NRMSE}_n \) versus \(n\) on a log vertical
           axis, with the 0.2% threshold drawn as a horizontal line.</li>
@@ -914,29 +916,31 @@ check5 = (auto - cost_grad(z.detach(), y_small, a, sigma_w, sigma_x)).abs().max(
       Reconstruct at the same three values used in Step 7,
     </p>
     $$
-    \sigma_x \in \{\, 0.01,\ 0.05,\ 0.25 \,\} \ ,
+    \sigma_x \in \{\, 0.018,\ 0.036,\ 0.072 \,\} \ ,
     $$
     <p>
       starting at \( x^{(0)} = y \), with \(\sigma_w = 0.02\) and \(\alpha\)
-      from (11). Run each for 50 iterations. As before, \(\sigma_x = 0.05\)
-      is the good value, \(\sigma_x = 0.01\) is over-regularized, and
-      \(\sigma_x = 0.25\) is under-regularized. Stop by the same rule as in
-      Step 7: watch \(\mathrm{NRMSE}_n\) and stop when it is below 0.2%. For
-      \(\sigma_x = 0.05\) this happens well within 50 iterations. Produce:
+      from (11). Run each for 50 iterations. As before, \(\sigma_x = 0.036\)
+      is the good value, \(\sigma_x = 0.018\) is over-regularized, and
+      \(\sigma_x = 0.072\) is under-regularized. This \(\sigma_x = 0.036\) is
+      the best value for this deblurring problem, and it is the value used for
+      the Gaussian MRF prior in Lab 4, so the two labs solve the same problem.
+      Stop by the same rule as in Step 7: watch \(\mathrm{NRMSE}_n\) and stop
+      when it is below 0.2%. For \(\sigma_x = 0.036\) this happens well within
+      50 iterations. Produce:
     </p>
     <p>
       <b>Choosing \(\sigma_x\).</b> The trade-off is sharper here. Too small a
       \(\sigma_x\) over-smooths and undoes the deblurring. Too large a
       \(\sigma_x\) lets the deconvolution amplify noise in the near-zero bands
-      of the blur transfer function, and the RMSE rises above that of the
-      blurred input \(y\). Of the three, \(\sigma_x = 0.05\) gives the lowest
-      RMSE.
+      of the blur transfer function, so the RMSE climbs back up. Of the three,
+      \(\sigma_x = 0.036\) gives the lowest RMSE.
     </p>
     <ol>
       <li><b>Images.</b> The blurred noisy image \(y\) and the three restored
-          images \(\hat{x}\), for \(\sigma_x = 0.01,\ 0.05,\ 0.25\), displayed
+          images \(\hat{x}\), for \(\sigma_x = 0.018,\ 0.036,\ 0.072\), displayed
           over \([0,1]\).</li>
-      <li><b>Convergence.</b> For \(\sigma_x = 0.05\) only, the same
+      <li><b>Convergence.</b> For \(\sigma_x = 0.036\) only, the same
           two-panel figure required in Step 7: (a) the cost versus \(n\); (b)
           \( \mathrm{NRMSE}_n \) versus \(n\) on a log axis with the 0.2%
           threshold.</li>
@@ -965,11 +969,11 @@ check5 = (auto - cost_grad(z.detach(), y_small, a, sigma_w, sigma_x)).abs().max(
           compare with the standard deviation of the noncausal prediction
           error you measured in Task 4a?</li>
       <li>Describe what happens to edges and to fine texture as
-          \(\sigma_x\) decreases from 0.25 to 0.01. Name one image feature
+          \(\sigma_x\) decreases from 0.072 to 0.018. Name one image feature
           in kodim23 that is visibly damaged by the strongest prior, and
           say why a quadratic penalty on \( (x_s - x_r)^2 \) does that.</li>
       <li>Compare the convergence figures for denoising and deconvolution at
-          \(\sigma_x = 0.05\). At which iteration does \(\mathrm{NRMSE}_n\)
+          \(\sigma_x = 0.036\). At which iteration does \(\mathrm{NRMSE}_n\)
           drop below 0.2% in each? Deconvolution takes more iterations.
           Explain this in terms of the eigenvalues of
           \( H = \frac{1}{\sigma_w^2}A^tA + B \) and the blur transfer

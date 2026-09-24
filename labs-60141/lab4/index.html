@@ -193,7 +193,7 @@ unzip levin09_kernels.zip</pre>
   </div>
 </details>
 
-<details class="module" open>
+<details class="module">
   <summary>Parameters for the Experiments
     <span class="note">The settings for every hand-in item, in one place.</span>
   </summary>
@@ -233,7 +233,7 @@ unzip levin09_kernels.zip</pre>
       <tr><td class="grp">D3</td><td>Surrogate plot (Task 4b)</td>
           <td>none *</td><td>1</td><td>0.2 *</td><td>plot only</td></tr>
       <tr><td class="grp">D5</td><td>Cost decreases each step (Task 6a)</td>
-          <td>0.02</td><td>1</td><td>0.015</td><td>\( N = 50 \), \( \omega = 1 \)</td></tr>
+          <td>0.02</td><td>1</td><td>0.020</td><td>\( N = 50 \), \( \omega = 1 \)</td></tr>
       <tr><td class="grp">D6&ndash;D10</td><td>Reconstruction runs R1&ndash;R6 (Step 7)</td>
           <td>0.02</td><td>1 or 100 &dagger;</td><td>see the run table in Step 7</td>
           <td>\( N = 50 \), \( \omega = 1 \)</td></tr>
@@ -1029,16 +1029,16 @@ def reconstruct(y, a, sigma_w, sigma_x, p, q, T, num_iters, omega):
     </p>
     <p>
       For each prior you run three values of \( \sigma_x \): a center value,
-      half of it, and twice it. The center values, \( 0.015 \) for the QGGMRF
+      half of it, and twice it. The center values, \( 0.020 \) for the QGGMRF
       and \( 0.036 \) for the Gaussian MRF, are near the \( \sigma_x \) that
       minimizes RMSE for each prior.
     </p>
     <table class="runs">
       <tr><th>Run</th><th>Prior</th><th>\( T \)</th><th>\( \sigma_x \)</th></tr>
       <tr><td>R1</td><td>Gaussian MRF</td><td>100</td><td>\( 0.036 \) (center)</td></tr>
-      <tr><td>R2</td><td>QGGMRF</td><td>1</td><td>\( 0.015 \) (center)</td></tr>
-      <tr><td>R3</td><td>QGGMRF</td><td>1</td><td>\( 0.0075 \) (center / 2)</td></tr>
-      <tr><td>R4</td><td>QGGMRF</td><td>1</td><td>\( 0.030 \) (center &times; 2)</td></tr>
+      <tr><td>R2</td><td>QGGMRF</td><td>1</td><td>\( 0.020 \) (center)</td></tr>
+      <tr><td>R3</td><td>QGGMRF</td><td>1</td><td>\( 0.010 \) (center / 2)</td></tr>
+      <tr><td>R4</td><td>QGGMRF</td><td>1</td><td>\( 0.040 \) (center &times; 2)</td></tr>
       <tr><td>R5</td><td>Gaussian MRF</td><td>100</td><td>\( 0.018 \) (center / 2)</td></tr>
       <tr><td>R6</td><td>Gaussian MRF</td><td>100</td><td>\( 0.072 \) (center &times; 2)</td></tr>
     </table>
@@ -1112,7 +1112,7 @@ def reconstruct(y, a, sigma_w, sigma_x, p, q, T, num_iters, omega):
           R5 and R6 for the Gaussian MRF, and say what happens in the limits
           of very small and very large \( \sigma_x \).</li>
       <li>The QGGMRF reaches its best RMSE at a smaller \( \sigma_x \) (R2,
-          \( 0.015 \)) than the Gaussian MRF does (R1, \( 0.036 \)). A smaller
+          \( 0.020 \)) than the Gaussian MRF does (R1, \( 0.036 \)). A smaller
           \( \sigma_x \) is a stronger prior. Explain why the edge-preserving
           prior can regularize the flat regions this much harder without
           blurring the edge, using your influence function plot from D1.</li>

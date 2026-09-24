@@ -192,7 +192,7 @@ unzip levin09_kernels.zip</pre>
   </div>
 </details>
 
-<details class="module" open>
+<details class="module">
   <summary>Parameters for the Experiments
     <span class="note">The settings for every hand-in item, in one place.</span>
   </summary>
@@ -234,10 +234,10 @@ unzip levin09_kernels.zip</pre>
       <tr><td class="grp">D1</td><td>\(F\) on its own (Task 7b)</td>
           <td>0.02</td><td>0.01 and 1.0</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
       <tr><td class="grp">D3</td><td>QGGMRF-PnP vs. Lab 4 MAP (Task 10a)</td>
-          <td>0.02</td><td>0.05</td><td>0.05</td><td>0.015 &dagger;</td><td>see note &Dagger;</td></tr>
+          <td>0.02</td><td>0.05</td><td>0.05</td><td>0.020 &dagger;</td><td>see note &Dagger;</td></tr>
       <tr><td class="grp">D4</td><td>\( \sigma_p \) sweep, QGGMRF (Task 10b)</td>
           <td>0.02</td><td>0.025, 0.05, 0.10</td><td>= \( \sigma_p \)</td>
-          <td>0.015 &dagger;</td><td>see note &Dagger;</td></tr>
+          <td>0.020 &dagger;</td><td>see note &Dagger;</td></tr>
       <tr><td class="grp">D5</td><td>DRUNet-PnP deblurring (Task 12a)</td>
           <td>0.02</td><td>0.05</td><td>0.03</td><td>&mdash;</td><td>50</td></tr>
       <tr><td class="grp">D6</td><td>\( \sigma_p \) sweep, DRUNet (Task 12b)</td>
@@ -248,7 +248,7 @@ unzip levin09_kernels.zip</pre>
           <td>0.02</td><td>step \(s\) &sect;</td><td>0.03</td><td>&mdash;</td><td>50</td></tr>
     </table>
     <p class="source">
-      &dagger; \( \sigma_x = 0.015 \) is the QGGMRF value from Lab 4 (its run
+      &dagger; \( \sigma_x = 0.020 \) is the QGGMRF value from Lab 4 (its run
       R2). Feed the same \( \sigma_x \) to the PnP denoiser and to the direct
       Lab 4 MAP, so the two minimize one cost.
       <br>
