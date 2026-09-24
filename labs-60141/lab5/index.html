@@ -234,10 +234,10 @@ unzip levin09_kernels.zip</pre>
       <tr><td class="grp">D1</td><td>\(F\) on its own (Task 7b)</td>
           <td>0.02</td><td>0.01 and 1.0</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
       <tr><td class="grp">D3</td><td>QGGMRF-PnP vs. Lab 4 MAP (Task 10a)</td>
-          <td>0.02</td><td>0.05</td><td>0.05</td><td>0.020 &dagger;</td><td>see note &Dagger;</td></tr>
+          <td>0.02</td><td>0.05</td><td>0.05</td><td>0.020 &dagger;</td><td>100 outer, 20 inner &Dagger;</td></tr>
       <tr><td class="grp">D4</td><td>\( \sigma_p \) sweep, QGGMRF (Task 10b)</td>
           <td>0.02</td><td>0.025, 0.05, 0.10</td><td>= \( \sigma_p \)</td>
-          <td>0.020 &dagger;</td><td>see note &Dagger;</td></tr>
+          <td>0.020 &dagger;</td><td>100 outer, 20 inner &Dagger;</td></tr>
       <tr><td class="grp">D5</td><td>DRUNet-PnP deblurring (Task 12a)</td>
           <td>0.02</td><td>0.05</td><td>0.03</td><td>&mdash;</td><td>50</td></tr>
       <tr><td class="grp">D6</td><td>\( \sigma_p \) sweep, DRUNet (Task 12b)</td>
@@ -252,9 +252,10 @@ unzip levin09_kernels.zip</pre>
       R2). Feed the same \( \sigma_x \) to the PnP denoiser and to the direct
       Lab 4 MAP, so the two minimize one cost.
       <br>
-      &Dagger; Step 10 does not fix the QGGMRF-PnP outer and inner iteration
-      counts. Choose them large enough that the loop converges, which is what
-      makes the denoiser an accurate proximal map and the result match the MAP.
+      &Dagger; The QGGMRF proximal map is solved by 20 inner steepest-descent
+      iterations, warm-started from the previous outer iteration. The warm start
+      keeps the map accurate with only 20 inner iterations, so 100 outer PnP
+      iterations reproduce the Lab 4 MAP.
       <br>
       &sect; Proximal-gradient PnP has no \( \sigma_p \). It uses a gradient
       step size \(s\) in the stable range \( 0 \lt s \lt 2/\max_\omega
@@ -832,10 +833,11 @@ def prox_data(v, y, a_hat, sigma_w, sigma_p):
           used for the Lab 4 MAP, so the prior inside the denoiser is the prior
           in the MAP cost.</li>
       <li><b>A warm start.</b> \(F\) is exact, but the QGGMRF denoiser is itself
-          iterative and stops after a few inner iterations. Start each inner
-          solve from the previous iteration's denoiser output, not from scratch.
-          Then the inner minimization is accurate and \(H\) is a true proximal
-          map. Without the warm start \(H\) is only a rough proximal map, and the
+          iterative and stops after a fixed number of inner iterations, 20 in
+          this lab. Start each inner solve from the previous iteration's
+          denoiser output, not from scratch. Then the inner minimization stays
+          accurate and \(H\) is a true proximal map. Without the warm start
+          those 20 iterations leave \(H\) only a rough proximal map, and the
           equilibrium drifts away from the MAP.</li>
     </ol>
     <p>
@@ -868,9 +870,10 @@ def prox_data(v, y, a_hat, sigma_w, sigma_p):
     <p>
       <b>Task 10a. Reproduce the MAP.</b> Form \(y = Ax + w\) with kernel 1 and
       \(\sigma_w = 0.02\). Run <code>pnp_qggmrf_map</code> with
-      \(\sigma_p = \sigma_n = 0.05\) and the \(\sigma_x\) you used for your Lab 4
-      MAP. On the same data, compute your direct Lab 4 MAP reconstruction.
-      Compare the two.
+      \(\sigma_p = \sigma_n = 0.05\), the \(\sigma_x = 0.020\) you used for your
+      Lab 4 MAP, 100 outer PnP iterations, and 20 inner steepest-descent
+      iterations in the warm-started QGGMRF proximal map. On the same data,
+      compute your direct Lab 4 MAP reconstruction. Compare the two.
     </p>
     <div class="handin" id="D3">
       <span class="tag">HAND IN &middot; D3</span>
