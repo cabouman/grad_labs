@@ -979,8 +979,10 @@ def denoise_dnn(v, sigma_n):
       <span class="tag">HAND IN &middot; D5</span>
       <p>
         The blurred noisy \(y\), the DRUNet-PnP result, and the Lab 4 MAP, over
-        \([0,1]\), each with a 128 by 128 crop (state the coordinates); the RMSE
-        of each against the clean image; and the convergence history
+        \([0,1]\). Show a 128 by 128 crop (state the coordinates) of the ground
+        truth, \(y\), the DRUNet-PnP result, and the Lab 4 MAP together, so the
+        four can be compared side by side. Give the RMSE of \(y\), DRUNet-PnP,
+        and the MAP against the clean image, and the convergence history
         \( \|x - v\| / \|x\| \) versus iteration on a log vertical axis. One
         sentence: how does DRUNet-PnP compare to the MAP?
       </p>
@@ -1227,8 +1229,9 @@ def denoise_dnn(v, sigma_n):
           The three \(\sigma_p\)-sweep RMSE values and one sentence on why they
           are the same.</li>
       <li><span class="dnum"><a href="#D5">D5</a></span>
-          The blurred \(y\), the DRUNet-PnP result, and the Lab 4 MAP with
-          crops, their RMSE, and the convergence plot.</li>
+          The blurred \(y\), the DRUNet-PnP result, and the Lab 4 MAP, with a
+          crop comparison that also includes the ground truth, their RMSE, and
+          the convergence plot.</li>
       <li><span class="dnum"><a href="#D6">D6</a></span>
           The \(\sigma_p\) sweep crops and the two fingerprint crops with
           RMSE, and two sentences.</li>
