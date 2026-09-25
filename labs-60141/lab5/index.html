@@ -244,8 +244,8 @@ unzip levin09_kernels.zip</pre>
           <td>0.02</td><td>0.025, 0.05, 0.10</td><td>0.03</td><td>&mdash;</td><td>50</td></tr>
       <tr><td class="grp">D6</td><td>Fingerprint, DRUNet (Task 12c)</td>
           <td>0.02</td><td>0.03 and 0.10</td><td>= \( \sigma_p \)</td><td>&mdash;</td><td>50</td></tr>
-      <tr><td class="grp">D7</td><td>Proximal-gradient PnP (Task 13a), optional</td>
-          <td>0.02</td><td>step \(s\) &sect;</td><td>0.03</td><td>&mdash;</td><td>50</td></tr>
+      <tr><td class="grp">D7</td><td>Proximal-gradient PnP (Task 15a), optional</td>
+          <td>0.02</td><td>\( s = \sigma_n^2 \) &sect;</td><td>0.03</td><td>&mdash;</td><td>50</td></tr>
     </table>
     <p class="source">
       &dagger; \( \sigma_x = 0.020 \) is the QGGMRF value from Lab 4 (its run
@@ -257,9 +257,9 @@ unzip levin09_kernels.zip</pre>
       keeps the map accurate with only 20 inner iterations, so 100 outer PnP
       iterations reproduce the Lab 4 MAP.
       <br>
-      &sect; Proximal-gradient PnP has no \( \sigma_p \). It uses a gradient
-      step size \(s\) in the stable range \( 0 \lt s \lt 2/\max_\omega
-      |\hat{a}(\omega)|^2 \) (Step 13).
+      &sect; Proximal-gradient PnP has no \( \sigma_p \). It takes a gradient
+      step on the data term with step size \( s = \sigma_n^2 \), the value that
+      makes the fixed point a stationary point of the MAP cost (Step 13).
     </p>
   </div>
 
@@ -1038,106 +1038,180 @@ def denoise_dnn(v, sigma_n):
 
 <details class="module">
   <summary>Module 5: Proximal-Gradient PnP (Optional)
-    <span class="note">Step 13.  A second algorithm that needs no proximal map for F.  This module is optional.</span>
+    <span class="note">Steps 13 to 15.  A second algorithm that needs no proximal map for F.  This module is optional.</span>
   </summary>
   <div class="modulebody">
 
   <div class="card">
-    <h3>Step 13: A Second Way to Reach the Equilibrium</h3>
+    <h3>Step 13: Proximal-Gradient PnP</h3>
     <p>
-      PnP-ADMM is not the only algorithm that reaches a consensus equilibrium.
-      It leans on the proximal map \(F\), which in this lab is a few FFTs but
-      for a general forward model is a full linear solve. This module builds a
-      second algorithm, <b>proximal-gradient PnP</b>, that needs only \(A\),
-      \(A^t\), and the denoiser. It never solves a linear system, so it applies
-      to any forward model you can multiply by and take the adjoint of, even
-      when you cannot invert \(M\). This module is optional.
+      PnP-ADMM leans on the proximal map \(F\), which in this lab is a few FFTs
+      but for a general forward model is a full linear solve. This module builds
+      a second algorithm, <b>proximal-gradient PnP</b>, that needs only \(A\),
+      \(A^t\), and the denoiser, and never solves a linear system. It is also a
+      clean place to see why a denoiser is a principled stand-in for a prior.
+      This module is optional.
     </p>
     <p>
-      Split the cost of equation (1) into its two parts: the smooth data term
-      \( f(x) = \frac{1}{2\sigma_w^2}\|y - Ax\|^2 \), and the prior, whose
-      proximal map is the denoiser \(H\). The <b>proximal-gradient method</b>,
-      also called forward-backward splitting, minimizes such a sum by
-      alternating one gradient step on the smooth term with one proximal step
-      on the other:
+      Recall the two proximal maps of the split cost (1), one for the data term
+      \(f\) and one for the prior \(h\):
     </p>
     $$
-    x \ \leftarrow \ H\!\left( x - s\, \nabla f(x) \right) \ .
-    \tag{9}
+    F(v) = \arg\min_x \left\{ f(x) + \tfrac{1}{2\sigma_p^2}\|x - v\|^2 \right\} ,
+    \qquad
+    H(v) = \arg\min_x \left\{ h(x) + \tfrac{1}{2\sigma_n^2}\|x - v\|^2 \right\} .
     $$
     <p>
-      The gradient step is the <b>forward</b> step and the proximal step is the
-      <b>backward</b> step. In PnP the backward step is a denoiser, exactly as
-      in PnP-ADMM. The gradient of the data term is
-      \( \nabla f(x) = \frac{1}{\sigma_w^2} A^t ( A x - y ) \), the data error
-      back-projected through the adjoint. Folding the constant
-      \( 1/\sigma_w^2 \) into the step size, the update reads
+      The <b>proximal-gradient method</b>, also called forward-backward
+      splitting, minimizes \( f + h \) by taking a gradient step on one term and
+      a proximal step on the other. There are two symmetric forms:
     </p>
     $$
-    x \ \leftarrow \ H\!\left( x - s\, A^t ( A x - y ) \right) \ .
-    \tag{10}
+    x \leftarrow H\!\left( x - s\,\nabla f(x) \right) \ ,
+    \tag{9a}
+    $$
+    $$
+    x \leftarrow F\!\left( x - s\,\nabla h(x) \right) \ .
+    \tag{9b}
     $$
     <p>
-      One forward projection \( A x \), one subtraction, one adjoint
-      \( A^t(\cdot) \), and one call to the denoiser. There is no proximal map
-      for \(F\) and no linear solve.
+      <b>The fixed point has zero gradient, exactly as in Step 4.</b> Take the
+      first form. At a fixed point \(x^*\) the anchor is
+      \( v = x^* - s\,\nabla f(x^*) \), and \( x^* = H(v) \) minimizes
+      \( h(x) + \tfrac{1}{2\sigma_n^2}\|x - v\|^2 \), so its gradient is zero
+      there:
+    </p>
+    $$
+    \nabla h(x^*) + \tfrac{1}{\sigma_n^2}\left( x^* - v \right)
+    = \nabla h(x^*) + \tfrac{s}{\sigma_n^2}\,\nabla f(x^*) = 0 \ .
+    $$
+    <p>
+      Choosing the step size \( s = \sigma_n^2 \) makes this
+      \( \nabla f(x^*) + \nabla h(x^*) = 0 \): the fixed point is a stationary
+      point of the MAP cost \( f + h \), the same condition as Step 4. By the
+      symmetry of (9a) and (9b), the other form reaches the same conclusion with
+      \( s = \sigma_p^2 \). The step size is the square of the proximal parameter
+      of whichever map you keep.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 14: Which Form to Use</h3>
+    <p>
+      The two forms ask different things of the prior. Form (9a) needs the
+      proximal map \(H\); form (9b) needs the gradient \(\nabla h\). There is no
+      explicit prior, only a trained denoiser, so we have a formula for neither.
+      One identity, Tweedie's formula, bridges the gap and supplies both: the
+      first box states it and handles form (9b), and the second draws the
+      corollary for form (9a). Both readings are used in practice.
     </p>
     <div class="tip">
-      <b>The step size and stability.</b> The forward step is stable when
-      \( 0 \lt s \lt 2 / \max_\omega |\hat{a}(\omega)|^2 \), where
-      \( |\hat{a}(\omega)|^2 \) is the squared magnitude of the blur's
-      frequency response from Step 7. A step above this range lets the data
-      term amplify high frequencies faster than the denoiser removes them, and
-      the iteration diverges. A very small step is stable but slow.
+      <b>Form (9b): the denoiser is the prior's score (Tweedie's formula).</b>
+      Form (9b) needs \(\nabla h\). Tweedie's formula supplies it from the
+      denoiser. Let \( V = X + N \) with \( N \sim N(0, \sigma_n^2 I) \). The
+      MMSE denoiser, the posterior mean, is
+      $$
+      D(v) = E[X \mid V = v] = v + \sigma_n^2\,\nabla \log p_V(v) \ ,
+      \tag{10}
+      $$
+      a standard identity for Gaussian denoising that follows from Bayes' rule,
+      where \( p_V \) is the density of the noisy image. Rearranged,
+      \( \bigl( D(v) - v \bigr)/\sigma_n^2 = \nabla \log p_V(v) \): the denoiser
+      returns, up to the factor \(\sigma_n^2\), the score of the noisy density.
+      That score is for \(p_V\), the prior \(p_X\) blurred by the noise; as
+      \( \sigma_n \to 0 \) it tends to the true prior score,
+      \( \nabla \log p_V(v) = \nabla \log p_X(v) + O(\sigma_n^2) \). Recall
+      \( h = -\log p_X \), so \( \nabla \log p_X = -\nabla h \): the denoiser
+      hands us the \(\nabla h\) that form (9b) is missing. This is the
+      score-based view used in diffusion models.
+    </div>
+    <div class="tip">
+      <b>Form (9a): the denoiser is the proximal map \(H\).</b> Form (9a) plugs
+      the denoiser in where \(H\) sits, which is legitimate when the denoiser
+      matches \(H\). The proximal map \(H(v)\) is the <b>MAP</b> denoiser, the
+      posterior mode of \(X\) given \(V = v\); the trained network approximates
+      the <b>MMSE</b> denoiser \( D(v) = E[X \mid V = v] \), the posterior mean.
+      They agree to leading order for small \(\sigma_n\). The MAP map
+      \( x = H(v) \) satisfies
+      \( \nabla h(x) + \frac{1}{\sigma_n^2}\left( x - v \right) = 0 \), that is
+      \( x = v - \sigma_n^2\,\nabla h(x) \); to leading order \( x \approx v \),
+      so \( \nabla h(x) = \nabla h(v) + O(\sigma_n^2) \) and
+      $$
+      H(v) = v - \sigma_n^2\,\nabla h(v) + O(\sigma_n^4) \ .
+      $$
+      By Tweedie's formula (10) the MMSE denoiser has the same expansion,
+      \( D(v) = v - \sigma_n^2\,\nabla h(v) + O(\sigma_n^4) \), so
+      \( H(v) = D(v) + O(\sigma_n^4) \): the trained denoiser is the proximal
+      map \(H\) to leading order.
     </div>
     <p>
-      <b>What it converges to.</b> At a fixed point the update leaves \(x\)
-      unchanged, so
-      \( x^* = H\!\left( x^* - s\, A^t ( A x^* - y ) \right) \). When \(H\) is
-      the proximal map of a prior, this is the condition
-      \( \nabla f(x^*) + \nabla h(x^*) = 0 \), so \(x^*\) minimizes the MAP
-      cost (1), the same answer as PnP-ADMM. When \(H\) is a general denoiser,
-      \(x^*\) is again an equilibrium rather than the minimizer of any cost,
-      defined now by this fixed-point equation. So proximal-gradient PnP and
-      PnP-ADMM are two algorithms aimed at the same kind of solution, reached
-      by different routes.
+      We use <b>form (9a)</b>. Both forms reach the same MAP fixed point, but
+      (9a) needs no linear solve: the denoiser plays \(H\), and the gradient
+      \( \nabla f \) is one \(A\) and one \(A^t\). Form (9b) would still need the
+      exact data proximal map \(F\), a linear solve, which is what this module
+      set out to avoid. Form (9a) is also the standard proximal-gradient PnP.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 15: Proximal-Gradient PnP in Code</h3>
+    <p>
+      Putting the pieces together, proximal-gradient PnP is one gradient step on
+      the data term followed by one call to the denoiser:
+    </p>
+    $$
+    x \leftarrow \text{denoise}\!\left( x - s\,\nabla f(x) \right) \ ,
+    \qquad s = \sigma_n^2 \ ,
+    \tag{11}
+    $$
+    <p>
+      with \( \sigma_n \) the denoiser noise level you already found works in
+      PnP-ADMM. One forward projection \( A x \), one adjoint \( A^t(\cdot) \),
+      and one denoiser call per iteration; no proximal map for \(F\) and no
+      linear solve.
     </p>
     <div class="codeblock">
       <button class="copy" onclick="copyCode(this)">Copy</button>
-<pre>def pnp_prox_grad(y, a_hat, denoiser, s, num_iters):
+<pre>def pnp_prox_grad(y, a_hat, denoiser, sigma_w, s, num_iters):
     """Run proximal-gradient PnP: a gradient step on the data term, then denoise.
 
-    Each iteration applies equation (10),
-        x = denoiser( x - s * A^t (A x - y) ),
+    Each iteration applies equation (11),
+        grad_f = (1 / sigma_w**2) * A^t (A x - y)      # gradient of the data term
+        x      = denoiser( x - s * grad_f ),
     with A and A^t applied in the DFT domain through a_hat.  There is no
     proximal map for F and no linear solve.
 
     y          (H, W) float64 tensor, the measured data
     a_hat      (H, W) complex128 tensor from kernel_dft
     denoiser   a function taking one (H, W) tensor and returning one, as H
-    s          float, the gradient step size, 0 < s < 2 / max|a_hat|^2
+    sigma_w    float, the noise level in the data term
+    s          float, the gradient step size; the theory value is sigma_n**2
     num_iters  int
     returns    (x, history), the final image and the list of
                ||x - x_prev|| / ||x|| at each iteration
     """</pre>
     </div>
     <p>
-      <b>Task 13a. Run it and compare.</b> On the same data as Module 4,
+      <b>Task 15a. Run it and compare.</b> On the same data as Module 4,
       \( y = A x + w \) with kernel 1 and \( \sigma_w = 0.02 \), run
       <code>pnp_prox_grad</code> with the DRUNet denoiser at
-      \( \sigma_n = 0.03 \) for 50 iterations. Pick a step size \(s\) inside the
-      stable range above. Compare its reconstruction and its per-iteration
-      change against the PnP-ADMM result from Task 12a.
+      \( \sigma_n = 0.03 \) and the step size \( s = \sigma_n^2 = 0.0009 \), for
+      50 iterations. Compare its reconstruction and its per-iteration change
+      against the PnP-ADMM result from Task 12a.
     </p>
     <div class="handin" id="D7">
       <span class="tag">HAND IN &middot; D7</span>
       <p>
         <b>Optional.</b> The proximal-gradient PnP reconstruction next to the
         PnP-ADMM result from D5, both over \([0,1]\) with the same crop; the
-        RMSE of each against the clean image; and the two convergence curves
-        \( \|x - x_{\text{prev}}\| / \|x\| \) on one log axis. One sentence
-        comparing the two algorithms in image quality and in the number of
-        iterations they take to settle.
+        RMSE of each against the clean image; and the convergence history of
+        each algorithm on one log axis &mdash; the per-iteration change
+        \( \|x - x_{\text{prev}}\| / \|x\| \) that proximal-gradient PnP returns,
+        and the equilibrium residual \( \|x - v\| / \|x\| \) that PnP-ADMM
+        returns from D5. These measure related but different things, and both
+        fall toward zero as the run settles. One sentence comparing the two
+        algorithms in image quality and in the number of iterations they take to
+        settle.
       </p>
     </div>
   </div>
@@ -1147,12 +1221,12 @@ def denoise_dnn(v, sigma_n):
 
 <details class="module">
   <summary>Module 6: Questions
-    <span class="note">Step 14.  Answer for your own code and images.</span>
+    <span class="note">Step 16.  Answer for your own code and images.</span>
   </summary>
   <div class="modulebody">
 
   <div class="card">
-    <h3>Step 14: Questions to Answer</h3>
+    <h3>Step 16: Questions to Answer</h3>
     <p>
       Answer each question in a few sentences, using your own images and
       numbers as evidence.
@@ -1237,7 +1311,7 @@ def denoise_dnn(v, sigma_n):
           RMSE, and two sentences.</li>
       <li><span class="dnum"><a href="#D7">D7</a></span>
           Optional. The proximal-gradient PnP result next to PnP-ADMM, their
-          RMSE, and the two convergence curves.</li>
+          RMSE, and each algorithm's convergence history.</li>
       <li><span class="dnum"><a href="#D8">D8</a></span>
           Your answers to the five questions.</li>
     </ol>
