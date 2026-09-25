@@ -233,18 +233,16 @@ unzip levin09_kernels.zip</pre>
           <td>none</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
       <tr><td class="grp">D1</td><td>\(F\) on its own (Task 7b)</td>
           <td>0.02</td><td>0.01 and 1.0</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td></tr>
-      <tr><td class="grp">D3</td><td>QGGMRF-PnP vs. Lab 4 MAP (Task 10a)</td>
+      <tr><td class="grp">D3</td><td>PnP-ADMM, QGGMRF denoiser: match the Lab 4 MAP (Task 10a)</td>
           <td>0.02</td><td>0.05</td><td>0.05</td><td>0.020 &dagger;</td><td>100 outer, 20 inner &Dagger;</td></tr>
-      <tr><td class="grp">D4</td><td>\( \sigma_p \) sweep, QGGMRF (Task 10b)</td>
+      <tr><td class="grp">D4</td><td>PnP-ADMM, QGGMRF denoiser: \( \sigma_p \) sweep (Task 10b)</td>
           <td>0.02</td><td>0.025, 0.05, 0.10</td><td>= \( \sigma_p \)</td>
           <td>0.020 &dagger;</td><td>100 outer, 20 inner &Dagger;</td></tr>
-      <tr><td class="grp">D5</td><td>DRUNet-PnP deblurring (Task 12a)</td>
+      <tr><td class="grp">D5</td><td>PnP-ADMM, DRUNet denoiser: deblurring (Task 12a)</td>
           <td>0.02</td><td>0.05</td><td>0.03</td><td>&mdash;</td><td>50</td></tr>
-      <tr><td class="grp">D6</td><td>\( \sigma_p \) sweep, DRUNet (Task 12b)</td>
+      <tr><td class="grp">D6</td><td>PnP-ADMM, DRUNet denoiser: \( \sigma_p \) sweep (Task 12b)</td>
           <td>0.02</td><td>0.025, 0.05, 0.10</td><td>0.03</td><td>&mdash;</td><td>50</td></tr>
-      <tr><td class="grp">D6</td><td>Fingerprint, DRUNet (Task 12c)</td>
-          <td>0.02</td><td>0.03 and 0.10</td><td>= \( \sigma_p \)</td><td>&mdash;</td><td>50</td></tr>
-      <tr><td class="grp">D7</td><td>Proximal-gradient PnP (Task 15a), optional</td>
+      <tr><td class="grp">D7</td><td>PnP-PG, DRUNet denoiser (Task 15a), optional</td>
           <td>0.02</td><td>\( s = \sigma_n^2 \) &sect;</td><td>0.03</td><td>&mdash;</td><td>50</td></tr>
     </table>
     <p class="source">
@@ -257,7 +255,7 @@ unzip levin09_kernels.zip</pre>
       keeps the map accurate with only 20 inner iterations, so 100 outer PnP
       iterations reproduce the Lab 4 MAP.
       <br>
-      &sect; Proximal-gradient PnP has no \( \sigma_p \). It takes a gradient
+      &sect; Proximal-gradient PnP (PnP-PG) has no \( \sigma_p \). It takes a gradient
       step on the data term with step size \( s = \sigma_n^2 \), the value that
       makes the fixed point a stationary point of the MAP cost (Step 13).
     </p>
@@ -895,8 +893,7 @@ def prox_data(v, y, a_hat, sigma_w, sigma_p):
         The three RMSE values from the \(\sigma_p\) sweep, and one sentence on
         why they are the same. (For a true proximal map, \(\sigma_p\) is the
         ADMM penalty: it sets how fast the loop converges, not the image it
-        converges to.) Keep this result; Module 4 runs the same test on DRUNet
-        and gets the opposite.
+        converges to.)
       </p>
     </div>
   </div>
@@ -958,7 +955,7 @@ def denoise_dnn(v, sigma_n):
   </div>
 
   <div class="card">
-    <h3>Step 12: Deblurring with DRUNet, and the Fingerprint</h3>
+    <h3>Step 12: Deblurring with DRUNet</h3>
     <p>
       Now plug DRUNet into the same <code>pnp_admm</code> loop. It was not
       derived from a prior: there is no cost (1) it minimizes and no
@@ -1011,24 +1008,12 @@ def denoise_dnn(v, sigma_n):
       image changes: small \(\sigma_p\) over-regularizes (too smooth), and large
       \(\sigma_p\) under-regularizes (noise comes back).
     </p>
-    <p>
-      <b>Task 12c. The fingerprint.</b> Run the DRUNet PnP twice with the two
-      agents set to the same parameter, \( \sigma_p = \sigma_n = 0.03 \) and
-      \( \sigma_p = \sigma_n = 0.10 \). Are the two reconstructions the same? For
-      a true pair of proximal maps they would be, exactly the \(\sigma_p\)
-      invariance you saw in Module 3 Task 10b, because the shared value is only
-      the ADMM penalty. If the DRUNet images differ, the denoiser is not the
-      proximal map of any fixed cost.
-    </p>
     <div class="handin" id="D6">
       <span class="tag">HAND IN &middot; D6</span>
       <p>
-        The three \(\sigma_p\)-sweep crops with their RMSE, and the two
-        fingerprint crops with their RMSE. Then two sentences: what
-        \(\sigma_p\) controls for DRUNet, which direction over-regularizes and
-        which under-regularizes; and what the fingerprint shows about whether
-        DRUNet is a proximal map, contrasted with the \(\sigma_p\) invariance of
-        the QGGMRF proximal map in Module 3.
+        The three \(\sigma_p\)-sweep crops with their RMSE, and two sentences on
+        what \(\sigma_p\) controls for DRUNet: which direction over-regularizes
+        and which under-regularizes.
       </p>
     </div>
   </div>
@@ -1047,7 +1032,7 @@ def denoise_dnn(v, sigma_n):
     <p>
       PnP-ADMM leans on the proximal map \(F\), which in this lab is a few FFTs
       but for a general forward model is a full linear solve. This module builds
-      a second algorithm, <b>proximal-gradient PnP</b>, that needs only \(A\),
+      a second algorithm, <b>proximal-gradient PnP (PnP-PG)</b>, that needs only \(A\),
       \(A^t\), and the denoiser, and never solves a linear system. It is also a
       clean place to see why a denoiser is a principled stand-in for a prior.
       This module is optional.
@@ -1307,8 +1292,7 @@ def denoise_dnn(v, sigma_n):
           crop comparison that also includes the ground truth, their RMSE, and
           the convergence plot.</li>
       <li><span class="dnum"><a href="#D6">D6</a></span>
-          The \(\sigma_p\) sweep crops and the two fingerprint crops with
-          RMSE, and two sentences.</li>
+          The three \(\sigma_p\) sweep crops with RMSE, and two sentences.</li>
       <li><span class="dnum"><a href="#D7">D7</a></span>
           Optional. The proximal-gradient PnP result next to PnP-ADMM, their
           RMSE, and each algorithm's convergence history.</li>
