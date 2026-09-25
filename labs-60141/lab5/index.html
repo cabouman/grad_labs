@@ -242,8 +242,10 @@ unzip levin09_kernels.zip</pre>
           <td>0.02</td><td>0.05</td><td>0.03</td><td>&mdash;</td><td>50</td></tr>
       <tr><td class="grp">D6</td><td>PnP-ADMM, DRUNet denoiser: \( \sigma_p \) sweep (Task 12b)</td>
           <td>0.02</td><td>0.025, 0.05, 0.10</td><td>0.03</td><td>&mdash;</td><td>50</td></tr>
-      <tr><td class="grp">D7</td><td>PnP-PG, DRUNet denoiser (Task 15a), optional</td>
+      <tr><td class="grp">D7</td><td>PnP-PG, DRUNet denoiser: unstable run (Task 16a), optional</td>
           <td>0.02</td><td>0.05 &sect;</td><td>0.03</td><td>&mdash;</td><td>50</td></tr>
+      <tr><td class="grp">D8</td><td>PnP-PG, DRUNet denoiser: stable rescaled run (Task 16a), optional</td>
+          <td>0.02</td><td>0.025 &sect;</td><td>0.015</td><td>&mdash;</td><td>50</td></tr>
     </table>
     <p class="source">
       &dagger; \( \sigma_x = 0.020 \) is the QGGMRF value from Lab 4 (its run
@@ -257,9 +259,11 @@ unzip levin09_kernels.zip</pre>
       <br>
       &sect; Proximal-gradient PnP (PnP-PG) drops the dual variable of PnP-ADMM and
       replaces the forward proximal map \( F \) with one gradient step on the data
-      term, of size \( \sigma_p^2 \) (Step 13). It reuses the D5 values
-      \( \sigma_p = 0.05 \) and \( \sigma_n = 0.03 \), so the gradient step is
-      \( 0.0025 \).
+      term, of size \( \sigma_p^2 \) (Step 13). D7 uses the D5 balance
+      \( \sigma_p = 0.05,\ \sigma_n = 0.03 \), which is unstable because
+      \( \sigma_p \) is above \( \sqrt 2\,\sigma_w \). D8 halves both to
+      \( \sigma_p = 0.025,\ \sigma_n = 0.015 \): the same balance
+      \( \sigma_n^2/\sigma_p^2 = 0.36 \), now stable (Step 15).
     </p>
   </div>
 
@@ -1038,7 +1042,7 @@ def denoise_dnn(v, sigma_n):
 
 <details class="module">
   <summary>Module 5: Proximal-Gradient PnP (Optional)
-    <span class="note">Steps 13 to 15.  A second algorithm that needs no proximal map for F.  This module is optional.</span>
+    <span class="note">Steps 13 to 16.  A second algorithm that needs no proximal map for F.  This module is optional.</span>
   </summary>
   <div class="modulebody">
 
@@ -1173,47 +1177,91 @@ def denoise_dnn(v, sigma_n):
   </div>
 
   <div class="card">
-    <h3>Step 15: Proximal-Gradient PnP in Code</h3>
+    <h3>Step 15: Stability Analysis</h3>
     <p>
-      Putting the pieces together, proximal-gradient PnP is one gradient step on
-      the data term followed by one call to the denoiser:
+      Proximal-gradient PnP is one gradient step on the data term followed by one
+      call to the denoiser:
     </p>
     $$
     x \leftarrow \text{denoise}_{\sigma_n}\!\left( x - \sigma_p^2\,\nabla f(x) \right) \ ,
     \tag{11}
     $$
     <p>
-      with \( \sigma_p \) and \( \sigma_n \) the two proximal parameters you
-      already tuned in PnP-ADMM: the denoiser runs at \( \sigma_n \) and the
-      gradient step uses \( \sigma_p^2 \) (Step 13). One forward projection
-      \( A x \), one adjoint \( A^t(\cdot) \), and one denoiser call per
-      iteration; no proximal map for \(F\) and no linear solve.
-    </p>
-    <p>
-      <b>The gradient of the data term.</b> The data term is
+      the denoiser at \( \sigma_n \) and the gradient step at \( \sigma_p^2 \)
+      (Step 13). The data term is
       \( f(x) = \tfrac{1}{2\sigma_w^2}\|y - A x\|^2 \), so
       $$
-      \nabla f(x) = \frac{1}{\sigma_w^2}\, A^t\!\left( A x - y \right) \ :
+      \nabla f(x) = \frac{1}{\sigma_w^2}\, A^t\!\left( A x - y \right) \ ,
       $$
-      form the residual \( A x - y \), back-project it with \( A^t \), and scale
-      by \( 1/\sigma_w^2 \). Both \(A\) and \(A^t\) are the DFT multiplies of
-      Step 2, \( \widehat{A x} = \hat a \odot \hat x \) and
-      \( \widehat{A^t r} = \overline{\hat a} \odot \hat r \) with \(\hat a\) the
-      kernel DFT (<code>a_hat</code>) and \(\overline{\hat a}\) its complex
-      conjugate. So the gradient is one forward DFT multiply, a subtraction, and
-      one adjoint DFT multiply, and no linear system is solved.
+      with \(A\) and \(A^t\) the DFT multiplies of Step 2,
+      \( \widehat{A x} = \hat a \odot \hat x \) and
+      \( \widehat{A^t r} = \overline{\hat a} \odot \hat r \).
     </p>
+    <p>
+      <b>Unlike PnP-ADMM, this iteration can diverge.</b> PnP-ADMM computes the
+      exact proximal map \(F\), a linear solve that is stable for any
+      \(\sigma_p\). PnP-PG replaces that solve with one explicit gradient step,
+      and an explicit gradient step is stable only when its step size is small
+      enough.
+    </p>
+    <p>
+      <b>The condition.</b> The denoiser is non-expansive: it never pushes two
+      images further apart, so it cannot cause a blow-up. Any instability is in
+      the gradient step alone. That step is affine,
+      \( x - \sigma_p^2\,\nabla f(x)
+         = \bigl( I - \tfrac{\sigma_p^2}{\sigma_w^2}\,A^t A \bigr) x + \text{const} \),
+      so each iteration multiplies the error by
+      $$
+      G = I - \frac{\sigma_p^2}{\sigma_w^2}\, A^t A \ .
+      $$
+      The error stays bounded only if every eigenvalue of \(G\) has magnitude at
+      most one. With \(\lambda\) an eigenvalue of \(A^t A\), the eigenvalues of
+      \(G\) are \( 1 - \tfrac{\sigma_p^2}{\sigma_w^2}\,\lambda \), and requiring
+      \( \bigl| 1 - \tfrac{\sigma_p^2}{\sigma_w^2}\,\lambda \bigr| \le 1 \) for
+      every \(\lambda\) gives
+      $$
+      \sigma_p^2 \le \frac{2\,\sigma_w^2}{\lambda_{\max}(A^t A)} \ .
+      $$
+      In the DFT domain \(A^t A\) multiplies frequency \(\omega\) by
+      \(|\hat a(\omega)|^2\), so
+      \( \lambda_{\max}(A^t A) = \max_\omega |\hat a(\omega)|^2 \). The kernel is
+      normalized to sum to one, so that maximum is one and the condition becomes
+      $$
+      \sigma_p \le \sqrt{2}\,\sigma_w \ .
+      $$
+    </p>
+    <p>
+      <b>D5's parameters are unstable.</b> With \( \sigma_w = 0.02 \) the ceiling
+      is \( \sqrt 2\,\sigma_w \approx 0.028 \), and D5 uses \( \sigma_p = 0.05 \),
+      which is above it. At \( \sigma_p = 0.05 \) the iteration diverges. This is
+      the price of the explicit gradient step, not a defect of the denoiser.
+    </p>
+    <p>
+      <b>Rescale to a stable point.</b> The balance between data and prior is set
+      by the ratio \( \sigma_n^2/\sigma_p^2 \) (Step 13), not by \( \sigma_p \)
+      and \( \sigma_n \) separately. Divide both by the same factor and that
+      ratio, and so the fixed point, is unchanged while the step \( \sigma_p^2 \)
+      shrinks. Halving both, \( \sigma_p = 0.025 \) and \( \sigma_n = 0.015 \),
+      keeps the ratio \( \sigma_n^2/\sigma_p^2 = 0.36 \) and now satisfies
+      \( \sigma_p \le \sqrt 2\,\sigma_w \), so the iteration converges to the same
+      balance. (In the idealized case of a true proximal-map denoiser the two
+      share a fixed point exactly; DRUNet is trained, so lowering \(\sigma_n\)
+      shifts its effective prior slightly.)
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 16: Proximal-Gradient PnP in Code</h3>
     <p>
       <b>The denoiser.</b> \( \text{denoise}_{\sigma_n} \) is an image denoiser:
       given a noisy image and an assumed noise standard deviation \(\sigma_n\), it
       returns an estimate of the clean image, treating its input as a clean image
       plus white Gaussian noise of standard deviation \(\sigma_n\). It is the same
-      denoiser you plugged into PnP-ADMM as \(H\) &mdash; here the pretrained
-      DRUNet of Module 4, called at \( \sigma_n = 0.03 \). It is not derived from
-      any prior; equation (11) calls it in place of the proximal map \(H\). Step 14
-      justifies that substitution through Tweedie's formula: the ideal such
-      denoiser is the posterior mean \( E[X \mid V = v] \) of (10), and it agrees
-      with \(H\) to leading order in \(\sigma_n\).
+      denoiser you plugged into PnP-ADMM as \(H\), the pretrained DRUNet of
+      Module 4. It is not derived from any prior; equation (11) calls it in place
+      of the proximal map \(H\), which Step 14 justifies through Tweedie's formula:
+      the ideal such denoiser is the posterior mean \( E[X \mid V = v] \) of (10),
+      and it agrees with \(H\) to leading order in \(\sigma_n\).
     </p>
     <div class="codeblock">
       <button class="copy" onclick="copyCode(this)">Copy</button>
@@ -1240,27 +1288,41 @@ def denoise_dnn(v, sigma_n):
     """</pre>
     </div>
     <p>
-      <b>Task 15a. Run it and compare.</b> On the same data as Module 4,
+      <b>Task 16a. Run both settings.</b> On the same data as Module 4,
       \( y = A x + w \) with kernel 1 and \( \sigma_w = 0.02 \), run
-      <code>pnp_prox_grad</code> with the DRUNet denoiser \( \text{denoise}_{\sigma_n} \)
-      at \( \sigma_n = 0.03 \) and \( \sigma_p = 0.05 \), the same \( \sigma_p \)
-      as the D5 PnP-ADMM run, so the gradient step is \( \sigma_p^2 = 0.0025 \).
-      Run 50 iterations. Compare its reconstruction and its per-iteration change
-      against the PnP-ADMM result from Task 12a.
+      <code>pnp_prox_grad</code> with the DRUNet denoiser for 50 iterations at two
+      settings that share the balance \( \sigma_n^2/\sigma_p^2 = 0.36 \):
     </p>
+    <ul>
+      <li><b>D7, \( \sigma_p = 0.05 \), \( \sigma_n = 0.03 \)</b> (the D5 values).
+          \( \sigma_p \) is above \( \sqrt 2\,\sigma_w \), so the per-iteration
+          change grows and the run diverges (Step 15).</li>
+      <li><b>D8, \( \sigma_p = 0.025 \), \( \sigma_n = 0.015 \)</b> (both halved).
+          \( \sigma_p \) is below \( \sqrt 2\,\sigma_w \), so the run converges to
+          the same balance.</li>
+    </ul>
     <div class="handin" id="D7">
       <span class="tag">HAND IN &middot; D7</span>
       <p>
-        <b>Optional.</b> The proximal-gradient PnP reconstruction next to the
-        PnP-ADMM result from D5, both over \([0,1]\) with the same crop; the
-        RMSE of each against the clean image; and the convergence history of
-        each algorithm on one log axis &mdash; the per-iteration change
-        \( \|x - x_{\text{prev}}\| / \|x\| \) that proximal-gradient PnP returns,
-        and the equilibrium residual \( \|x - v\| / \|x\| \) that PnP-ADMM
-        returns from D5. These measure related but different things, and both
-        fall toward zero as the run settles. One sentence comparing the two
-        algorithms in image quality and in the number of iterations they take to
-        settle.
+        <b>Optional.</b> The proximal-gradient PnP run at \( \sigma_p = 0.05 \),
+        \( \sigma_n = 0.03 \): its per-iteration change
+        \( \|x - x_{\text{prev}}\| / \|x\| \) on a log axis, showing it grows
+        rather than falls. One sentence naming the stability condition of Step 15
+        that \( \sigma_p = 0.05 \) violates.
+      </p>
+    </div>
+    <div class="handin" id="D8">
+      <span class="tag">HAND IN &middot; D8</span>
+      <p>
+        <b>Optional.</b> The proximal-gradient PnP run at \( \sigma_p = 0.025 \),
+        \( \sigma_n = 0.015 \) next to the PnP-ADMM result from D5, both over
+        \([0,1]\) with the same crop; the RMSE of each against the clean image;
+        and the convergence history of each on one log axis &mdash; the
+        per-iteration change \( \|x - x_{\text{prev}}\| / \|x\| \) that
+        proximal-gradient PnP returns, and the equilibrium residual
+        \( \|x - v\| / \|x\| \) that PnP-ADMM returns from D5. One sentence
+        comparing the two in image quality and in the number of iterations they
+        take to settle.
       </p>
     </div>
   </div>
@@ -1270,12 +1332,12 @@ def denoise_dnn(v, sigma_n):
 
 <details class="module">
   <summary>Module 6: Questions
-    <span class="note">Step 16.  Answer for your own code and images.</span>
+    <span class="note">Step 17.  Answer for your own code and images.</span>
   </summary>
   <div class="modulebody">
 
   <div class="card">
-    <h3>Step 16: Questions to Answer</h3>
+    <h3>Step 17: Questions to Answer</h3>
     <p>
       Answer each question in a few sentences, using your own images and
       numbers as evidence.
@@ -1305,8 +1367,8 @@ def denoise_dnn(v, sigma_n):
           problem, say what it would know that \(F\) and \(H\) do not, and say
           what its proximal map would do to an image.</li>
     </ol>
-    <div class="handin" id="D8">
-      <span class="tag">HAND IN &middot; D8</span>
+    <div class="handin" id="D9">
+      <span class="tag">HAND IN &middot; D9</span>
       <p>
         Your answers to the five questions above.
       </p>
@@ -1358,9 +1420,14 @@ def denoise_dnn(v, sigma_n):
       <li><span class="dnum"><a href="#D6">D6</a></span>
           The three \(\sigma_p\) sweep crops with RMSE, and two sentences.</li>
       <li><span class="dnum"><a href="#D7">D7</a></span>
-          Optional. The proximal-gradient PnP result next to PnP-ADMM, their
-          RMSE, and each algorithm's convergence history.</li>
+          Optional. The unstable proximal-gradient PnP run
+          (\( \sigma_p = 0.05 \)): its per-iteration change on a log axis and one
+          sentence on the stability condition it violates.</li>
       <li><span class="dnum"><a href="#D8">D8</a></span>
+          Optional. The stable rescaled proximal-gradient PnP run
+          (\( \sigma_p = 0.025,\ \sigma_n = 0.015 \)) next to PnP-ADMM, their
+          RMSE, and each algorithm's convergence history.</li>
+      <li><span class="dnum"><a href="#D9">D9</a></span>
           Your answers to the five questions.</li>
     </ol>
     <p>Concise and clear beats long.</p>
