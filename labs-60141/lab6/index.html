@@ -27,6 +27,7 @@
          padding: 1px 5px; font-size: 0.95em; }
   pre { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 6px;
         padding: 12px 14px; overflow-x: auto; font-size: 0.92em; line-height: 1.4; }
+  mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width: 100%; }
   .tip { background: #f6f3ea; border-left: 4px solid #cfb991; padding: 10px 14px;
          margin: 12px 0; font-size: 0.97em; }
   .codeblock { position: relative; }
@@ -107,6 +108,12 @@
       there?
     </p>
     <p>
+      The lab has two parts. In Part 1 you fit the clusters when you already
+      know how many there are. In Part 2 you let the data tell you how many
+      clusters there are. Both parts turn out to be the same procedure, seen
+      from two sides, and finding that out is the point of the lab.
+    </p>
+    <p>
       This lab also teaches something about building software with an AI. In
       the earlier labs the page handed you the exact signature of every
       function. This one does not, and that is deliberate. Here the program
@@ -129,10 +136,9 @@
       <li>Every experiment on this page is fully specified: the data, the
           initialization, and the number of iterations. Follow it exactly,
           so your numbers can be compared with everyone else's.</li>
-      <li>Seed every random number generator with 0 unless the step says
-          otherwise, for example
-          <code>rng = np.random.default_rng(0)</code>. State in your report
-          which generator you used.</li>
+      <li>Seed every random number generator with the seed the step gives,
+          for example <code>rng = np.random.default_rng(0)</code>. State in
+          your report which generator you used.</li>
       <li>Each function comes with checks. Run them. If a check fails, the
           code is wrong, and it is your job to get it fixed.</li>
       <li>Keep your code in your <code>image-processing-labs</code>
@@ -145,6 +151,11 @@
       Code that runs without an error message is not the same as code that
       is correct, and this lab has two failure modes that produce no error
       message at all. Step 7 names them.
+    </div>
+    <div class="tip">
+      <b>Write down what you expect, before you run.</b> A few steps ask you
+      to predict the result first. Being wrong costs nothing. Not noticing
+      you were wrong is the habit this lab is built to break.
     </div>
   </div>
 
@@ -176,6 +187,9 @@
     <p>
       and the full parameter vector is
       \( \theta = (\pi_0, \mu_0, R_0, \cdots, \pi_{M-1}, \mu_{M-1}, R_{M-1}) \).
+      In your code, keep \( \theta \) as three arrays: the weights of shape
+      \( (M,) \), the means of shape \( (M, p) \), and the covariances of
+      shape \( (M, p, p) \).
     </p>
     <p>
       The labels are never observed. Summing them out gives the Gaussian
@@ -221,9 +235,10 @@
     <p>
       where \( \delta(\cdot) \) is 1 at zero and 0 elsewhere. So \( N_m \)
       counts the points in class \( m \), \( b_m \) sums them, and
-      \( S_m \) sums their outer products. Chapter 12 shows that these are
-      the natural sufficient statistics of the complete-data distribution,
-      and that the ML estimates are simple functions of them:
+      \( S_m \) sums their outer products. These three are called the
+      sufficient statistics of the labeled data, because the ML estimate
+      depends on the data only through them. Chapter 12 shows that the ML
+      estimates are simple functions of them:
     </p>
     $$
     \hat{\pi}_m = \frac{N_m}{N} , \qquad
@@ -314,11 +329,17 @@
     \tag{10}
     $$
     <p>
-      Draw each label \( x_n \) from \( \pi \), then draw \( y_n \) from
+      Use <code>rng = np.random.default_rng(0)</code>. Draw each label
+      \( x_n \) from \( \pi \), then draw \( y_n \) from
       \( N(\mu_{x_n}, R_{x_n}) \). Save both \( y \), of shape
-      \( 500 \times 2 \), and the true labels \( x \) to a file. You will
-      reuse this exact data set in every remaining step, so generate it once
-      and load it after that.
+      \( 500 \times 2 \), and the true labels \( x \) to a file, in the
+      order they were generated. You will reuse this exact data set in every
+      remaining step, so generate it once and load it after that.
+    </p>
+    <p>
+      The parameters above fully define the distribution you are sampling
+      from. In Parts 1 and 2 you will try to recover this same \( \theta \)
+      from the samples alone, without the labels.
     </p>
     <div class="handin" id="D1">
       <span class="tag">HAND IN &middot; D1</span>
@@ -367,42 +388,59 @@
     <h3>Step 6: Write the Specifications</h3>
     <p>
       Now design the implementation. Do not ask the AI for "an EM program."
-      Break the algorithm into the four functions below, and write a
-      specification for each one <em>before any code exists</em>. A
-      specification has three parts:
+      Build it from the four functions whose signatures are given below. The
+      parameters are the three arrays from Step 1: the weights, of shape
+      \( (M,) \), the means, of shape \( (M, p) \), and the covariances, of
+      shape \( (M, p, p) \). Every function reads or returns them. Assembled,
+      the four functions are a complete EM program.
+    </p>
+    <p>
+      The signatures are fixed, so that everyone's code has the same
+      structure. Before you write any code for a function, write its
+      specification, which has three parts:
     </p>
     <ul>
       <li><b>What it does</b>, in a few sentences, naming the equation
           numbers from this page that it implements.</li>
-      <li><b>Inputs</b>: every input, with its meaning, type, and array
-          shape.</li>
-      <li><b>Outputs</b>: every output, with its meaning, type, and array
-          shape.</li>
+      <li><b>Arguments and returns</b>: the meaning and array shape of each
+          one.</li>
+      <li><b>Invariants</b>: the properties the output must satisfy, such as
+          "every row sums to one." These are what you test in Step 7.</li>
     </ul>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def e_step(Y, weights, means, covariances):
+    # posterior class probabilities P_{n,m}, equation (6)
+    # Y (N,p), weights (M,), means (M,p), covariances (M,p,p)
+    # returns P, shape (N,M)
+
+def m_step(Y, P):
+    # expected statistics (7) and updated parameters (8)
+    # Y (N,p), P (N,M); add 1e-6 * I to each covariance
+    # returns weights (M,), means (M,p), covariances (M,p,p)
+
+def log_likelihood(Y, weights, means, covariances):
+    # the log likelihood of equation (3); returns a float
+
+def run_em(Y, weights, means, covariances, num_iterations):
+    # num_iterations of e_step then m_step
+    # returns weights, means, covariances, and the list of log
+    # likelihoods recorded after each iteration</pre>
+    </div>
     <p>
-      The decomposition is fixed, so that everyone's code has the same
-      structure. The interfaces, meaning the exact inputs, outputs, and
-      shapes, are yours to design.
+      Here is how the four functions fit together in one EM run. This is the
+      body of <code>run_em</code>, and it is the whole algorithm.
     </p>
-    <table class="units">
-      <tr><th>Function</th><th>What it computes</th></tr>
-      <tr><td>e_step</td>
-          <td>The posterior class probabilities \( P_{n,m} \) of equation
-              (6), for every sample and every class.</td></tr>
-      <tr><td>m_step</td>
-          <td>The expected statistics \( \bar{N}_m \), \( \bar{b}_m \),
-              \( \bar{S}_m \) of equation (7), and from them the updated
-              parameters of equation (8).</td></tr>
-      <tr><td>log_likelihood</td>
-          <td>The log likelihood of equation (3), for a given data set and
-              parameter vector.</td></tr>
-      <tr><td>run_em</td>
-          <td>The outer loop. Alternates <code>e_step</code> and
-              <code>m_step</code> until the log likelihood stops improving
-              by more than a tolerance, or a maximum iteration count is
-              reached. Records the log likelihood after every
-              iteration.</td></tr>
-    </table>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>Given data Y and initial weights, means, covariances:
+
+  record log_likelihood(Y, weights, means, covariances)
+  repeat 20 times:
+      P = e_step(Y, weights, means, covariances)
+      weights, means, covariances = m_step(Y, P)
+      record log_likelihood(Y, weights, means, covariances)</pre>
+    </div>
     <div class="tip">
       <b>A test of a specification.</b> Could a classmate who has read this
       page, but cannot ask you any questions, implement your function and
@@ -473,16 +511,16 @@
 </details>
 
 <details class="module">
-  <summary>Module 3: Run It, and Watch It Get Stuck
-    <span class="note">Steps 8 and 9.  Clustering, and what happens when you start somewhere else.</span>
+  <summary>Part 1: Fit It with Three Clusters
+    <span class="note">Steps 8 and 9.  A good fit when you know the number, and why the start matters.</span>
   </summary>
   <div class="modulebody">
 
   <div class="card">
-    <h3>Step 8: Run EM</h3>
+    <h3>Step 8: Fit the Model with M = 3</h3>
     <p>
-      Run EM on the data from Step 4, with \( M = 3 \), exactly 20
-      iterations with the tolerance set to zero, and the initialization
+      Run EM on the data from Step 4, with \( M = 3 \), for 20 iterations,
+      and the initialization
     </p>
     $$
     \pi \leftarrow [1/3, 1/3, 1/3] , \qquad
@@ -494,18 +532,29 @@
       with \( \mu_0, \mu_1, \mu_2 \) set to the first three sample vectors
       produced in Step 4.
     </p>
+    <p>
+      We will track the <b>cost</b>, which is the negative log likelihood
+      \( -\log p(y | M, \theta) \). EM increases the log likelihood, so it
+      decreases the cost. Plot the cost against the iteration number and look
+      at the last few iterations: the cost is still dropping at iteration 20,
+      so EM has not finished. The fit is still usable. With the right number
+      of clusters, 20 iterations buys a reasonable answer, not a great one.
+      More iterations would keep improving it.
+    </p>
     <div class="tip">
       <b>The labels EM produces are not the labels you generated.</b> The
       mixture likelihood does not care which component is called 0, so EM
       will land on some permutation of the components. Before you compare
-      anything, find the correspondence between estimated and true
-      components that best matches their means, and apply it.
+      anything, match each estimated component to the true component with the
+      nearest mean, as a one-to-one pairing: there are only \( 3! \)
+      orderings, so pick the one with the smallest total mean distance.
     </div>
     <div class="handin" id="D5">
       <span class="tag">HAND IN &middot; D5</span>
       <p>
-        A plot of \( \log p(y | M, \theta) \) versus iteration number, for
-        iterations 1 through 20.
+        A plot of the cost \( -\log p(y | M, \theta) \) versus iteration
+        number, for iterations 1 through 20. State whether the cost is still
+        decreasing at iteration 20.
       </p>
     </div>
     <div class="handin" id="D6">
@@ -522,40 +571,57 @@
         A scatter plot of the data colored by the hard label
         \( \hat{x}_n = \arg\max_m P_{n,m} \), with the estimated mean of
         each component marked, and the fraction of samples whose hard label
-        disagrees with the true label from Step 4.
+        disagrees with the true label from Step 4. The hard label is the
+        most-probable component, the one with the largest posterior
+        \( P_{n,m} \). It uses the weights \( \pi_m \), so it is not in
+        general the component with the largest density.
       </p>
     </div>
   </div>
 
   <div class="card">
-    <h3>Step 9: Initialization and Local Maxima</h3>
+    <h3>Step 9: The Start Matters</h3>
     <p>
-      The log likelihood of a mixture has many local maxima, and EM finds
-      only the one nearest to where it starts. Every iteration goes uphill,
-      the algorithm is working exactly as proved, and the answer can still
-      be poor. That is worth seeing once, deliberately, rather than
-      discovering it in a project.
+      In Step 8 you set the initial means to the first three samples. That is
+      one choice. The log likelihood of a mixture has many local maxima, and
+      EM goes uphill to the nearest one, so a different start can reach a
+      different answer.
     </p>
+    <div class="tip">
+      <b>Predict first.</b> Before you run this, write one line: will all five
+      random starts below reach the same cost as Step 8, or not? Record your
+      prediction. You will compare it to the result in D8.
+    </div>
     <p>
-      Repeat Step 8 five more times with \( M = 3 \), keeping \( \pi \) and
+      Repeat Step 8 five times with \( M = 3 \), keeping \( \pi \) and
       \( R_m \) as in (11), but choosing the three initial means as three
-      distinct data points drawn at random from the 500 samples. Use seeds
-      0, 1, 2, 3, 4 for the five runs. Run 20 iterations each.
+      distinct data points drawn at random from the 500 samples. For run
+      \( s \), use
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>idx = np.random.default_rng(s).choice(500, size=3, replace=False)
+initial_means = y[idx]</pre>
+    </div>
+    <p>
+      for \( s = 0, 1, 2, 3, 4 \). Run 20 iterations each.
     </p>
     <div class="handin" id="D8">
       <span class="tag">HAND IN &middot; D8</span>
       <p>
-        One plot with all five log likelihood curves plus the curve from
-        Step 8, on the same axes with a legend, and a table of the final log
-        likelihood for all six runs.
+        One plot with the five cost curves plus the curve from Step 8, on the
+        same axes with a legend, and a table of the final cost for all six
+        runs. State whether your Step 9 prediction was right.
       </p>
     </div>
     <div class="handin" id="D9">
       <span class="tag">HAND IN &middot; D9</span>
       <p>
-        The hard-label scatter plot for whichever run reached the
-        <em>lowest</em> final log likelihood, with one sentence describing
-        what that solution did with the clusters.
+        Five scatter plots, one per random start, each colored by the hard
+        label and marked with the estimated means. For each, give the final
+        cost. In one or two sentences, say which starts reached a good
+        clustering and which did not, and what the poor ones did with the
+        clusters.
       </p>
     </div>
   </div>
@@ -564,8 +630,8 @@
 </details>
 
 <details class="module">
-  <summary>Module 4: How Many Clusters Are There?
-    <span class="note">Steps 10 and 11.  A question the likelihood cannot answer on its own.</span>
+  <summary>Part 2: How Many Clusters Are There?
+    <span class="note">Steps 10 and 11.  Let the data choose the number, by one procedure.</span>
   </summary>
   <div class="modulebody">
 
@@ -599,6 +665,18 @@
     \tag{13}
     $$
     <p>
+      The first term of (12) is exactly the cost you plotted in Part 1. So
+      for a fixed number of clusters \( M \), the penalty
+      \( \tfrac12 L(M) \log(Np) \) is a constant: it does not depend on
+      \( \theta \). The MDL is then the cost plus that constant, and
+      minimizing MDL over \( \theta \) at fixed \( M \) is the same as
+      maximizing the likelihood, which is exactly what EM already does. The
+      penalty changes nothing within a single \( M \). Its only job is to
+      compare different values of \( M \): more clusters means more
+      parameters, means a larger constant, and that is what stops the search
+      from giving every point its own cluster.
+    </p>
+    <p>
       To find \( \hat{M} \), start with more components than you expect and
       remove them one at a time.
     </p>
@@ -631,10 +709,12 @@
     \tag{15}
     $$
     $$
-    R_{(l,m)} = \frac{
-      \pi_l \left( R_l + (\mu_l - \mu_{(l,m)})(\mu_l - \mu_{(l,m)})^t \right)
-      + \pi_m \left( R_m + (\mu_m - \mu_{(l,m)})(\mu_m - \mu_{(l,m)})^t \right)
-    }{\pi_l + \pi_m} .
+    \begin{aligned}
+    R_{(l,m)} = \frac{1}{\pi_l + \pi_m} \Big[
+      &\pi_l \left( R_l + (\mu_l - \mu_{(l,m)})(\mu_l - \mu_{(l,m)})^t \right) \\
+      &+ \pi_m \left( R_m + (\mu_m - \mu_{(l,m)})(\mu_m - \mu_{(l,m)})^t \right)
+    \Big] .
+    \end{aligned}
     \tag{16}
     $$
     <p>
@@ -644,22 +724,31 @@
       new component and the others carry over unchanged.
     </p>
     <p>
-      Three more functions are needed, and you specify them the same way you
-      did in Step 6, saying what they compute, what goes in, and what comes
-      out, before any code.
+      Each lower order starts from the merge of the order above it. This is a
+      <b>warm start</b>: the order above has already spread its components
+      across the data, so after a merge the remaining components sit on real
+      cluster regions, and EM finishes in a few iterations. That is why 20
+      iterations per order is more than enough here.
     </p>
-    <table class="units">
-      <tr><th>Function</th><th>What it computes</th></tr>
-      <tr><td>mdl</td>
-          <td>The MDL value of equations (12) and (13), using your
-              <code>log_likelihood</code>.</td></tr>
-      <tr><td>merge_closest</td>
-          <td>Finds the pair minimizing (14), merges it using (15) and (16),
-              and returns the order-\( (M-1) \) parameter vector.</td></tr>
-      <tr><td>estimate_order</td>
-          <td>The search loop above, using <code>run_em</code>,
-              <code>mdl</code>, and <code>merge_closest</code>.</td></tr>
-    </table>
+    <p>
+      Three more functions are needed, with the signatures below. Specify each
+      one the same way you did in Step 6, before any code.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def mdl(Y, weights, means, covariances):
+    # the MDL value of equations (12) and (13); returns a float
+
+def merge_closest(Y, weights, means, covariances):
+    # finds the closest pair (14), merges it with (15) and (16)
+    # returns the order M-1 weights, means, covariances
+
+def estimate_order(Y, max_order, initial_means, num_iterations):
+    # the search loop: for M from max_order down to 1, run_em then
+    #   merge_closest, recording mdl(M) at each order
+    # returns, for each M, the MDL value and the parameters, and the
+    #   per-iteration MDL values for the D11 plot</pre>
+    </div>
     <p>
       Run it on the data from Step 4 with \( M_o = 9 \), the initialization
       \( \pi \leftarrow [1/9, \cdots, 1/9] \), \( R_m \leftarrow I \) for
@@ -694,19 +783,30 @@
   </div>
 
   <div class="card">
-    <h3>Step 11: Questions to Answer</h3>
+    <h3>Step 11: One Procedure, Two Jobs</h3>
     <p>
-      Answer each in a few sentences, using your own plots and numbers as
-      evidence.
+      The merge search passed through an \( M = 3 \) model on its way down.
+      Compare its cost there with the five \( M = 3 \) costs from Step 9.
+      The merge search reaches a good answer, the same quality as the best
+      random start, and it does so without being told the number of clusters.
+      Starting with too many components and merging down is not only how you
+      count the clusters. It is also a reliable way to fit them, because it
+      reaches the good answer that a single random start often misses.
+    </p>
+    <p>
+      Answer each question in a few sentences, using your own plots and
+      numbers as evidence.
     </p>
     <ol>
-      <li>Compare the estimated parameters from Step 8 to the true values.
-          Which are estimated most accurately, and which least? Give a
-          reason based on the data, not on the algorithm.</li>
-      <li>In Step 9, did every initialization reach the same final log
-          likelihood? What does the spread of final values tell you about
-          the shape of the likelihood surface, and what would you do about
-          it in a real application?</li>
+      <li>The merge search produced an \( M = 3 \) model with some final
+          cost. Several of the random starts in Step 9 reached a higher cost.
+          Both are \( M = 3 \) models fit by EM on the same data. Explain why
+          starting \( M = 3 \) from the merge of the \( M = 4 \) solution
+          reaches a lower cost than starting from random means. Refer to
+          where the initial means sit in each case.</li>
+      <li>In Step 9, did every start reach the same final cost? What does the
+          spread of final costs tell you about the shape of the likelihood
+          surface?</li>
       <li>The likelihood of a Gaussian mixture has no finite maximum. You
           can drive it to infinity by putting a component on a single data
           point and shrinking its covariance. Explain how the
@@ -766,15 +866,17 @@
       <li><span class="dnum"><a href="#D4">D4</a></span>
           The results of the four checks, with the numbers.</li>
       <li><span class="dnum"><a href="#D5">D5</a></span>
-          The log likelihood plot for the 20 iterations.</li>
+          The cost versus iteration plot, with the "still decreasing?" answer.</li>
       <li><span class="dnum"><a href="#D6">D6</a></span>
           The estimated against true parameter table.</li>
       <li><span class="dnum"><a href="#D7">D7</a></span>
           The hard-label scatter plot, with the disagreement fraction.</li>
       <li><span class="dnum"><a href="#D8">D8</a></span>
-          The six log likelihood curves and the table of final values.</li>
+          The six cost curves and the table of final costs, with your
+          prediction result.</li>
       <li><span class="dnum"><a href="#D9">D9</a></span>
-          The scatter plot for the worst run, with one sentence.</li>
+          The five random-start scatter plots, with the good and poor runs
+          named.</li>
       <li><span class="dnum"><a href="#D10">D10</a></span>
           The three additional specifications, verbatim.</li>
       <li><span class="dnum"><a href="#D11">D11</a></span>
@@ -793,9 +895,11 @@
     <p>
       EM is the standard tool for fitting models with hidden variables, and
       the pattern you used here, expected sufficient statistics in place of
-      observed ones, carries far beyond Gaussian mixtures. So does the other
-      habit this lab asked for: writing down what a piece of code must do
-      before anything writes it.
+      observed ones, carries far beyond Gaussian mixtures. The deeper result
+      of this lab is that fitting the clusters, avoiding a bad answer from a
+      poor starting point, and choosing the number of clusters are one
+      procedure: start with too many components and merge down. You met it as
+      three separate problems and found it was one.
     </p>
     <p>
       <a href="../../index.html">Back to the laboratory index</a> &middot;
