@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 6: Pointwise Operations and Gamma</title>
+<style>
+  html { background: #faf8f4; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         background: #faf8f4; color: #222; line-height: 1.5; }
+  .band { background: #cfb991; border-bottom: 4px solid #000;
+          padding: 24px 16px 18px 16px; text-align: center; }
+  .band h2 { margin: 0 0 6px 0; font-size: 1.0em; font-weight: normal; color: #3d3324; }
+  .band h1 { margin: 0; font-size: 1.5em; color: #000; }
+  .band a { color: #000; }
+  .container { max-width: 760px; margin: 28px auto; padding: 0 16px; }
+  .section { border: 2px solid #cfb991; border-radius: 14px;
+             background: #f4efe3; padding: 18px 16px 2px 16px; margin-bottom: 22px; }
+  .section > h2 { margin: 0 0 16px 8px; font-size: 1.3em; color: #3d3324; }
+  .card { background: #fff; border: 1px solid #e3dccb; border-radius: 10px;
+          padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; color: #000; border-bottom: 2px solid #cfb991; padding-bottom: 6px; }
+  a { color: #8a6d1d; text-decoration: none; }
+  a:hover { color: #000; text-decoration: underline; }
+  ul, ol { margin: 8px 0; }
+  li { padding: 3px 0; }
+  code { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 4px;
+         padding: 1px 5px; font-size: 0.95em; }
+  pre { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 6px;
+        padding: 12px 14px; overflow-x: auto; font-size: 0.92em; line-height: 1.4; }
+  .tip { background: #f6f3ea; border-left: 4px solid #cfb991; padding: 10px 14px;
+         margin: 12px 0; font-size: 0.97em; }
+  .codeblock { position: relative; }
+  .codeblock pre { padding-right: 76px; }
+  .copy { position: absolute; top: 8px; right: 8px; background: #cfb991; color: #000;
+          border: 1px solid #b9ac8e; border-radius: 4px; padding: 2px 10px;
+          font-size: 0.8em; font-family: inherit; cursor: pointer; }
+  .copy:hover { background: #b9ac8e; }
+  .kernelfig { text-align: center; margin: 16px 0 4px 0; }
+  .kernelfig img { border: 1px solid #e3dccb; }
+  .kernelfig .caption { font-size: 0.9em; color: #555; margin-top: 6px; }
+  table.kernel { border-collapse: collapse; margin: 12px auto; }
+  table.kernel td { border: 1px solid #b9ac8e; padding: 6px 14px; text-align: center;
+                    font-family: "Times New Roman", serif; }
+  .source { font-size: 0.9em; color: #5b5b5b; margin: 4px 0 0 0; }
+  table.runs { border-collapse: collapse; margin: 12px 0; font-size: 0.92em; width: 100%; }
+  table.runs th, table.runs td { border: 1px solid #e3dccb; padding: 5px 9px; text-align: left; }
+  table.runs th { background: #f4efe3; }
+  table.runs td.grp { background: #faf8f4; font-weight: bold; white-space: nowrap; }
+  details.module { border: 2px solid #cfb991; border-radius: 14px; background: #f4efe3;
+                   margin-bottom: 22px; }
+  details.module > summary { cursor: pointer; list-style: none; padding: 16px 18px;
+                             font-size: 1.2em; font-weight: bold; color: #3d3324; }
+  details.module > summary::-webkit-details-marker { display: none; }
+  details.module > summary::before { content: "\25B8"; color: #8a6d1d; margin-right: 10px; }
+  details.module[open] > summary::before { content: "\25BE"; }
+  details.module > summary:hover { color: #000; }
+  details.module .modulebody { padding: 0 16px 2px 16px; }
+  summary .note { display: block; font-weight: normal; font-size: 0.78em;
+                  color: #6b5c42; margin: 4px 0 0 26px; }
+  .allbtn { display: block; margin: 0 0 16px auto; background: #f4efe3; color: #3d3324;
+            border: 1px solid #cfb991; border-radius: 4px; padding: 3px 12px;
+            font-size: 0.85em; font-family: inherit; cursor: pointer; }
+  .allbtn:hover { background: #e8e0cd; }
+  .handin { border: 1px solid #cfb991; border-left: 7px solid #cfb991;
+            border-radius: 8px; background: #fffdf5;
+            padding: 12px 16px 4px 16px; margin: 18px 0; }
+  .handin .tag { display: inline-block; background: #cfb991; color: #000;
+                 border-radius: 4px; padding: 1px 9px; font-size: 0.82em;
+                 font-weight: bold; letter-spacing: 0.4px; }
+  .handin p:first-of-type { margin-top: 8px; }
+  ol.handin-list { list-style: none; padding-left: 0; margin: 10px 0; }
+  ol.handin-list li { position: relative; padding: 4px 0 4px 2.9em; }
+  ol.handin-list .dnum { position: absolute; left: 0; width: 2.9em;
+                         font-weight: bold; color: #8a6d1d; }
+  .band .nav { margin: 10px 0 0 0; font-size: 0.9em; }
+  .band .nav a { text-decoration: underline; }
+</style>
+<script>
+  MathJax = { tex: { inlineMath: [['\\(', '\\)']], tags: 'ams' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<body>
+
+<div class="band">
+  <h2>ECE 63700: Digital Image Processing I</h2>
+  <h1>Lab 6: Pointwise Operations and Gamma</h1>
+  <p class="nav">
+    <a href="https://charlesbouman.org/ece63700/">ECE 63700 course notes</a> &middot;
+    <a href="../../index.html">Laboratory index</a>
+  </p>
+</div>
+
+<div class="container">
+
+<button class="allbtn" onclick="toggleAll(this)">Open all</button>
+
+<details class="module">
+  <summary>Overview
+    <span class="note">What the lab is about, the data, and the ground rules.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What This Lab Is About</h3>
+    <p><b>Due: Friday, Feb. 26, 2027.</b></p>
+    <p>
+      In this lab you change images with <b>pointwise operations</b>. A
+      pointwise operation maps each gray level to a new gray level, and the
+      new value of a pixel depends only on its old value. Pointwise
+      operations are an important class of methods for image enhancement.
+    </p>
+    <p>
+      In Module 1 you compute the <b>histogram</b> of an image, which shows
+      how its gray levels are distributed. Then you enhance an image in two
+      ways: by <b>histogram equalization</b>, which maps the gray levels
+      through their own cumulative distribution, and by <b>contrast
+      stretching</b>, which maps a range of gray levels onto the full range.
+      In Module 2 you measure the <b>gamma</b> of your own display, which
+      describes how the display turns gray levels into light. Then you use it
+      to <b>gamma correct</b> an image stored on a linear intensity scale, and
+      to convert an image that was corrected for a different display.
+    </p>
+    <p>
+      You will not hand-write the implementation. This page states the
+      definitions and the exact signature of every function you need. Your
+      job is to direct Claude, or another agentic AI, to write the code from
+      that specification. Then you run the experiments yourself, produce the
+      required images and numbers, and explain what you see. You are graded
+      on the specification you give, the checks you run to confirm the code
+      is right, and your reading of the results.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>The Data</h3>
+    <p>
+      Download the data before you start. The file
+      <a href="https://charlesbouman.org/ece63700/labs/lab6-data.zip"><b>lab6-data.zip</b></a>,
+      220 KB, holds four images.
+    </p>
+    <ul>
+      <li><b>race.png</b>, a grayscale image 384 pixels wide and 256 pixels
+          tall.</li>
+      <li><b>kids.png</b>, a grayscale image 366 pixels wide and 242 pixels
+          tall, with low contrast.</li>
+      <li><b>linear.png</b>, a grayscale image 256 pixels wide and 384 pixels
+          tall, stored on a linear intensity scale.</li>
+      <li><b>gamma15.png</b>, the same size as <code>linear.png</code>, gamma
+          corrected for a display with \(\gamma = 1.5\).</li>
+    </ul>
+    <p class="source">
+      These are provided images. They are stored in lossless PNG format with
+      8 bits per pixel.
+    </p>
+    <p>
+      From the shell, in the folder that holds <code>lab6.py</code>:
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>wget https://charlesbouman.org/ece63700/labs/lab6-data.zip
+unzip lab6-data.zip</pre>
+    </div>
+    <p>
+      Module 2 also uses the web page
+      <a href="gamma-match.html"><b>gamma-match.html</b></a>, which shows the
+      pattern you use to measure the gamma of your display.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Ground Rules</h3>
+    <ul>
+      <li>All code is in a single file named <code>lab6.py</code>. Use the
+          <code>labs</code> conda environment you built in Lab 2. This lab
+          uses NumPy, not PyTorch. You may use matplotlib for plotting.</li>
+      <li><code>lab6.py</code> holds functions and nothing else. Run your
+          experiments from a separate script that imports it.</li>
+      <li>Every function has the exact signature given on this page, and a
+          docstring that says what it does, what its inputs are, and what
+          it returns. Keep the docstrings short.</li>
+      <li><b>This lab works in integer gray levels from 0 to 255</b>, as
+          Lab 5 does. Read each image as a <code>uint8</code> array and do
+          not scale it. Every function that returns an image returns a
+          <code>uint8</code> array, rounded to the nearest gray level. The
+          thresholds \(T_1\) and \(T_2\) and the matched gray level \(g\) are
+          in gray levels.</li>
+      <li>No Python <code>for</code> loop over pixels or over gray levels.
+          A pointwise operation is a table of 256 output values, one for
+          each input gray level, and the helper <code>apply_table</code>
+          applies the table to every pixel at once.</li>
+      <li>Show every image with <code>vmin=0</code>, <code>vmax=255</code>,
+          a colorbar, and labeled axes, so that gray level 255 is white in
+          every figure.</li>
+    </ul>
+    <div class="tip">
+      <b>How to direct the AI.</b> Give it the equations from this page, the
+      array types, the rounding rule, and the signatures of the functions you
+      want. Then run the checks in Steps 2, 4, 5, 8, and 9 <em>before</em>
+      you interpret any image. An equalization with a wrong normalization
+      still produces an image with more contrast.
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Parameters for the Experiments
+    <span class="note">The settings for every hand-in item, in one place.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Parameters for Every Experiment</h3>
+    <p>
+      The table lists the settings for each hand-in item. Every experiment
+      below points back to this table by its deliverable number, so you do
+      not have to search the text for a number.
+    </p>
+    <table class="runs">
+      <tr>
+        <th>Item</th><th>Experiment</th><th>Input</th><th>Function and settings</th>
+      </tr>
+      <tr><td class="grp">D1</td><td>Histograms (Step 2)</td>
+          <td><code>race.png</code>, <code>kids.png</code></td>
+          <td><code>histogram</code>, bins at gray levels 0 to 255</td></tr>
+      <tr><td class="grp">D2</td><td>Histogram equalization (Step 3)</td>
+          <td><code>kids.png</code></td>
+          <td><code>empirical_cdf</code>, <code>equalize</code>, \(L = 256\)</td></tr>
+      <tr><td class="grp">D3</td><td>Checks of the equalization (Step 4)</td>
+          <td><code>kids.png</code> and its equalized image</td>
+          <td>empirical CDF against \((i+1)/256\) for \(i = 0, \dots, 255\)</td></tr>
+      <tr><td class="grp">D4</td><td>Contrast stretching (Step 5)</td>
+          <td><code>kids.png</code></td>
+          <td><code>stretch</code>, \(T_1\) and \(T_2\) of your choice that make
+              the output span 0 to 255</td></tr>
+      <tr><td class="grp">D5</td><td>Gamma of your display (Step 7)</td>
+          <td><code>gamma-match.html</code></td>
+          <td>start at \(g = 127\); the half pattern with lines, the half
+              pattern as a checkerboard, and the quarter pattern;
+              <code>gamma_from_match</code></td></tr>
+      <tr><td class="grp">D6</td><td>Gamma correction (Step 8)</td>
+          <td><code>linear.png</code></td>
+          <td><code>gamma_correct</code> with the \(\gamma\) of D5 from the
+              half pattern with lines</td></tr>
+      <tr><td class="grp">D7</td><td>Changing the gamma (Step 9)</td>
+          <td><code>gamma15.png</code></td>
+          <td><code>change_gamma</code> from \(\gamma = 1.5\) to the
+              \(\gamma\) of D5</td></tr>
+    </table>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 1: Histograms, Equalization, and Contrast Stretching
+    <span class="note">Steps 1 to 5. Set up the code, compute histograms, equalize a histogram, check the result, and stretch the contrast.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 1: Set Up <code>lab6.py</code></h3>
+    <p>
+      Copy these helpers into <code>lab6.py</code>.
+      <code>load_image</code> and <code>save_image</code> read and write
+      8-bit images as <code>uint8</code> arrays. <code>to_uint8</code>
+      rounds real gray levels and clips them to 0 to 255.
+      <code>apply_table</code> applies a pointwise operation that is given
+      as a table of 256 values.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>import numpy as np
+from PIL import Image
+
+
+def load_image(path):
+    """This function reads an 8-bit grayscale image file and returns it as an array.
+
+    path     path to a PNG or TIFF file
+    returns  (H, W) uint8 NumPy array with integer gray levels 0 to 255
+    """
+    return np.asarray(Image.open(path).convert("L"), dtype=np.uint8)
+
+
+def save_image(x, path):
+    """This function writes an (H, W) uint8 array as an 8-bit grayscale PNG.
+
+    x        (H, W) uint8 NumPy array
+    path     output file name, ending in .png
+    """
+    Image.fromarray(np.asarray(x, dtype=np.uint8)).save(path)
+
+
+def to_uint8(y):
+    """This function rounds an array of gray levels and clips it to 0 to 255.
+
+    y        NumPy array of real gray levels
+    returns  uint8 NumPy array of the same shape
+    """
+    return np.clip(np.round(y), 0, 255).astype(np.uint8)
+
+
+def apply_table(x, table):
+    """This function applies a pointwise operation given as a table of 256 values.
+
+    Pixel x[m, n] of the output is table[x[m, n]].
+
+    x        (H, W) uint8 NumPy array
+    table    NumPy array of 256 values, one for each gray level 0 to 255
+    returns  (H, W) array with the type of table
+    """
+    table = np.asarray(table)
+    if table.shape != (256,):
+        raise ValueError("table must have 256 entries")
+    return table[x]</pre>
+    </div>
+    <p>
+      <code>table[x]</code> uses the array <code>x</code> as a list of
+      indices into <code>table</code>, so one NumPy operation looks up every
+      pixel.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 2: Histograms</h3>
+    <p>
+      Let \(S\) be the set of pixel locations, and let \(X_s\) be the gray
+      level at the pixel \(s \in S\). The gray levels take the values
+      \(0, \dots, L-1\) with \(L = 256\). The <b>histogram</b> of the image
+      counts the pixels at each gray level,
+    </p>
+    $$
+    h(i) = \sum_{s \in S} \delta(X_s - i) \ , \qquad i = 0, \dots, L-1 \ ,
+    \tag{1}
+    $$
+    <p>
+      where \(\delta(0) = 1\) and \(\delta(k) = 0\) for \(k \neq 0\).
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def histogram(x):
+    """This function returns the histogram of an 8-bit image.
+
+    x        (H, W) uint8 NumPy array
+    returns  (256,) int64 NumPy array h, where h[i] is the number of pixels
+             with gray level i
+    """</pre>
+    </div>
+    <p>
+      <code>histogram</code> does not call <code>np.histogram</code>,
+      because the check below uses it.
+    </p>
+    <p>
+      <b>Task 2a.</b> Load <code>race.png</code> and <code>kids.png</code>.
+      Display each image, and plot its histogram as a bar plot with one bar
+      for each gray level 0 to 255. Label the axes and give each plot a
+      title.
+    </p>
+    <p>
+      <b>Task 2b. Check.</b> For each image, confirm that the histogram sums
+      to the number of pixels. Then count the bins where it differs from
+      <code>np.histogram(x, bins=256, range=(0, 256))</code>. The count must
+      be 0.
+    </p>
+    <div class="handin" id="D1">
+      <span class="tag">HAND IN &middot; D1</span>
+      <p>
+        The two images and their labeled histograms, and the results of the
+        two checks.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 3: Histogram Equalization</h3>
+    <p>
+      Histogram equalization transforms an image so that its histogram is
+      spread uniformly over the full range of gray levels. To see how, think
+      of the gray level of a pixel as a random variable \(X\) with cumulative
+      distribution function \(F_X(x) = P\{X \le x\}\). Map \(X\) through its
+      own distribution function to form \(Y = F_X(X)\). If \(F_X\) is
+      continuous and increasing, then for \(0 \le y \le 1\)
+    </p>
+    $$
+    P\{Y \le y\} = P\{X \le F_X^{-1}(y)\} = F_X\big(F_X^{-1}(y)\big) = y \ ,
+    $$
+    <p>
+      so \(Y\) is uniformly distributed on \([0, 1]\). The histogram of an
+      image can therefore be equalized by mapping each pixel through the
+      distribution function of its gray levels.
+    </p>
+    <p>
+      The distribution function is estimated from the histogram by the
+      <b>empirical CDF</b>,
+    </p>
+    $$
+    \hat F_X(i) = \frac{\sum_{j=0}^{i} h(j)}{\sum_{j=0}^{L-1} h(j)} \ ,
+    \qquad i = 0, \dots, L-1 \ .
+    \tag{2}
+    $$
+    <p>
+      The denominator makes \(\hat F_X(L-1) = 1\). The values
+      \(Y_s = \hat F_X(X_s)\) lie between 0 and 1, but they do not start at
+      0. Let \(Y_{\min}\) and \(Y_{\max}\) be the smallest and largest values
+      of \(Y_s\) over the image. The equalized image is
+    </p>
+    $$
+    Z_s = (L-1) \, \frac{\hat F_X(X_s) - Y_{\min}}{Y_{\max} - Y_{\min}} \ ,
+    \tag{3}
+    $$
+    <p>
+      rounded to the nearest integer.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def empirical_cdf(x):
+    """This function returns the empirical cumulative distribution of the gray levels.
+
+    x        (H, W) uint8 NumPy array
+    returns  (256,) float64 NumPy array F, where F[i] is the fraction of
+             pixels with gray level at most i, so F[255] = 1
+    """
+
+
+def equalize(x):
+    """This function equalizes the histogram of an 8-bit image.
+
+    It maps each pixel through the empirical CDF of the image, then shifts
+    and scales the result so that it spans 0 to 255, and rounds to the
+    nearest gray level.
+
+    x        (H, W) uint8 NumPy array
+    returns  (H, W) uint8 NumPy array, the equalized image
+    """</pre>
+    </div>
+    <p>
+      <b>Task 3a.</b> Plot \(\hat F_X(i)\) for <code>kids.png</code>, for
+      \(i = 0, \dots, 255\).
+    </p>
+    <p>
+      <b>Task 3b.</b> Equalize <code>kids.png</code>. Display the equalized
+      image and plot its histogram, with labeled axes and a title.
+    </p>
+    <p>
+      <b>Task 3c.</b> Compare the equalized image and its histogram with
+      the originals from D1.
+    </p>
+    <div class="handin" id="D2">
+      <span class="tag">HAND IN &middot; D2</span>
+      <p>
+        The labeled plot of \(\hat F_X(i)\) for <code>kids.png</code>, the
+        equalized image, its labeled histogram, and your comparison with the
+        originals.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 4: Check the Equalization</h3>
+    <p>
+      If the histogram of an image were exactly flat, then its empirical CDF
+      would be the CDF of a uniform distribution on the gray levels 0 to
+      255, which is the straight line \((i+1)/256\). The distance of the
+      empirical CDF from this line measures how far the histogram is from
+      flat:
+    </p>
+    $$
+    D = \max_{0 \le i \le 255} \left| \hat F(i) - \frac{i+1}{256} \right| \ .
+    $$
+    <p>
+      <b>Task 4a.</b> Compute \(D\) for <code>kids.png</code> and for its
+      equalized image. Plot both empirical CDFs and the straight line on one
+      graph.
+    </p>
+    <p>
+      <b>Task 4b.</b> Count the distinct gray levels in
+      <code>kids.png</code> and in its equalized image. Confirm that the
+      equalization is a pointwise operation that does not decrease: every
+      pixel with the same input gray level has the same output gray level,
+      and a larger input gray level never gives a smaller output gray level.
+    </p>
+    <div class="tip">
+      <b>Reading the check.</b> \(D\) must be much smaller for the equalized
+      image than for <code>kids.png</code>, but it is not 0. The number of
+      distinct gray levels can stay the same or fall, but it can never rise.
+      If it rises, the function is not a pointwise operation.
+    </div>
+    <div class="handin" id="D3">
+      <span class="tag">HAND IN &middot; D3</span>
+      <p>
+        The two values of \(D\), the plot of the two CDFs and the line, the
+        two counts of distinct gray levels, and the result of the order
+        check.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 5: Contrast Stretching</h3>
+    <p>
+      Contrast stretching maps the gray levels from 0 to \(T_1\) to 0
+      (black), maps the gray levels from \(T_2\) to 255 to 255 (white), and
+      stretches the gray levels between \(T_1\) and \(T_2\) linearly over the
+      full range:
+    </p>
+    $$
+    f(x) = \begin{cases}
+      0 & x \le T_1 \\
+      255 \, \dfrac{x - T_1}{T_2 - T_1} & T_1 < x < T_2 \\
+      255 & x \ge T_2 \ ,
+    \end{cases}
+    $$
+    <p>
+      rounded to the nearest integer. The figure shows the map.
+    </p>
+    <div class="kernelfig">
+      <svg width="260" height="230" viewBox="0 0 260 230" role="img"
+           aria-label="Graph of the contrast stretching map">
+        <line x1="40" y1="190" x2="240" y2="190" stroke="#222" stroke-width="1.2"/>
+        <line x1="40" y1="190" x2="40" y2="20" stroke="#222" stroke-width="1.2"/>
+        <polyline points="40,190 90,190 190,30 230,30" fill="none" stroke="#8a6d1d" stroke-width="2.5"/>
+        <line x1="90" y1="190" x2="90" y2="196" stroke="#222"/>
+        <line x1="190" y1="30" x2="190" y2="196" stroke="#999" stroke-dasharray="3,3"/>
+        <line x1="34" y1="30" x2="190" y2="30" stroke="#999" stroke-dasharray="3,3"/>
+        <text x="90" y="210" font-size="13" text-anchor="middle">T₁</text>
+        <text x="190" y="210" font-size="13" text-anchor="middle">T₂</text>
+        <text x="230" y="210" font-size="13" text-anchor="middle">255</text>
+        <text x="40" y="210" font-size="13" text-anchor="middle">0</text>
+        <text x="30" y="34" font-size="13" text-anchor="end">255</text>
+        <text x="140" y="226" font-size="13" text-anchor="middle">input x</text>
+        <text x="16" y="110" font-size="13" text-anchor="middle" transform="rotate(-90 16 110)">output f(x)</text>
+      </svg>
+      <div class="caption">The contrast stretching map.</div>
+    </div>
+    <p>
+      If a pointwise operation \(y = f(x)\) is one to one, then the input
+      and output histograms are approximately related by
+    </p>
+    $$
+    h_{\text{out}}(y) \approx \left. \frac{h_{\text{in}}(x)}{|f'(x)|} \right|_{x = f^{-1}(y)} \ ,
+    \tag{4}
+    $$
+    <p>
+      where \(f^{-1}(y)\) is rounded to the nearest integer. The map \(f\) is
+      not one to one, because it sends whole ranges to 0 and to 255, so the
+      output histogram can have spikes at 0 and 255. Between the thresholds
+      \(f'\) is the constant \(255/(T_2 - T_1)\). So between 1 and 254 the
+      output histogram is a stretched and rescaled copy of the input
+      histogram between \(T_1\) and \(T_2\).
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def stretch(x, T1, T2):
+    """This function stretches the contrast of an 8-bit image.
+
+    Gray levels at most T1 map to 0, gray levels at least T2 map to 255, and
+    gray levels between them map linearly from 0 to 255.  The result is
+    rounded to the nearest gray level.
+
+    x        (H, W) uint8 NumPy array
+    T1, T2   ints with 0 &lt;= T1 &lt; T2 &lt;= 255
+    returns  (H, W) uint8 NumPy array, the stretched image
+    """</pre>
+    </div>
+    <p>
+      <b>Task 5a.</b> Choose \(T_1\) and \(T_2\) so that the histogram of the
+      stretched <code>kids.png</code> spans the full range from 0 to 255.
+      Report your choice. Display the stretched image and plot its
+      histogram, with labeled axes and a title. Compare them with the
+      originals from D1.
+    </p>
+    <p>
+      <b>Task 5b. Check.</b> Confirm that the stretched image has smallest
+      gray level 0 and largest gray level 255. Then use equation (4). For
+      each input gray level \(i\) with \(T_1 &lt; i &lt; T_2\), the output
+      bin \(f(i)\) must hold exactly \(h_{\text{in}}(i)\) pixels, because the
+      map is one to one there. Count the input gray levels where this fails.
+      Also confirm that \(h_{\text{out}}(0)\) equals the number of input
+      pixels at or below \(T_1\), and that \(h_{\text{out}}(255)\) equals the
+      number at or above \(T_2\).
+    </p>
+    <div class="handin" id="D4">
+      <span class="tag">HAND IN &middot; D4</span>
+      <p>
+        Your \(T_1\) and \(T_2\), the stretched image and its labeled
+        histogram, your comparison with the originals, and the results of
+        the checks.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 2: Gamma
+    <span class="note">Steps 6 to 11. Learn the gamma model, measure the gamma of your display, gamma correct an image, change the gamma of an image, and answer the questions.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 6: Gamma</h3>
+    <p>
+      A display does not produce light in proportion to the gray level it is
+      sent. For a long time most displays were cathode ray tubes (CRTs), in
+      which the light intensity \(I\) is a power of the applied voltage
+      \(V\),
+    </p>
+    $$
+    I = V^{\gamma} \ .
+    $$
+    <p>
+      The exponent is the <b>gamma</b> \(\gamma\) of the display, and a
+      typical CRT has \(\gamma\) near 2.5. Liquid crystal and OLED displays
+      work by different physics, but they use tables that give them a
+      similar power law response. Most current displays follow the sRGB
+      standard, whose response is close to a power law with
+      \(\gamma = 2.2\). For an 8-bit gray level \(x\), the light the display
+      produces, on the same 0 to 255 scale, is
+    </p>
+    $$
+    y = 255 \left( \frac{x}{255} \right)^{\gamma} \ .
+    \tag{5}
+    $$
+    <p>
+      Because of this power law, an image whose pixel values are
+      proportional to light intensity looks too dark on a display,
+      especially in the dark and middle gray levels. <b>Gamma correction</b>
+      compensates for this. It applies the inverse of equation (5), which
+      raises \(x/255\) to the power \(1/\gamma\), before the image is
+      displayed.
+    </p>
+    <p>
+      There is a second reason to store images on a gamma corrected scale.
+      The eye is more sensitive to a change in intensity on a dark
+      background than on a bright one. When an image is quantized to 8 bits,
+      the change in perceived brightness from one gray level to the next
+      should be about the same everywhere. A linear scale does not do this.
+      It gives large visible steps, called false contours, in dark regions.
+      The gamma corrected scale happens to be close to a scale that is
+      uniform in perceived brightness. For this reason cameras and scanners
+      gamma correct images before they store them, and most images you see,
+      such as JPEG photographs and video, are already on a gamma corrected
+      scale.
+    </p>
+    <p>
+      Gamma matters when an image is stored on a linear scale, as in some
+      computer graphics and scientific images, or when an image was
+      corrected for a display whose gamma differs from yours. In this module
+      you measure the gamma of your display and then correct two images.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 7: Measure the Gamma of Your Display</h3>
+    <p>
+      The measurement compares a pattern of black and white lines with a
+      uniform gray patch. Seen from a distance, the optics of the eye blur
+      the lines, so the pattern looks like a uniform gray. If half of the
+      lines are white with intensity \(I_{255}\) and half are black, the
+      pattern has intensity
+    </p>
+    $$
+    I_c = \frac{I_{255} + 0}{2} \ .
+    $$
+    <p>
+      By equation (5), a uniform patch of gray level \(g\) has intensity
+      \(I_g = I_{255} \, (g/255)^{\gamma}\). The two look the same when
+      \(I_g = I_c\), which is when
+    </p>
+    $$
+    \left( \frac{g}{255} \right)^{\gamma} = \frac{1}{2} \ .
+    \tag{6}
+    $$
+    <p>
+      So the gray level \(g\) that matches the pattern determines
+      \(\gamma\).
+    </p>
+    <p>
+      The page <a href="gamma-match.html"><b>gamma-match.html</b></a> draws
+      the pattern. It has bands labeled <b>lines</b>, made of black and
+      white lines, next to bands labeled <b>gray</b>, which are one solid
+      gray. A slider sets the gray level \(g\) of the gray bands, and the
+      page shows \(g\). At the match the bands disappear when you view the
+      pattern from a distance. The lines can be 1 or 2 display pixels wide.
+      The page also offers two other patterns: the same half pattern drawn
+      as a checkerboard, and a quarter pattern with one white line in every
+      four, whose intensity is \(I_{255}/4\). A magnifier on the page shows
+      the pixel values around the mouse, so you can see that the lines
+      really alternate.
+    </p>
+    <div class="tip">
+      <b>Set up the display first.</b> Each line must be exactly 1 or 2
+      pixels of the display wide, or the display blends them and the
+      measurement is wrong. To check, take a screenshot of the pattern and
+      zoom in on it: the lines in the screenshot must be sharp and evenly
+      spaced.
+      <ul>
+        <li>Open the page at 100% browser zoom. Press Ctrl+0, or Cmd+0 on a
+            Mac, to reset the zoom. The page draws its lines in device
+            pixels, so it also works on high resolution displays. It shows
+            the device pixel ratio it found.</li>
+        <li>Look at the lines up close, with a magnifier if you have one.
+            They must be sharp, with no slow light and dark bands across
+            them. If you see such bands, the browser is rescaling the
+            pattern. Check the zoom and the display scaling in your system
+            settings.</li>
+        <li>Turn off Night Shift, Night Light, True Tone, automatic
+            brightness, and any blue light filter if you can. Set the
+            brightness to a comfortable level and leave it there.</li>
+        <li>Use the built-in display or an external monitor, but not a
+            projector. Do not use a screenshot of the pattern.</li>
+      </ul>
+    </div>
+    <p>
+      Write a function that solves equation (6) for \(\gamma\). It also
+      handles the quarter pattern, for which \(1/2\) becomes \(1/4\).
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def gamma_from_match(g, fraction):
+    """This function returns the display gamma from a matched gray level.
+
+    The uniform gray level g matches a pattern whose mean light intensity is
+    fraction times the intensity of white.
+
+    g         int or float, the matched gray level, 0 &lt; g &lt; 255
+    fraction  float, the fraction of white in the pattern, 0.5 or 0.25
+    returns   float, the gamma of the display
+    """</pre>
+    </div>
+    <p>
+      <b>Task 7a.</b> Open <code>gamma-match.html</code> with the half
+      pattern of lines. Start at \(g = 127\), step back from the display,
+      and adjust \(g\) until the bands disappear. Repeat the match 3 times,
+      starting once from a dark gray and once from a light gray, and report
+      the 3 values of \(g\) and their mean.
+    </p>
+    <p>
+      <b>Task 7b.</b> Derive the expression for \(\gamma\) in terms of
+      \(g\) from equation (6), and compute \(\gamma\) for your display from
+      the mean \(g\). Also compute how much \(\gamma\) changes when \(g\)
+      changes by one gray level.
+    </p>
+    <p>
+      <b>Task 7c. Check.</b> Repeat the match with the checkerboard and with
+      the quarter pattern, and compute \(\gamma\) from each. If the display
+      follows the power law and treats each pixel independently, then all
+      three values of \(\gamma\) agree.
+    </p>
+    <div class="handin" id="D5">
+      <span class="tag">HAND IN &middot; D5</span>
+      <p>
+        The make and model of your display and the device pixel ratio that
+        the page shows, the matched gray levels, your derivation, and the
+        three values of \(\gamma\).
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 8: Gamma Correct a Linear Image</h3>
+    <p>
+      <code>linear.png</code> is stored on a linear intensity scale. To show
+      it correctly on your display, apply the inverse of equation (5) with
+      the \(\gamma\) of your display.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def power_law(x, p):
+    """This function applies the power law 255 (x/255)^p to an array of gray levels.
+
+    The result is not rounded, so it can be inverted exactly.
+
+    x        NumPy array of gray levels 0 to 255, of any type
+    p        float, the exponent
+    returns  float64 NumPy array of the same shape
+    """
+
+
+def gamma_correct(x, gamma):
+    """This function gamma corrects an image stored on a linear intensity scale.
+
+    The corrected image shows the original light intensities on a display
+    with the given gamma.
+
+    x        (H, W) uint8 NumPy array on a linear intensity scale
+    gamma    float, the gamma of the display
+    returns  (H, W) uint8 NumPy array
+    """</pre>
+    </div>
+    <p>
+      <b>Task 8a.</b> Display <code>linear.png</code>.
+    </p>
+    <p>
+      <b>Task 8b.</b> Gamma correct <code>linear.png</code> with the
+      \(\gamma\) of your display from Task 7b, and display the result. Write
+      down the formula you used.
+    </p>
+    <p>
+      <b>Task 8c. Check.</b> Apply <code>power_law</code> with the exponent
+      \(1/\gamma\) and then with the exponent \(\gamma\) to
+      <code>linear.png</code>, without rounding. Report the largest absolute
+      difference from <code>linear.png</code>. It must be at the level of
+      round-off, below \(10^{-10}\) gray levels.
+    </p>
+    <div class="handin" id="D6">
+      <span class="tag">HAND IN &middot; D6</span>
+      <p>
+        The original and corrected images, labeled with the value of
+        \(\gamma\) used, the formula you used, and the result of the check.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 9: Change the Gamma of an Image</h3>
+    <p>
+      Sometimes an image is gamma corrected, but for a display whose gamma
+      differs from yours. <code>gamma15.png</code> is gamma corrected for a
+      display with \(\gamma = 1.5\). To show it correctly on your display,
+      you must change its gamma correction.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def change_gamma(x, gamma_in, gamma_out):
+    """This function converts an image gamma corrected for one display to another.
+
+    x          (H, W) uint8 NumPy array, gamma corrected for gamma_in
+    gamma_in   float, the gamma that x is corrected for
+    gamma_out  float, the gamma of the display that will show the result
+    returns    (H, W) uint8 NumPy array, gamma corrected for gamma_out
+    """</pre>
+    </div>
+    <p>
+      <b>Task 9a.</b> Derive the formula that converts
+      <code>gamma15.png</code> into an image gamma corrected for your
+      display. Compute the result in one step from the <code>uint8</code>
+      input, and round only once.
+    </p>
+    <p>
+      <b>Task 9b.</b> Display <code>gamma15.png</code> and the converted
+      image.
+    </p>
+    <p>
+      <b>Task 9c. Check.</b> Count the pixels that
+      <code>change_gamma(x, 1.5, 1.5)</code> changes. The count must be 0.
+    </p>
+    <div class="handin" id="D7">
+      <span class="tag">HAND IN &middot; D7</span>
+      <p>
+        Your derivation, the original and converted images, labeled with the
+        two values of \(\gamma\), and the result of the check.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 10: Your Specification</h3>
+    <p>
+      Over the two modules you directed your AI assistant to write the
+      bodies of eight functions: <code>histogram</code>,
+      <code>empirical_cdf</code>, <code>equalize</code>,
+      <code>stretch</code>, <code>gamma_from_match</code>,
+      <code>power_law</code>, <code>gamma_correct</code>, and
+      <code>change_gamma</code>.
+    </p>
+    <div class="handin" id="D8">
+      <span class="tag">HAND IN &middot; D8</span>
+      <p>
+        The specification you gave your AI assistant, quoted. If you
+        corrected it during the build, show the correction and say what was
+        wrong.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 11: Questions to Answer</h3>
+    <p>
+      Answer each in a few sentences, using your own images and numbers as
+      evidence. Point to the specific figure or number you are relying on.
+    </p>
+    <ol>
+      <li>The derivation in Step 3 shows that \(Y = F_X(X)\) is exactly
+          uniform. Explain why the histogram of your equalized image is not
+          exactly flat. Use the value of \(D\) and the counts of distinct
+          gray levels from D3.</li>
+      <li>When does contrast stretching give a better image than histogram
+          equalization? Compare your images of D2 and D4, and say what each
+          method does to the regions of <code>kids.png</code> that hold the
+          most pixels.</li>
+      <li>Why are images stored on a gamma corrected scale rather than a
+          linear one, even on a display that could show a linear scale?
+          Explain in terms of 8-bit quantization and the response of the
+          eye. Use your corrected <code>linear.png</code> as evidence: count
+          how many of the gray levels 0 to 63 it uses, and find the output
+          gray levels of the input gray levels 1, 2, and 3.</li>
+      <li>What happens if you gamma correct an image twice? Gamma correct
+          your corrected <code>linear.png</code> a second time, display it,
+          and explain what you see in terms of the exponent of the combined
+          operation.</li>
+      <li>One could convert <code>gamma15.png</code> in two steps: first to
+          a linear scale, rounded to <code>uint8</code>, and then gamma
+          correct the result with <code>gamma_correct</code>. Do this and
+          compare it with your one-step result of D7. Count the distinct
+          gray levels of the intermediate image and of both results, and the
+          pixels where the two results differ. Which method is better, and
+          why?</li>
+    </ol>
+    <div class="handin" id="D9">
+      <span class="tag">HAND IN &middot; D9</span>
+      <p>
+        Your answers to the five questions above.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Deliverables
+    <span class="note">What to submit, and where each item comes from.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What to Hand In</h3>
+    <p>Submit two files through Brightspace.</p>
+    <ol>
+      <li>A report, as a single <b>PDF</b>, labeled "Lab 6", containing the
+          items listed below in this order.</li>
+      <li>Your <code>lab6.py</code>, as a plain <code>.py</code> file.</li>
+    </ol>
+    <p>
+      Do not paste the code into the report, and do not send a zip file.
+      Also commit <code>lab6.py</code> to your
+      <code>image-processing-labs</code> repository under <code>lab6</code>
+      and push it before you submit.
+    </p>
+    <ol class="handin-list">
+      <li><span class="dnum"></span>
+          Your name and the link to your GitHub repository.</li>
+      <li><span class="dnum"><a href="#D1">D1</a></span>
+          <code>race.png</code> and <code>kids.png</code> with their labeled
+          histograms, and the results of the two checks.</li>
+      <li><span class="dnum"><a href="#D2">D2</a></span>
+          The plot of \(\hat F_X(i)\) for <code>kids.png</code>, the
+          equalized image, its histogram, and your comparison.</li>
+      <li><span class="dnum"><a href="#D3">D3</a></span>
+          The two values of \(D\), the plot of the CDFs, the counts of
+          distinct gray levels, and the order check.</li>
+      <li><span class="dnum"><a href="#D4">D4</a></span>
+          Your \(T_1\) and \(T_2\), the stretched image and its histogram,
+          your comparison, and the checks.</li>
+      <li><span class="dnum"><a href="#D5">D5</a></span>
+          Your display and its device pixel ratio, the matched gray levels,
+          the derivation, and the three values of \(\gamma\).</li>
+      <li><span class="dnum"><a href="#D6">D6</a></span>
+          The original and gamma corrected <code>linear.png</code>, the
+          formula, and the round trip check.</li>
+      <li><span class="dnum"><a href="#D7">D7</a></span>
+          The derivation, the original and converted
+          <code>gamma15.png</code>, and the check.</li>
+      <li><span class="dnum"><a href="#D8">D8</a></span>
+          The specification you gave your AI assistant, quoted, with any
+          corrections you made during the build.</li>
+      <li><span class="dnum"><a href="#D9">D9</a></span>
+          Your answers to the five questions.</li>
+    </ol>
+    <p>
+      Concise and clear beats long.
+    </p>
+  </div>
+
+  <div class="card">
+    <p>
+      You have now enhanced images with pointwise operations, measured the
+      gamma of your own display, and corrected images for it.
+    </p>
+    <p>
+      <a href="../../index.html">Back to the laboratory index</a> &middot;
+      <a href="https://charlesbouman.org/ece63700/">ECE 63700 course notes</a>
+    </p>
+  </div>
+
+  </div>
+</details>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  var text = btn.nextElementSibling.innerText;
+  function done() {
+    var old = btn.textContent;
+    btn.textContent = "Copied";
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done);
+  } else {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    done();
+  }
+}
+
+function toggleAll(btn) {
+  var open = btn.textContent.indexOf("Open") === 0;
+  var list = document.querySelectorAll("details.module");
+  for (var i = 0; i < list.length; i++) { list[i].open = open; }
+  btn.textContent = open ? "Close all" : "Open all";
+}
+
+function revealHash() {
+  if (!location.hash) { return; }
+  var el = document.querySelector(location.hash);
+  if (!el) { return; }
+  var p = el.parentElement;
+  while (p) {
+    if (p.tagName === "DETAILS") { p.open = true; }
+    p = p.parentElement;
+  }
+  el.scrollIntoView();
+}
+window.addEventListener("load", revealHash);
+window.addEventListener("hashchange", revealHash);
+</script>
+
+</body>
+</html>
