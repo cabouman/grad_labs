@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 7: Eigen Decomposition</title>
+<style>
+  html { background: #faf8f4; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         background: #faf8f4; color: #222; line-height: 1.5; }
+  .band { background: #cfb991; border-bottom: 4px solid #000;
+          padding: 24px 16px 18px 16px; text-align: center; }
+  .band h2 { margin: 0 0 6px 0; font-size: 1.0em; font-weight: normal; color: #3d3324; }
+  .band h1 { margin: 0; font-size: 1.5em; color: #000; }
+  .band a { color: #000; }
+  .container { max-width: 760px; margin: 28px auto; padding: 0 16px; }
+  .section { border: 2px solid #cfb991; border-radius: 14px;
+             background: #f4efe3; padding: 18px 16px 2px 16px; margin-bottom: 22px; }
+  .section > h2 { margin: 0 0 16px 8px; font-size: 1.3em; color: #3d3324; }
+  .card { background: #fff; border: 1px solid #e3dccb; border-radius: 10px;
+          padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; color: #000; border-bottom: 2px solid #cfb991; padding-bottom: 6px; }
+  a { color: #8a6d1d; text-decoration: none; }
+  a:hover { color: #000; text-decoration: underline; }
+  ul, ol { margin: 8px 0; }
+  li { padding: 3px 0; }
+  code { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 4px;
+         padding: 1px 5px; font-size: 0.95em; }
+  pre { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 6px;
+        padding: 12px 14px; overflow-x: auto; font-size: 0.92em; line-height: 1.4; }
+  .tip { background: #f6f3ea; border-left: 4px solid #cfb991; padding: 10px 14px;
+         margin: 12px 0; font-size: 0.97em; }
+  .codeblock { position: relative; }
+  .codeblock pre { padding-right: 76px; }
+  .copy { position: absolute; top: 8px; right: 8px; background: #cfb991; color: #000;
+          border: 1px solid #b9ac8e; border-radius: 4px; padding: 2px 10px;
+          font-size: 0.8em; font-family: inherit; cursor: pointer; }
+  .copy:hover { background: #b9ac8e; }
+  .kernelfig { text-align: center; margin: 16px 0 4px 0; }
+  .kernelfig img { border: 1px solid #e3dccb; }
+  .kernelfig .caption { font-size: 0.9em; color: #555; margin-top: 6px; }
+  table.kernel { border-collapse: collapse; margin: 12px auto; }
+  table.kernel td { border: 1px solid #b9ac8e; padding: 6px 14px; text-align: center;
+                    font-family: "Times New Roman", serif; }
+  .source { font-size: 0.9em; color: #5b5b5b; margin: 4px 0 0 0; }
+  table.runs { border-collapse: collapse; margin: 12px 0; font-size: 0.92em; width: 100%; }
+  table.runs th, table.runs td { border: 1px solid #e3dccb; padding: 5px 9px; text-align: left; }
+  table.runs th { background: #f4efe3; }
+  table.runs td.grp { background: #faf8f4; font-weight: bold; white-space: nowrap; }
+  details.module { border: 2px solid #cfb991; border-radius: 14px; background: #f4efe3;
+                   margin-bottom: 22px; }
+  details.module > summary { cursor: pointer; list-style: none; padding: 16px 18px;
+                             font-size: 1.2em; font-weight: bold; color: #3d3324; }
+  details.module > summary::-webkit-details-marker { display: none; }
+  details.module > summary::before { content: "\25B8"; color: #8a6d1d; margin-right: 10px; }
+  details.module[open] > summary::before { content: "\25BE"; }
+  details.module > summary:hover { color: #000; }
+  details.module .modulebody { padding: 0 16px 2px 16px; }
+  summary .note { display: block; font-weight: normal; font-size: 0.78em;
+                  color: #6b5c42; margin: 4px 0 0 26px; }
+  .allbtn { display: block; margin: 0 0 16px auto; background: #f4efe3; color: #3d3324;
+            border: 1px solid #cfb991; border-radius: 4px; padding: 3px 12px;
+            font-size: 0.85em; font-family: inherit; cursor: pointer; }
+  .allbtn:hover { background: #e8e0cd; }
+  .handin { border: 1px solid #cfb991; border-left: 7px solid #cfb991;
+            border-radius: 8px; background: #fffdf5;
+            padding: 12px 16px 4px 16px; margin: 18px 0; }
+  .handin .tag { display: inline-block; background: #cfb991; color: #000;
+                 border-radius: 4px; padding: 1px 9px; font-size: 0.82em;
+                 font-weight: bold; letter-spacing: 0.4px; }
+  .handin p:first-of-type { margin-top: 8px; }
+  ol.handin-list { list-style: none; padding-left: 0; margin: 10px 0; }
+  ol.handin-list li { position: relative; padding: 4px 0 4px 2.9em; }
+  ol.handin-list .dnum { position: absolute; left: 0; width: 2.9em;
+                         font-weight: bold; color: #8a6d1d; }
+  .band .nav { margin: 10px 0 0 0; font-size: 0.9em; }
+  .band .nav a { text-decoration: underline; }
+</style>
+<script>
+  MathJax = { tex: { inlineMath: [['\\(', '\\)']], tags: 'ams' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+
+<div class="band">
+  <h2>ECE 63700: Digital Image Processing I</h2>
+  <h1>Lab 7: Eigen Decomposition</h1>
+  <p class="nav">
+    <a href="https://charlesbouman.org/ece63700/">ECE 63700 course notes</a> &middot;
+    <a href="../../index.html">Laboratory index</a>
+  </p>
+</div>
+
+<div class="container">
+
+<button class="allbtn" onclick="toggleAll(this)">Open all</button>
+
+<details class="module">
+  <summary>Overview
+    <span class="note">What the lab is about, the data, and the ground rules.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What This Lab Is About</h3>
+    <p><b>Due: Friday, Mar. 5, 2027.</b></p>
+    <p>
+      In this lab you treat images as random vectors and study them through
+      the <b>eigen decomposition</b> of their covariance. The eigenvectors of
+      the covariance are the directions in which a set of images varies most,
+      and they are used for image coding, image classification, and object
+      recognition.
+    </p>
+    <p>
+      In Module 1 you generate Gaussian random vectors with a given
+      covariance, estimate the covariance from the samples, and use its
+      eigen decomposition to <b>decorrelate</b> and <b>whiten</b> them. In
+      Module 2 you compute the eigenvectors of the covariance of a set of
+      images of typed letters, called <b>eigenimages</b>. You compute them
+      with the <b>singular value decomposition</b> (SVD) of the data matrix,
+      without forming the covariance, and you rebuild an image from a few
+      eigenimages. In Module 3 you use the eigenimages to reduce each letter
+      image to 10 numbers and classify the letters with Gaussian maximum
+      likelihood classifiers.
+    </p>
+    <p>
+      You will not hand-write the implementation. This page states the
+      definitions and the exact signature of every function you need. Your
+      job is to direct Claude, or another agentic AI, to write the code from
+      that specification. Then you run the experiments yourself, produce the
+      required images and numbers, and explain what you see. You are graded
+      on the specification you give, the checks you run to confirm the code
+      is right, and your reading of the results.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>The Data</h3>
+    <p>
+      Download the data before you start. The file
+      <a href="https://charlesbouman.org/ece63700/labs/lab7-data.zip"><b>lab7-data.zip</b></a>,
+      390 KB, holds 338 images of typed lower-case letters, each 64 by 64
+      pixels. It unzips to a folder <code>data</code> with two subfolders.
+    </p>
+    <ul>
+      <li><b>data/training/</b> holds the training images: one folder for
+          each of 12 fonts (<code>arial</code>,
+          <code>bookman_old_style</code>, <code>century</code>,
+          <code>comic_sans_ms</code>, <code>courier_new</code>,
+          <code>fixed_sys</code>, <code>georgia</code>,
+          <code>microsoft_sans_serif</code>,
+          <code>palatino_linotype</code>, <code>shruti</code>,
+          <code>tahoma</code>, <code>times_new_roman</code>), and in each
+          folder the 26 images <code>a.png</code> to <code>z.png</code>.
+          That makes 312 training images.</li>
+      <li><b>data/test/</b> holds the test images: one folder,
+          <code>veranda</code>, with the 26 letters in a font that is not in
+          the training set.</li>
+    </ul>
+    <p class="source">
+      These are provided images. They are stored in lossless PNG format with
+      8 bits per pixel.
+    </p>
+    <p>
+      From the shell, in the folder that holds <code>lab7.py</code>:
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>wget https://charlesbouman.org/ece63700/labs/lab7-data.zip
+unzip lab7-data.zip</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Ground Rules</h3>
+    <ul>
+      <li>All code is in a single file named <code>lab7.py</code>. Use the
+          <code>labs</code> conda environment you built in Lab 2. Do all
+          linear algebra in <b>PyTorch</b>, with <code>float64</code>
+          tensors and the functions of <code>torch.linalg</code>. You may use
+          NumPy and matplotlib for plotting.</li>
+      <li><code>lab7.py</code> holds functions and nothing else. Run your
+          experiments from a separate script that imports it.</li>
+      <li>Every function has the exact signature given on this page, and a
+          docstring that says what it does, what its inputs are, and what
+          it returns. Keep the docstrings short.</li>
+      <li><b>A data matrix holds one vector per column.</b> \(n\) vectors of
+          dimension \(p\) form a \((p, n)\) tensor. The letter images are
+          read as gray levels from 0 to 255, without scaling, and each image
+          is flattened row by row into a column of 4096 values.</li>
+      <li>Eigenvalues are sorted from largest to smallest, and the
+          eigenvectors in the same order. An eigenvector is determined only
+          up to its sign, so compare eigenvectors only after you match their
+          signs.</li>
+      <li>No Python <code>for</code> loop over pixels or over images. A loop
+          over the 26 letter classes is allowed.</li>
+      <li>Show every image with a colorbar. Show a group of eigenimages on
+          one shared gray scale that is symmetric about 0.</li>
+    </ul>
+    <div class="tip">
+      <b>How to direct the AI.</b> Give it the equations from this page, the
+      shapes of the tensors, the normalization of each estimate (\(1/n\) or
+      \(1/(n-1)\)), the order of the eigenvalues, and the signatures of the
+      functions you want. Then run the checks in Steps 2, 3, 6, 8, and 9
+      <em>before</em> you interpret any image or error rate. Eigenvectors
+      in the wrong order, or a covariance with the wrong normalization, still
+      produce plausible pictures.
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Parameters for the Experiments
+    <span class="note">The settings for every hand-in item, in one place.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Parameters for Every Experiment</h3>
+    <p>
+      The table lists the settings for each hand-in item. Every experiment
+      below points back to this table by its deliverable number, so you do
+      not have to search the text for a number.
+    </p>
+    <table class="runs">
+      <tr>
+        <th>Item</th><th>Experiment</th><th>Input</th><th>Function and settings</th>
+      </tr>
+      <tr><td class="grp">D1</td><td>Generate Gaussian vectors (Step 2)</td>
+          <td>\(R_X\) of equation (5)</td>
+          <td><code>generate_gaussian</code>, \(p = 2\), \(n = 1000\),
+              <code>seed = 0</code></td></tr>
+      <tr><td class="grp">D2</td><td>Estimate, decorrelate, whiten (Step 3)</td>
+          <td>the \(X\) of D1</td>
+          <td><code>sample_mean_cov</code>, <code>decorrelate</code>,
+              <code>whiten</code></td></tr>
+      <tr><td class="grp">D3</td><td>SVD and eigenvectors (Step 4)</td>
+          <td>none</td>
+          <td>a derivation</td></tr>
+      <tr><td class="grp">D4</td><td>Mean image and eigenimages (Step 5)</td>
+          <td><code>data/training</code>, \(n = 312\), \(p = 4096\)</td>
+          <td><code>pca_svd</code>; the first 12 eigenimages in 4 rows of 3</td></tr>
+      <tr><td class="grp">D5</td><td>Checks of the eigenvectors (Step 6)</td>
+          <td><code>data/training</code></td>
+          <td><code>pca_cov</code>; rank threshold \(10^{-10}\sigma_1\);
+              eigenvectors 1 to 30</td></tr>
+      <tr><td class="grp">D6</td><td>Projection coefficients (Step 7)</td>
+          <td>the first four training images: a, b, c, d of
+              <code>arial</code></td>
+          <td><code>project</code>; coefficients 1 to 10</td></tr>
+      <tr><td class="grp">D7</td><td>Resynthesis (Step 8)</td>
+          <td>the first training image, a of <code>arial</code></td>
+          <td><code>resynthesize</code> with \(m = 1, 5, 10, 15, 20, 30\);
+              error curve for \(m = 0\) to \(r - 1\), with \(r\) from D5</td></tr>
+      <tr><td class="grp">D8</td><td>Classifier with \(B_k = R_k\) (Step 10)</td>
+          <td><code>data/training</code> and <code>data/test</code></td>
+          <td>\(m = 10\) eigenvectors; <code>class_statistics</code>,
+              <code>scaling_matrices(covs, "full")</code>,
+              <code>classify</code></td></tr>
+      <tr><td class="grp">D9</td><td>Constrained classifiers (Step 11)</td>
+          <td><code>data/training</code> and <code>data/test</code></td>
+          <td>\(m = 10\); <code>"diag"</code>, <code>"wc"</code>,
+              <code>"wc_diag"</code>, <code>"identity"</code></td></tr>
+    </table>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 1: Gaussian Random Vectors and Whitening
+    <span class="note">Steps 1 to 3. Set up the code, generate Gaussian random vectors with a given covariance, then estimate the covariance and whiten the vectors.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 1: Set Up <code>lab7.py</code></h3>
+    <p>
+      Copy these helpers into <code>lab7.py</code>.
+      <code>load_letters</code> reads a folder of letter images into the
+      columns of a data matrix, together with the letter of each column.
+      <code>to_image</code> turns a column back into a 64 by 64 image for
+      display.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>import os
+
+import numpy as np
+import torch
+from PIL import Image
+
+LETTERS = "abcdefghijklmnopqrstuvwxyz"
+
+
+def load_letters(folder):
+    """This function reads the letter images in folder into the columns of a data matrix.
+
+    folder holds one subfolder for each font, and each subfolder holds the
+    26 images a.png to z.png, each 64 by 64 pixels.  The fonts are read in
+    alphabetical order, and the letters in the order a to z, so column
+    26 * f + k holds letter k of font f.  Each image is flattened row by row.
+
+    folder   path to the folder, for example "data/training"
+    returns  X, a (4096, n) float64 tensor of gray levels 0 to 255;
+             labels, an (n,) int64 tensor of letter numbers 0 (a) to 25 (z);
+             fonts, the list of font names
+    """
+    fonts = sorted(d for d in os.listdir(folder)
+                   if os.path.isdir(os.path.join(folder, d)))
+    columns, labels = [], []
+    for font in fonts:
+        for k, letter in enumerate(LETTERS):
+            img = np.asarray(Image.open(os.path.join(folder, font, letter + ".png")),
+                             dtype=np.float64)
+            columns.append(img.reshape(-1))
+            labels.append(k)
+    X = torch.from_numpy(np.stack(columns, axis=1))
+    return X, torch.tensor(labels, dtype=torch.int64), fonts
+
+
+def to_image(x):
+    """This function reshapes a column of 4096 pixel values into a 64 by 64 image.
+
+    x        (4096,) or (4096, 1) tensor
+    returns  (64, 64) NumPy array, for display with matplotlib
+    """
+    return x.reshape(64, 64).detach().cpu().numpy()</pre>
+    </div>
+    <p>
+      The loop in <code>load_letters</code> runs over files, not over
+      pixels, so it is allowed.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 2: Gaussian Random Vectors</h3>
+    <p>
+      A Gaussian random vector \(X = [X_1, \dots, X_p]^t\) with mean \(\mu\)
+      and covariance \(R\) has the density
+    </p>
+    $$
+    p(x) = \frac{1}{(2\pi)^{p/2} |R|^{1/2}}
+      \exp\left\{ -\frac{1}{2} (x - \mu)^t R^{-1} (x - \mu) \right\} \ ,
+    \tag{1}
+    $$
+    <p>
+      where \(\mu = E[X]\) is a \(p \times 1\) vector and
+      \(R = E[(X - \mu)(X - \mu)^t]\) is a \(p \times p\) symmetric,
+      positive definite matrix. In this step assume \(\mu = 0\).
+    </p>
+    <p>
+      Because \(R\) is symmetric, it has the <b>eigen decomposition</b>
+    </p>
+    $$
+    R = E \Lambda E^t \ ,
+    \tag{2}
+    $$
+    <p>
+      where the columns of \(E = [e_1, \dots, e_p]\) are orthonormal
+      eigenvectors, so \(E^t E = I\), and
+      \(\Lambda = \mathrm{diag}(\lambda_1, \dots, \lambda_p)\) holds the
+      eigenvalues. The vector \(\tilde X = E^t X\) has covariance
+      \(E^t R E = \Lambda\), so its components are uncorrelated, and, being
+      Gaussian, independent. Its density is a product,
+    </p>
+    $$
+    p(x) = \prod_{k=1}^{p} \frac{1}{\sqrt{2\pi\lambda_k}}
+      \exp\left\{ -\frac{\tilde x_k^2}{2\lambda_k} \right\} \ ,
+    \qquad \tilde x = E^t x \ .
+    $$
+    <p>
+      So the contours of \(p(x)\) are ellipses whose axes point along the
+      eigenvectors \(e_k\), with lengths proportional to
+      \(\sqrt{\lambda_k}\). Scaling each component of \(\tilde X\) by
+      \(1/\sqrt{\lambda_k}\) gives the <b>whitened</b> vector
+    </p>
+    $$
+    W = \Lambda^{-1/2} E^t X \ ,
+    \tag{3}
+    $$
+    <p>
+      whose components are i.i.d. \(N(0, 1)\), so \(E[W W^t] = I\).
+      Inverting equation (3) gives a way to generate \(X\) with covariance
+      \(R\) from i.i.d. \(N(0, 1)\) samples:
+    </p>
+    $$
+    X = E \Lambda^{1/2} W \ .
+    \tag{4}
+    $$
+    <p>
+      In this step you generate vectors with the covariance
+    </p>
+    $$
+    R_X = \begin{bmatrix} 2 & -1.2 \\ -1.2 & 1 \end{bmatrix} \ .
+    \tag{5}
+    $$
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def eig_sorted(R):
+    """This function returns the eigenvalues and eigenvectors of a symmetric matrix, largest first.
+
+    R        (p, p) float64 symmetric tensor
+    returns  lam, a (p,) tensor of eigenvalues in decreasing order;
+             E, a (p, p) tensor whose column k is the unit eigenvector of lam[k]
+    """
+
+
+def generate_gaussian(R, n, seed):
+    """This function generates n Gaussian random vectors with zero mean and covariance R.
+
+    It draws W with i.i.d. N(0, 1) entries, then forms X_tilde = Lambda^(1/2) W
+    and X = E X_tilde, where R = E Lambda E^t.
+
+    R        (p, p) float64 symmetric positive definite tensor
+    n        number of vectors
+    seed     int, seed of the torch.Generator that draws W
+    returns  W, X_tilde, X, each a (p, n) float64 tensor with one vector per column
+    """</pre>
+    </div>
+    <p>
+      <code>torch.linalg.eigh</code> returns the eigenvalues in increasing
+      order, so <code>eig_sorted</code> must reverse them, and the columns
+      of the eigenvectors with them. Draw \(W\) with
+      <code>torch.randn</code> and a <code>torch.Generator</code> seeded
+      with <code>seed</code>, so that the result can be reproduced.
+    </p>
+    <p>
+      <b>Task 2a.</b> Report the eigenvalues and eigenvectors of \(R_X\).
+      Generate the 1000 vectors of D1 and make scatter plots of \(W\),
+      \(\tilde X\), and \(X\) in three separate figures. Use the same axis
+      limits in all three, equal scales on the two axes
+      (<code>ax.set_aspect("equal")</code>), and labeled axes.
+    </p>
+    <p>
+      <b>Task 2b. Check.</b> Report the largest entry of
+      \(|E \Lambda E^t - R_X|\), which must be at the level of round-off,
+      below \(10^{-12}\). Then report the largest entry of
+      \(|\hat R_W - I|\), where \(\hat R_W\) is the sample covariance of
+      your generated \(W\). This one is a statistical error, of the order of
+      \(1/\sqrt{n} \approx 0.03\), not round-off.
+    </p>
+    <div class="handin" id="D1">
+      <span class="tag">HAND IN &middot; D1</span>
+      <p>
+        The eigenvalues and eigenvectors of \(R_X\), the three labeled
+        scatter plots, a sentence on what each transformation does to the
+        cloud of points, and the results of the two checks.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 3: Covariance Estimation and Whitening</h3>
+    <p>
+      In practice the covariance is not known and must be estimated from
+      data. Arrange \(n\) i.i.d. vectors as the columns of a \(p \times n\)
+      data matrix \(X = [X_1, \dots, X_n]\). With an unknown mean, the
+      unbiased estimates are
+    </p>
+    $$
+    \hat\mu = \frac{1}{n} \sum_{i=1}^{n} X_i \ ,
+    \qquad
+    \hat R = \frac{1}{n-1} \sum_{i=1}^{n} (X_i - \hat\mu)(X_i - \hat\mu)^t
+           = \frac{1}{n-1} Z Z^t \ ,
+    \tag{6}
+    $$
+    <p>
+      where \(Z = [X_1 - \hat\mu, \dots, X_n - \hat\mu]\) holds the centered
+      vectors. With the eigen decomposition \(\hat R = E \Lambda E^t\), the
+      decorrelated and the whitened vectors are
+    </p>
+    $$
+    \tilde X_i = E^t (X_i - \hat\mu) \ ,
+    \qquad
+    W_i = \Lambda^{-1/2} E^t (X_i - \hat\mu) \ .
+    \tag{7}
+    $$
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def sample_mean_cov(X):
+    """This function estimates the mean and covariance from the columns of a data matrix.
+
+    X        (p, n) float64 tensor with one sample per column
+    returns  mu, a (p, 1) tensor, the sample mean;
+             R_hat, a (p, p) tensor, the unbiased covariance estimate with 1/(n-1)
+    """
+
+
+def decorrelate(X):
+    """This function decorrelates the columns of X with the eigenvectors of their sample covariance.
+
+    X        (p, n) float64 tensor with one sample per column
+    returns  (p, n) float64 tensor X_tilde = E^t (X - mu), where mu and
+             R_hat = E Lambda E^t come from sample_mean_cov(X)
+    """
+
+
+def whiten(X):
+    """This function whitens the columns of X with their sample mean and covariance.
+
+    X        (p, n) float64 tensor with one sample per column
+    returns  (p, n) float64 tensor W = Lambda^(-1/2) E^t (X - mu), where mu
+             and R_hat = E Lambda E^t come from sample_mean_cov(X)
+    """</pre>
+    </div>
+    <p>
+      <b>Task 3a.</b> Estimate \(\hat\mu\) and \(\hat R_X\) from the 1000
+      vectors \(X\) of D1 and list them next to the true \(R_X\). Report the
+      largest entry of \(|\hat R_X - R_X|\).
+    </p>
+    <p>
+      <b>Task 3b.</b> Decorrelate and whiten the vectors. Make scatter
+      plots of \(\tilde X_i\) and \(W_i\) as in Task 2a, and list the sample
+      covariance \(\hat R_W\) of the whitened vectors.
+    </p>
+    <p>
+      <b>Task 3c. Check.</b> The transforms use the eigen decomposition of
+      \(\hat R_X\) itself, so they are exact up to round-off. Report the
+      off-diagonal entry of the sample covariance of the \(\tilde X_i\), the
+      largest entry of \(|\hat R_W - I|\), and the largest entry of the sample
+      mean of the \(W_i\). All three must be below \(10^{-12}\).
+    </p>
+    <div class="tip">
+      <b>Reading the check.</b> If \(|\hat R_W - I|\) is near 0.001
+      instead of near \(10^{-15}\), the code mixes the normalizations
+      \(1/n\) and \(1/(n-1)\): their ratio for \(n = 1000\) is
+      \(1000/999\).
+    </div>
+    <div class="handin" id="D2">
+      <span class="tag">HAND IN &middot; D2</span>
+      <p>
+        \(R_X\), \(\hat\mu\), and \(\hat R_X\) with the largest difference,
+        the labeled scatter plots of \(\tilde X_i\) and \(W_i\), the listing
+        of \(\hat R_W\), and the results of the three checks.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 2: Eigenimages and the SVD
+    <span class="note">Steps 4 to 8. Learn why the SVD gives the eigenvectors, compute the eigenimages of the letters, check them, and rebuild an image from a few eigenimages.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 4: Eigenvectors from the SVD of the Data Matrix</h3>
+    <p>
+      For images, the dimension \(p\) is the number of pixels. For the 64
+      by 64 letters \(p = 4096\), so \(\hat R\) is a \(4096 \times 4096\)
+      matrix with nearly 17 million entries, and for a 400 by 400 image it
+      would have about 25 billion. But there are only \(n = 312\) training
+      images. The columns of \(\hat R\) are combinations of the same \(n\)
+      centered vectors, so \(\hat R\) has rank at most \(n\) and at most
+      \(n\) nonzero eigenvalues. These can be found without forming
+      \(\hat R\).
+    </p>
+    <p>
+      The <b>singular value decomposition</b> of a \(p \times n\) matrix
+      \(Z\) with \(p > n\), in its reduced form, is
+    </p>
+    $$
+    Z = U \Sigma V^t \ ,
+    \tag{8}
+    $$
+    <p>
+      where \(U\) is \(p \times n\) and \(V\) is \(n \times n\), both with
+      orthonormal columns (\(U^t U = V^t V = I\)), and
+      \(\Sigma = \mathrm{diag}(\sigma_1, \dots, \sigma_n)\) holds the
+      <b>singular values</b> \(\sigma_1 \ge \sigma_2 \ge \dots \ge 0\).
+      The procedure is:
+    </p>
+    <ol>
+      <li>Center the data and scale it: \(Z = (X - \hat\mu \mathbf{1}^t)/\sqrt{n-1}\),
+          so that \(\hat R = Z Z^t\) by equation (6).</li>
+      <li>Compute the reduced SVD \(Z = U \Sigma V^t\) with
+          <code>torch.linalg.svd(Z, full_matrices=False)</code>.</li>
+      <li>The columns \(u_k\) of \(U\) are eigenvectors of \(\hat R\), and
+          the eigenvalues are \(\lambda_k = \sigma_k^2\).</li>
+    </ol>
+    <p>
+      <b>Task 4.</b> Substitute equation (8) into \(\hat R = Z Z^t\) and show
+      that \(\hat R u_k = \sigma_k^2 u_k\). Say why the remaining \(p - n\)
+      eigenvalues of \(\hat R\) are 0.
+    </p>
+    <div class="handin" id="D3">
+      <span class="tag">HAND IN &middot; D3</span>
+      <p>
+        Your derivation, in a few lines.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 5: Eigenimages</h3>
+    <p>
+      The eigenvectors of an image covariance are called
+      <b>eigenimages</b>. The eigenimages with the largest eigenvalues are
+      the directions in \(\mathbb{R}^p\) in which the images vary most.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def pca_svd(X):
+    """This function computes the eigenvalues and eigenvectors of the sample covariance by an SVD.
+
+    It forms Z = (X - mu) / sqrt(n - 1) and its reduced SVD Z = U Sigma V^t,
+    without forming the (p, p) covariance R_hat = Z Z^t.
+
+    X        (p, n) float64 tensor, one image per column, with p > n
+    returns  mu, a (p, 1) tensor, the mean image;
+             lam, an (n,) tensor, the eigenvalues sigma_k^2 of R_hat, largest first;
+             U, a (p, n) tensor whose column k is the eigenvector of lam[k]
+    """</pre>
+    </div>
+    <p>
+      <b>Task 5a.</b> Load the training images with
+      <code>load_letters("data/training")</code> and call
+      <code>pca_svd</code>. Display the mean image \(\hat\mu\) on the gray
+      scale 0 to 255.
+    </p>
+    <p>
+      <b>Task 5b.</b> Display the eigenimages \(u_1, \dots, u_{12}\) in one
+      figure with 4 rows of 3, each reshaped to 64 by 64 with
+      <code>to_image</code>. Use one gray scale for all twelve, from
+      \(-a\) to \(a\), where \(a\) is the largest absolute value among them,
+      and one colorbar. Title each with its index.
+    </p>
+    <div class="handin" id="D4">
+      <span class="tag">HAND IN &middot; D4</span>
+      <p>
+        The mean image and the figure of the first 12 eigenimages, both
+        with colorbars.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 6: Check the Eigenvectors</h3>
+    <p>
+      For \(p = 4096\) it is still possible to form \(\hat R\) and compute its
+      eigen decomposition directly, which gives an independent check of
+      <code>pca_svd</code>.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def pca_cov(X):
+    """This function computes the eigenvalues and eigenvectors of the sample covariance directly.
+
+    It forms the (p, p) covariance R_hat with sample_mean_cov and calls
+    eig_sorted.  It is used only to check pca_svd.
+
+    X        (p, n) float64 tensor, one image per column
+    returns  mu, a (p, 1) tensor; lam, a (p,) tensor, largest first;
+             E, a (p, p) tensor of eigenvectors
+    """</pre>
+    </div>
+    <p>
+      <b>Task 6a. Check the rank.</b> Count the singular values above
+      \(10^{-10} \sigma_1\). Call this count \(r\), the rank of \(Z\).
+    </p>
+    <p>
+      <b>Task 6b. Check the eigenvalues.</b> Report the largest relative
+      difference \(|\sigma_k^2 - \lambda_k| / \sigma_k^2\) between the
+      eigenvalues from <code>pca_svd</code> and from <code>pca_cov</code>, for
+      \(k = 1, \dots, r\). Plot both sets of eigenvalues against \(k\) on one
+      graph with a logarithmic vertical axis.
+    </p>
+    <p>
+      <b>Task 6c. Check the eigenvectors.</b> For \(k = 1, \dots, 30\),
+      compare \(u_k\) from <code>pca_svd</code> with \(e_k\) from
+      <code>pca_cov</code> up to sign: compute the largest entry of
+      \(|u_k - e_k|\) and of \(|u_k + e_k|\), and keep the smaller. Report
+      the largest of these 30 values. Also report the largest entry of
+      \(|U^t U - I|\).
+    </p>
+    <p>
+      <b>Task 6d.</b> Time <code>pca_svd</code> and <code>pca_cov</code>
+      with <code>time.perf_counter</code>.
+    </p>
+    <div class="tip">
+      <b>Reading the check.</b> The eigenvalues and eigenvectors must agree
+      to round-off, below \(10^{-10}\). If two eigenvectors agree only up to
+      sign, that is correct. If \(u_k\) matches some \(e_j\) with
+      \(j \ne k\), the eigenvalues are not sorted the same way.
+    </div>
+    <div class="handin" id="D5">
+      <span class="tag">HAND IN &middot; D5</span>
+      <p>
+        The rank \(r\), the plot of the two sets of eigenvalues, the largest
+        eigenvalue difference, the largest eigenvector difference, the
+        orthonormality check, and the two times.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 7: Projection Coefficients</h3>
+    <p>
+      Let \(U_m = [u_1, \dots, u_m]\) hold the first \(m\) eigenimages. The
+      <b>projection coefficients</b> of an image \(x\) are
+    </p>
+    $$
+    y = U_m^t (x - \hat\mu) \ .
+    \tag{9}
+    $$
+    <p>
+      The vector \(y\) has \(m\) entries. It is not an image, but it
+      describes the image by its coordinates along the directions of
+      greatest variation, so it can serve as a <b>feature vector</b>.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def project(X, mu, U, m):
+    """This function computes the projection coefficients of images onto the first m eigenimages.
+
+    X        (p, n) float64 tensor, one image per column
+    mu       (p, 1) tensor, the mean image
+    U        (p, r) tensor of eigenimages, with r &gt;= m
+    m        number of eigenimages
+    returns  (m, n) tensor Y = U_m^t (X - mu), where U_m is the first m columns of U
+    """</pre>
+    </div>
+    <p>
+      <b>Task 7.</b> Compute the coefficients of all training images. On
+      one graph, plot coefficients 1 to 10 of the first four training images
+      (the letters a, b, c, d of <code>arial</code>) against the index
+      \(k\), one line for each letter, with a legend.
+    </p>
+    <div class="handin" id="D6">
+      <span class="tag">HAND IN &middot; D6</span>
+      <p>
+        The labeled plot of the projection coefficients.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 8: Resynthesis</h3>
+    <p>
+      An image can be approximated from its \(m\) projection coefficients
+      by a combination of the eigenimages,
+    </p>
+    $$
+    \hat x = \hat\mu + \sum_{k=1}^{m} u_k y_k = \hat\mu + U_m y \ .
+    \tag{10}
+    $$
+    <p>
+      This approximation is <b>principal component analysis</b> (PCA). For a
+      random image \(X\) with covariance eigenvalues \(\lambda_k\), its mean
+      squared error is the sum of the eigenvalues that are left out,
+    </p>
+    $$
+    E\left[ \| \hat X - X \|^2 \right] = \sum_{k=m+1}^{p} \lambda_k \ ,
+    \tag{11}
+    $$
+    <p>
+      so the largest eigenvalues give the best approximation with \(m\)
+      terms.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def resynthesize(Y, mu, U):
+    """This function rebuilds images from their projection coefficients.
+
+    Y        (m, n) tensor of projection coefficients
+    mu       (p, 1) tensor, the mean image
+    U        (p, r) tensor of eigenimages, with r &gt;= m
+    returns  (p, n) tensor X_hat = U_m Y + mu, with m = Y.shape[0]
+    """</pre>
+    </div>
+    <p>
+      <b>Task 8a.</b> Resynthesize the first training image (a of
+      <code>arial</code>) with \(m = 1, 5, 10, 15, 20, 30\). Display the
+      original and the six results in one figure, all on the gray scale 0 to
+      255, with one colorbar.
+    </p>
+    <p>
+      <b>Task 8b. Check.</b> For \(m = 0, 1, \dots, r - 1\), compute the squared
+      error \(\|\hat x - x\|^2\) of the first image, and the average of the
+      squared error over all \(n\) training images. Plot both against \(m\)
+      on one graph with a logarithmic vertical axis, together with the value
+      that equation (11) predicts for the average,
+      \(\frac{n-1}{n} \sum_{k=m+1}^{r} \lambda_k\). Count the values of
+      \(m\) where the error of the first image increases. Report the
+      largest relative difference between the average and the prediction.
+    </p>
+    <div class="tip">
+      <b>Reading the check.</b> The error of a single image can never
+      increase with \(m\), so the count must be 0. The average over the
+      training set must match the prediction to round-off. The factor
+      \((n-1)/n\) appears because \(\hat R\) divides by \(n-1\) while the
+      average divides by \(n\).
+    </div>
+    <div class="handin" id="D7">
+      <span class="tag">HAND IN &middot; D7</span>
+      <p>
+        The figure of the original and the six resynthesized images, the
+        error plot, the count of increases, and the largest relative
+        difference.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 3: Classification
+    <span class="note">Steps 9 to 13. Reduce each letter to 10 PCA coefficients, classify the test letters with five Gaussian classifiers, and answer the questions.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 9: Gaussian Classification after PCA</h3>
+    <p>
+      A classifier assigns an input image \(x\) to one of the classes
+      \(C_1, \dots, C_K\), here the \(K = 26\) letters. If the image in class
+      \(C_k\) has the density \(p(x \mid C_k)\) and all classes are equally
+      likely, the class with the largest posterior probability is the
+      <b>maximum likelihood</b> (ML) class
+    </p>
+    $$
+    k^* = \arg\max_k \ p(x \mid C_k) \ .
+    $$
+    <p>
+      If the images of class \(k\) are Gaussian, \(N(\mu_k, R_k)\), then
+      taking \(-2\log\) of equation (1) and dropping the constant gives
+    </p>
+    $$
+    k^* = \arg\min_k \left\{ (x - \mu_k)^t R_k^{-1} (x - \mu_k) + \log |R_k| \right\} \ .
+    \tag{12}
+    $$
+    <p>
+      The first term is a weighted distance from \(x\) to the class mean.
+      With \(p = 4096\) pixels and 12 training images per class, \(R_k\)
+      cannot be estimated, and its estimate is not invertible. So first
+      reduce each image to the vector \(y = A^t (x - \hat\mu)\) of
+      equation (9), where \(A = U_{10}\) holds the first 10 eigenimages of
+      the whole training set and \(\hat\mu\) is its mean image. Then apply
+      equation (12) to \(y\), with the class means and covariances of the
+      \(y\) vectors:
+    </p>
+    $$
+    \hat\mu_k = \frac{1}{N_k} \sum_{i=1}^{N_k} y_i^{(k)} \ ,
+    \qquad
+    \hat R_k = \frac{1}{N_k - 1} \sum_{i=1}^{N_k}
+      (y_i^{(k)} - \hat\mu_k)(y_i^{(k)} - \hat\mu_k)^t \ ,
+    \tag{13}
+    $$
+    <p>
+      where \(y_i^{(k)}\) is the \(i\)-th training vector of class \(k\) and
+      \(N_k = 12\) is the number of training vectors in class \(k\).
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def class_statistics(Y, labels, K):
+    """This function estimates the mean and covariance of each class.
+
+    Y        (m, n) float64 tensor of feature vectors, one per column
+    labels   (n,) int64 tensor of class numbers 0 to K-1
+    K        number of classes
+    returns  means, a (K, m) tensor whose row k is the mean of class k;
+             covs, a (K, m, m) tensor, the unbiased covariance (1/(N_k - 1)) of each class
+    """</pre>
+    </div>
+    <p>
+      <b>Task 9a.</b> Compute the feature vectors \(Y\) of the training
+      images and \(Y_{\text{test}}\) of the test images, both with the
+      <b>same</b> \(\hat\mu\) and \(A\) from the training set. Then compute the
+      class means and covariances.
+    </p>
+    <p>
+      <b>Task 9b. Check.</b> The feature vectors of the training set must
+      have sample mean 0 and sample covariance
+      \(\mathrm{diag}(\lambda_1, \dots, \lambda_{10})\), by the
+      construction of the eigenimages. Report the largest entry of
+      \(|\hat\mu_Y|\) relative to \(\sqrt{\lambda_1}\) and the largest entry
+      of \(|\hat R_Y - \mathrm{diag}(\lambda_1, \dots, \lambda_{10})|\)
+      relative to \(\lambda_1\). Both must be below \(10^{-12}\).
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 10: Classify with the Full Class Covariance</h3>
+    <p>
+      The classifier uses a matrix \(B_k\) for each class in place of
+      \(R_k\) in equation (12):
+    </p>
+    $$
+    k^* = \arg\min_k \left\{ (y - \hat\mu_k)^t B_k^{-1} (y - \hat\mu_k) + \log |B_k| \right\} \ .
+    \tag{14}
+    $$
+    <p>
+      In this step \(B_k = \hat R_k\).
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def scaling_matrices(covs, kind):
+    """This function returns the matrix B_k that the classifier uses for each class.
+
+    covs     (K, m, m) tensor, the class covariances R_k
+    kind     "full"     B_k = R_k
+             "diag"     B_k = diagonal of R_k
+             "wc"       B_k = R_wc, the average of the R_k
+             "wc_diag"  B_k = diagonal of R_wc
+             "identity" B_k = I
+    returns  (K, m, m) tensor of the B_k
+    """
+
+
+def classify(Y, means, B):
+    """This function assigns each feature vector to the class with the smallest Gaussian cost.
+
+    The cost of class k for the vector y is
+    (y - mu_k)^t B_k^(-1) (y - mu_k) + log |B_k|.
+
+    Y        (m, n) float64 tensor of feature vectors, one per column
+    means    (K, m) tensor of class means
+    B        (K, m, m) tensor of the matrices B_k
+    returns  (n,) int64 tensor of the class with the smallest cost for each column
+    """</pre>
+    </div>
+    <p>
+      Use <code>torch.linalg.solve</code> for \(B_k^{-1}(y - \hat\mu_k)\)
+      rather than forming the inverse, and
+      <code>torch.linalg.slogdet</code> for \(\log |B_k|\).
+    </p>
+    <p>
+      <b>Task 10.</b> Classify the 26 test images with
+      <code>kind="full"</code>. Make a table with one row for each
+      misclassified test letter: the true letter and the letter the
+      classifier chose. Report the number of errors and the error rate.
+    </p>
+    <div class="handin" id="D8">
+      <span class="tag">HAND IN &middot; D8</span>
+      <p>
+        The table of misclassified test letters, the number of errors, and
+        the error rate.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 11: Constrained Covariances</h3>
+    <p>
+      The full classifier makes errors, and one likely cause is that each
+      \(\hat R_k\) is estimated from only 12 vectors. A more constrained
+      matrix \(B_k\) has fewer entries to estimate. Try these four:
+    </p>
+    <ol>
+      <li><code>"diag"</code>: \(B_k = \Lambda_k\), the diagonal of
+          \(\hat R_k\). Each class has its own diagonal covariance.</li>
+      <li><code>"wc"</code>: \(B_k = R_{wc}\), the average within-class
+          covariance
+          \(R_{wc} = \frac{1}{K} \sum_{k=1}^{K} \hat R_k\). All classes share
+          one covariance.</li>
+      <li><code>"wc_diag"</code>: \(B_k = \Lambda\), the diagonal of
+          \(R_{wc}\). All classes share one diagonal covariance.</li>
+      <li><code>"identity"</code>: \(B_k = I\). Each class has identity
+          covariance around its own mean.</li>
+    </ol>
+    <p>
+      Each still measures the difference between \(y\) and the class mean
+      \(\hat\mu_k\), but with a different weighting.
+    </p>
+    <p>
+      <b>Task 11a.</b> Classify the 26 test images with each of the four
+      matrices. For each, make the table of misclassified letters as in
+      D8, and report the number of errors and the error rate.
+    </p>
+    <p>
+      <b>Task 11b. Check.</b> With \(B_k = I\), equation (14) picks the
+      nearest class mean. Compute the nearest class mean of each test vector
+      directly with <code>torch.cdist</code>, and count the test images
+      where it differs from <code>classify</code>. The count must be 0.
+    </p>
+    <p>
+      <b>Task 11c.</b> Classify the 312 <em>training</em> images with all
+      five classifiers, and report the number of training errors of each.
+    </p>
+    <div class="handin" id="D9">
+      <span class="tag">HAND IN &middot; D9</span>
+      <p>
+        The four tables of misclassified letters, a summary table of test
+        and training errors for all five classifiers, the result of the
+        check, and which classifier worked best.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 12: Your Specification</h3>
+    <p>
+      Over the three modules you directed your AI assistant to write the
+      bodies of twelve functions: <code>eig_sorted</code>,
+      <code>generate_gaussian</code>, <code>sample_mean_cov</code>,
+      <code>decorrelate</code>, <code>whiten</code>, <code>pca_svd</code>,
+      <code>pca_cov</code>, <code>project</code>,
+      <code>resynthesize</code>, <code>class_statistics</code>,
+      <code>scaling_matrices</code>, and <code>classify</code>.
+    </p>
+    <div class="handin" id="D10">
+      <span class="tag">HAND IN &middot; D10</span>
+      <p>
+        The specification you gave your AI assistant, quoted. If you
+        corrected it during the build, show the correction and say what was
+        wrong.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 13: Questions to Answer</h3>
+    <p>
+      Answer each in a few sentences, using your own images and numbers as
+      evidence. Point to the specific figure or number you are relying on.
+    </p>
+    <ol>
+      <li>Why compute the eigenvectors from the SVD of the data matrix
+          \(Z\) instead of forming the covariance \(\hat R\) and computing its
+          eigen decomposition? Use the sizes of \(Z\) and \(\hat R\), the rank
+          from D5, and your two times.</li>
+      <li>What do the first eigenimages look like, and why? Explain in terms
+          of how the training letters vary, and compare the first few
+          eigenimages of D4 with the later ones.</li>
+      <li>Why can the constrained classifiers of D9 beat the full covariance
+          classifier of D8 with this little training data? Count the
+          entries of \(\hat R_k\) that must be estimated and the training
+          vectors available for each, and use the training and test errors of
+          D9. Describe the trade-off between the accuracy of the model and
+          the accuracy of its estimated parameters.</li>
+      <li>What does whitening do geometrically? Use the scatter plots of D1
+          and D2 to describe the effect of \(E^t\) and of
+          \(\Lambda^{-1/2}\).</li>
+      <li>The centered data matrix has \(n = 312\) columns, but your rank
+          \(r\) from D5 is smaller. Explain why the rank of the centered data
+          is at most \(n - 1\). Then find the reason for any further missing
+          rank. (Hint: compare the training images with each other.)</li>
+    </ol>
+    <div class="handin" id="D11">
+      <span class="tag">HAND IN &middot; D11</span>
+      <p>
+        Your answers to the five questions above.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Deliverables
+    <span class="note">What to submit, and where each item comes from.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What to Hand In</h3>
+    <p>Submit two files through Brightspace.</p>
+    <ol>
+      <li>A report, as a single <b>PDF</b>, labeled "Lab 7", containing the
+          items listed below in this order.</li>
+      <li>Your <code>lab7.py</code>, as a plain <code>.py</code> file.</li>
+    </ol>
+    <p>
+      Do not paste the code into the report, and do not send a zip file.
+      Also commit <code>lab7.py</code> to your
+      <code>image-processing-labs</code> repository under <code>lab7</code>
+      and push it before you submit.
+    </p>
+    <ol class="handin-list">
+      <li><span class="dnum"></span>
+          Your name and the link to your GitHub repository.</li>
+      <li><span class="dnum"><a href="#D1">D1</a></span>
+          The eigenvalues and eigenvectors of \(R_X\), the scatter plots of
+          \(W\), \(\tilde X\), and \(X\), and the two checks.</li>
+      <li><span class="dnum"><a href="#D2">D2</a></span>
+          \(R_X\), \(\hat\mu\), \(\hat R_X\), the scatter plots of
+          \(\tilde X_i\) and \(W_i\), \(\hat R_W\), and the three checks.</li>
+      <li><span class="dnum"><a href="#D3">D3</a></span>
+          The derivation that the SVD gives the eigenvectors and eigenvalues
+          of \(\hat R\).</li>
+      <li><span class="dnum"><a href="#D4">D4</a></span>
+          The mean image and the first 12 eigenimages.</li>
+      <li><span class="dnum"><a href="#D5">D5</a></span>
+          The rank, the eigenvalue plot, the eigenvalue, eigenvector, and
+          orthonormality checks, and the two times.</li>
+      <li><span class="dnum"><a href="#D6">D6</a></span>
+          The plot of the projection coefficients of a, b, c, d.</li>
+      <li><span class="dnum"><a href="#D7">D7</a></span>
+          The original and six resynthesized images, the error plot, and the
+          two checks.</li>
+      <li><span class="dnum"><a href="#D8">D8</a></span>
+          The misclassified letters, errors, and error rate with
+          \(B_k = \hat R_k\).</li>
+      <li><span class="dnum"><a href="#D9">D9</a></span>
+          The tables for the four constrained classifiers, the summary of
+          test and training errors, the check, and the best classifier.</li>
+      <li><span class="dnum"><a href="#D10">D10</a></span>
+          The specification you gave your AI assistant, quoted, with any
+          corrections you made during the build.</li>
+      <li><span class="dnum"><a href="#D11">D11</a></span>
+          Your answers to the five questions.</li>
+    </ol>
+    <p>
+      Concise and clear beats long.
+    </p>
+  </div>
+
+  <div class="card">
+    <p>
+      You have now decorrelated and whitened random vectors, computed
+      eigenimages with the SVD, and used them to classify letters.
+    </p>
+    <p>
+      <a href="../../index.html">Back to the laboratory index</a> &middot;
+      <a href="https://charlesbouman.org/ece63700/">ECE 63700 course notes</a>
+    </p>
+  </div>
+
+  </div>
+</details>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  var text = btn.nextElementSibling.innerText;
+  function done() {
+    var old = btn.textContent;
+    btn.textContent = "Copied";
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done);
+  } else {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    done();
+  }
+}
+
+function toggleAll(btn) {
+  var open = btn.textContent.indexOf("Open") === 0;
+  var list = document.querySelectorAll("details.module");
+  for (var i = 0; i < list.length; i++) { list[i].open = open; }
+  btn.textContent = open ? "Close all" : "Open all";
+}
+
+function revealHash() {
+  if (!location.hash) { return; }
+  var el = document.querySelector(location.hash);
+  if (!el) { return; }
+  var p = el.parentElement;
+  while (p) {
+    if (p.tagName === "DETAILS") { p.open = true; }
+    p = p.parentElement;
+  }
+  el.scrollIntoView();
+}
+window.addEventListener("load", revealHash);
+window.addEventListener("hashchange", revealHash);
+</script>
+
+</body>
+</html>
