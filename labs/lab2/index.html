@@ -327,9 +327,8 @@ git push</pre></li>
       <a href="https://www.anaconda.com/docs/getting-started/miniconda/install">Miniconda installation</a>
       for Linux (on WSL) or macOS. Then create the course environment:
     </p>
-<pre>conda create -n labs python numpy matplotlib scikit-image
-conda activate labs
-pip install torch</pre>
+<pre>conda create -n labs python numpy matplotlib scikit-image pytorch
+conda activate labs</pre>
     <p>Verify that everything works:</p>
 <pre>python -c "import torch; print(torch.__version__)"</pre>
     <p>

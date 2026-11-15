@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 4: 2-D Random Processes</title>
+<style>
+  html { background: #faf8f4; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         background: #faf8f4; color: #222; line-height: 1.5; }
+  .band { background: #cfb991; border-bottom: 4px solid #000;
+          padding: 24px 16px 18px 16px; text-align: center; }
+  .band h2 { margin: 0 0 6px 0; font-size: 1.0em; font-weight: normal; color: #3d3324; }
+  .band h1 { margin: 0; font-size: 1.5em; color: #000; }
+  .band a { color: #000; }
+  .container { max-width: 760px; margin: 28px auto; padding: 0 16px; }
+  .section { border: 2px solid #cfb991; border-radius: 14px;
+             background: #f4efe3; padding: 18px 16px 2px 16px; margin-bottom: 22px; }
+  .section > h2 { margin: 0 0 16px 8px; font-size: 1.3em; color: #3d3324; }
+  .card { background: #fff; border: 1px solid #e3dccb; border-radius: 10px;
+          padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; color: #000; border-bottom: 2px solid #cfb991; padding-bottom: 6px; }
+  a { color: #8a6d1d; text-decoration: none; }
+  a:hover { color: #000; text-decoration: underline; }
+  ul, ol { margin: 8px 0; }
+  li { padding: 3px 0; }
+  code { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 4px;
+         padding: 1px 5px; font-size: 0.95em; }
+  pre { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 6px;
+        padding: 12px 14px; overflow-x: auto; font-size: 0.92em; line-height: 1.4; }
+  .tip { background: #f6f3ea; border-left: 4px solid #cfb991; padding: 10px 14px;
+         margin: 12px 0; font-size: 0.97em; }
+  .codeblock { position: relative; }
+  .codeblock pre { padding-right: 76px; }
+  .copy { position: absolute; top: 8px; right: 8px; background: #cfb991; color: #000;
+          border: 1px solid #b9ac8e; border-radius: 4px; padding: 2px 10px;
+          font-size: 0.8em; font-family: inherit; cursor: pointer; }
+  .copy:hover { background: #b9ac8e; }
+  .kernelfig { text-align: center; margin: 16px 0 4px 0; }
+  .kernelfig img { border: 1px solid #e3dccb; }
+  .kernelfig .caption { font-size: 0.9em; color: #555; margin-top: 6px; }
+  table.kernel { border-collapse: collapse; margin: 12px auto; }
+  table.kernel td { border: 1px solid #b9ac8e; padding: 6px 14px; text-align: center;
+                    font-family: "Times New Roman", serif; }
+  .source { font-size: 0.9em; color: #5b5b5b; margin: 4px 0 0 0; }
+  table.runs { border-collapse: collapse; margin: 12px 0; font-size: 0.92em; width: 100%; }
+  table.runs th, table.runs td { border: 1px solid #e3dccb; padding: 5px 9px; text-align: left; }
+  table.runs th { background: #f4efe3; }
+  table.runs td.grp { background: #faf8f4; font-weight: bold; white-space: nowrap; }
+  details.module { border: 2px solid #cfb991; border-radius: 14px; background: #f4efe3;
+                   margin-bottom: 22px; }
+  details.module > summary { cursor: pointer; list-style: none; padding: 16px 18px;
+                             font-size: 1.2em; font-weight: bold; color: #3d3324; }
+  details.module > summary::-webkit-details-marker { display: none; }
+  details.module > summary::before { content: "\25B8"; color: #8a6d1d; margin-right: 10px; }
+  details.module[open] > summary::before { content: "\25BE"; }
+  details.module > summary:hover { color: #000; }
+  details.module .modulebody { padding: 0 16px 2px 16px; }
+  summary .note { display: block; font-weight: normal; font-size: 0.78em;
+                  color: #6b5c42; margin: 4px 0 0 26px; }
+  .allbtn { display: block; margin: 0 0 16px auto; background: #f4efe3; color: #3d3324;
+            border: 1px solid #cfb991; border-radius: 4px; padding: 3px 12px;
+            font-size: 0.85em; font-family: inherit; cursor: pointer; }
+  .allbtn:hover { background: #e8e0cd; }
+  .handin { border: 1px solid #cfb991; border-left: 7px solid #cfb991;
+            border-radius: 8px; background: #fffdf5;
+            padding: 12px 16px 4px 16px; margin: 18px 0; }
+  .handin .tag { display: inline-block; background: #cfb991; color: #000;
+                 border-radius: 4px; padding: 1px 9px; font-size: 0.82em;
+                 font-weight: bold; letter-spacing: 0.4px; }
+  .handin p:first-of-type { margin-top: 8px; }
+  ol.handin-list { list-style: none; padding-left: 0; margin: 10px 0; }
+  ol.handin-list li { position: relative; padding: 4px 0 4px 2.9em; }
+  ol.handin-list .dnum { position: absolute; left: 0; width: 2.9em;
+                         font-weight: bold; color: #8a6d1d; }
+  .band .nav { margin: 10px 0 0 0; font-size: 0.9em; }
+  .band .nav a { text-decoration: underline; }
+</style>
+<script>
+  MathJax = { tex: { inlineMath: [['\\(', '\\)']], tags: 'ams' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+
+<div class="band">
+  <h2>ECE 63700: Digital Image Processing I</h2>
+  <h1>Lab 4: 2-D Random Processes</h1>
+  <p class="nav">
+    <a href="https://charlesbouman.org/ece63700/">ECE 63700 course notes</a> &middot;
+    <a href="../../index.html">Laboratory index</a>
+  </p>
+</div>
+
+<div class="container">
+
+<button class="allbtn" onclick="toggleAll(this)">Open all</button>
+
+<details class="module">
+  <summary>Overview
+    <span class="note">What the lab is about, the data, and the ground rules.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What This Lab Is About</h3>
+    <p><b>Due: Friday, Feb. 5, 2027.</b></p>
+    <p>
+      In this lab you estimate the power spectral density (PSD) of 2-D
+      random processes. First you estimate the PSD of a grayscale image,
+      and you see why the simplest estimate is too noisy to use. Then you
+      build a better estimate by averaging over windowed blocks. Finally you
+      generate a 2-D autoregressive (AR) process, derive its PSD by hand,
+      and check your estimate against the theory.
+    </p>
+    <p>
+      You will not hand-write the implementation. This page states the
+      math and the exact signature of every function you need. Your job is
+      to direct Claude, or another agentic AI, to write the PyTorch code
+      from that specification. Then you run the experiments yourself,
+      produce the required plots and numbers, and explain what you see.
+      You are graded on the specification you give, the checks you run to
+      confirm the code is right, and your reading of the results.
+    </p>
+    <p>
+      The work is in two modules. Module 1 uses an image, and Module 2 uses
+      a synthetic random process. Open them below.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>The Data</h3>
+    <p>Download the image, in <code>lab4-data.zip</code>, before you start.</p>
+    <ul>
+      <li>
+        <b>img04g.png</b>,
+        a grayscale image 768 pixels wide and 512 pixels tall, 268 KB.
+      </li>
+    </ul>
+    <p class="source">
+      This is a provided image. It is stored in lossless PNG format with
+      8 bits per pixel.
+    </p>
+    <p>
+      From the shell, which is easier than saving from the browser:
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>wget https://charlesbouman.org/ece63700/labs/lab4-data.zip
+unzip lab4-data.zip</pre>
+    </div>
+    <p>
+      Module 2 needs no data file. You generate its input with a random
+      number generator.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Ground Rules</h3>
+    <ul>
+      <li>All code is in <b>PyTorch</b>, in a single file named
+          <code>lab4.py</code>. Use the <code>labs</code> conda environment
+          you built in Lab 2. You may use NumPy and matplotlib for
+          plotting.</li>
+      <li><code>lab4.py</code> holds functions and nothing else. Run your
+          experiments from a separate script that imports it.</li>
+      <li>Every function has the exact signature given on this page, and a
+          docstring that says what it does, what its inputs are, and what
+          it returns. Keep the docstrings short.</li>
+      <li>Read the image and scale it to the range \([0,1]\) by dividing
+          by 255. Do all arithmetic in <code>float64</code>. A PSD computed
+          on this scale is \(1/255^2\) times the PSD of the same image on
+          the 0 to 255 scale.</li>
+      <li>The index \(m\) counts rows, from top to bottom, and the index
+          \(n\) counts columns, from left to right. The frequency \(\mu\)
+          goes with \(m\), and the frequency \(\nu\) goes with \(n\). Both
+          are in radians per sample.</li>
+      <li>No Python <code>for</code> loop over pixels or over blocks. The
+          one exception is <code>iir_separable</code> in Module 2, which
+          loops over rows and then over columns, as in Lab 3.</li>
+    </ul>
+    <div class="tip">
+      <b>How to direct the AI.</b> Give it the equations from this page,
+      the array shapes, the index and frequency conventions, the
+      normalization of each estimate, and the signatures of the functions
+      you want. Then run the checks in Steps 4, 6, and 8 <em>before</em> you
+      interpret any plot. A PSD estimate with the wrong normalization still
+      produces a plausible surface.
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Parameters for the Experiments
+    <span class="note">The settings for every hand-in item, in one place.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Parameters for Every Experiment</h3>
+    <p>
+      The table lists the settings for each hand-in item. Every experiment
+      below points back to this table by its deliverable number, so you do
+      not have to search the text for a number.
+    </p>
+    <table class="runs">
+      <tr>
+        <th>Item</th><th>Experiment</th><th>Input</th><th>Estimate and settings</th>
+      </tr>
+      <tr><td class="grp">D1</td><td>One-block estimates (Step 2)</td>
+          <td><code>img04g.png</code></td>
+          <td><code>spec_anal</code>, centered block of size 64, 128, and 256</td></tr>
+      <tr><td class="grp">D2</td><td>Averaged estimate and Parseval check (Steps 3 and 4)</td>
+          <td><code>img04g.png</code></td>
+          <td><code>better_spec_anal</code>: 25 blocks of 64 by 64 from the
+              center 320 by 320 region, Hamming window</td></tr>
+      <tr><td class="grp">D3</td><td>White noise and the AR process (Steps 5 and 6)</td>
+          <td>512 by 512, uniform on \([-0.5, 0.5]\), seed 0</td>
+          <td><code>iir_separable</code> with \(a = 0.99\) and gain 3;
+              impulse check on a 64 by 64 image</td></tr>
+      <tr><td class="grp">D4</td><td>Theoretical PSD (Step 7)</td>
+          <td>&mdash;</td>
+          <td>equation (7) with \(\sigma_x^2 = 1/12\), on <code>freq_grid(64)</code></td></tr>
+      <tr><td class="grp">D5</td><td>Estimated PSD and comparison (Step 8)</td>
+          <td>\(y\) from D3</td>
+          <td><code>better_spec_anal</code>; compare over all frequencies and
+              over \(|\mu|, |\nu| \ge \pi/8\)</td></tr>
+    </table>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 1: Power Spectral Density of an Image
+    <span class="note">Steps 1 to 4. Set up the code, compute one-block estimates, build an averaged estimate, and check it with Parseval's relation.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 1: Set Up <code>lab4.py</code></h3>
+    <p>
+      Copy these helpers into <code>lab4.py</code>. The first three are the
+      same as in Lab 3. <code>spec_anal</code> computes the simplest PSD
+      estimate, which Step 2 explains, and <code>plot_log_psd</code> makes
+      the surface plots, so that everyone's plots can be compared.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>import numpy as np
+import torch
+from PIL import Image
+import matplotlib.pyplot as plt
+
+
+def load_image(path):
+    """This function reads an 8-bit image file and returns it as a tensor.
+
+    path     path to a PNG or TIFF file
+    returns  (C, H, W) float64 tensor with values in [0, 1]
+    """
+    a = np.asarray(Image.open(path), dtype=np.float64) / 255.0
+    if a.ndim == 2:
+        a = a[:, :, None]
+    return torch.from_numpy(a).permute(2, 0, 1).contiguous()
+
+
+def save_image(x, path):
+    """This function clips an image to [0, 1] and writes it as an 8-bit PNG.
+
+    x        (C, H, W) tensor with C = 1 or C = 3
+    path     output file name, ending in .png
+    """
+    a = (x.clamp(0.0, 1.0) * 255.0).round().to(torch.uint8)
+    a = a.permute(1, 2, 0).numpy()
+    if a.shape[2] == 1:
+        a = a[:, :, 0]
+    Image.fromarray(a).save(path)
+
+
+def freq_grid(n):
+    """This function returns an n by n grid of frequencies in [-pi, pi).
+
+    mu varies down the rows and nu varies across the columns.  The grid
+    matches the order of an FFT after torch.fft.fftshift.
+    """
+    w = 2 * torch.pi * (torch.arange(n, dtype=torch.float64) - n // 2) / n
+    return torch.meshgrid(w, w, indexing="ij")
+
+
+def spec_anal(x, n):
+    """This function estimates the power spectral density from one block.
+
+    The block is the n by n square at the center of x.  The function
+    computes |DFT|^2 / n^2 of the block and centers it so that it matches
+    freq_grid(n).  The mean of the block is not subtracted.
+
+    x        (H, W) float64 tensor
+    n        int, the block size
+    returns  (n, n) float64 tensor, the natural log of the estimate
+    """
+    H, W = x.shape
+    i, j = (H - n) // 2, (W - n) // 2
+    z = x[i:i + n, j:j + n]
+    s = torch.fft.fft2(z).abs() ** 2 / n**2
+    return torch.log(torch.fft.fftshift(s))
+
+
+def plot_log_psd(log_s, title, path):
+    """This function saves a surface plot of a log power spectral density.
+
+    log_s    (n, n) float64 tensor, centered to match freq_grid(n)
+    title    string, the title of the plot
+    path     output file name, ending in .png
+    """
+    mu, nu = freq_grid(log_s.shape[0])
+    fig = plt.figure(figsize=(6, 4.8))
+    ax = fig.add_subplot(projection="3d")
+    surf = ax.plot_surface(nu.numpy(), mu.numpy(), log_s.numpy(),
+                           cmap="viridis", linewidth=0, antialiased=True)
+    ax.set_xlabel(r"$\nu$ (radians/sample)")
+    ax.set_ylabel(r"$\mu$ (radians/sample)")
+    ax.set_zlabel("natural log of PSD")
+    ax.set_title(title)
+    fig.colorbar(surf, ax=ax, shrink=0.6, pad=0.12)
+    fig.tight_layout()
+    fig.savefig(path, dpi=130)
+    plt.close(fig)</pre>
+    </div>
+    <p>
+      <code>load_image</code> returns a tensor of shape \((1, H, W)\) for a
+      grayscale image. The PSD functions in this lab take a 2-D tensor of
+      shape \((H, W)\), so pass them <code>x[0]</code>.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 2: The One-Block Estimate</h3>
+    <p>
+      Model the image, after its mean is removed, as a sample of a 2-D
+      random process \(X(m,n)\) that has zero mean and is wide-sense
+      stationary. Its autocorrelation is
+      \(R(k,l) = E\big[X(m,n) X(m+k, n+l)\big]\), and its power spectral
+      density is the DSFT of the autocorrelation:
+    </p>
+    $$
+    S(e^{j\mu}, e^{j\nu}) = \sum_{k=-\infty}^{\infty} \sum_{l=-\infty}^{\infty}
+      R(k,l) \, e^{-j(\mu k + \nu l)} \ .
+    \tag{1}
+    $$
+    <p>
+      The simplest estimate uses one \(N \times N\) block \(z(m,n)\) of the
+      image. Let \(Z(k,l)\) be its \(N \times N\) DFT. The estimate at the
+      frequency \(\mu = 2\pi k/N\), \(\nu = 2\pi l/N\) is
+    </p>
+    $$
+    \hat S(k,l) = \frac{1}{N^2} \, |Z(k,l)|^2 \ .
+    \tag{2}
+    $$
+    <p>
+      This is what <code>spec_anal</code> computes for the block at the
+      center of the image. It returns the natural log of the estimate,
+      because the PSD of an image spans many orders of magnitude.
+      <code>spec_anal</code> does not subtract the mean of the block, so
+      its value at zero frequency is \(N^2\) times the squared mean of the
+      block. That value stands far above the rest of the surface.
+    </p>
+    <p>
+      <b>Task 2a.</b> Load <code>img04g.png</code> and display it as a
+      grayscale image with a colorbar and labeled axes.
+    </p>
+    <p>
+      <b>Task 2b.</b> Run <code>spec_anal</code> with \(N = 64\), \(128\),
+      and \(256\), and plot each result with <code>plot_log_psd</code>. Look
+      at how much the surface fluctuates from one frequency to the next.
+      The fluctuation stays large even when the block size grows.
+      Question 1 in Step 10 asks why.
+    </p>
+    <div class="handin" id="D1">
+      <span class="tag">HAND IN &middot; D1</span>
+      <p>
+        The image <code>img04g.png</code> and the three plots of the log
+        PSD estimate, for \(N = 64\), \(128\), and \(256\).
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 3: The Averaged Estimate</h3>
+    <p>
+      A better estimate averages the one-block estimate over many blocks,
+      and it multiplies each block by a window before the DFT. Use 25
+      non-overlapping \(64 \times 64\) blocks, arranged as a \(5 \times 5\)
+      grid that covers the \(320 \times 320\) region at the center of the
+      image. Subtract the mean of that region from it first. Call the
+      blocks \(z_b(m,n)\) for \(b = 1, \dots, 25\).
+    </p>
+    <p>
+      The window is the separable 2-D Hamming window
+      \(w(m,n) = h(m)\, h(n)\), where \(h\) is the 1-D Hamming window of
+      length 64. Let \(Z_b(k,l)\) be the \(64 \times 64\) DFT of
+      \(w(m,n)\, z_b(m,n)\). The averaged estimate is
+    </p>
+    $$
+    \hat S(k,l) = \frac{1}{25} \sum_{b=1}^{25}
+      \frac{|Z_b(k,l)|^2}{\sum_{m,n} w(m,n)^2} \ .
+    \tag{3}
+    $$
+    <p>
+      The denominator makes the estimate correct for white noise. If the
+      blocks are white noise with variance \(\sigma^2\), then the expected
+      value of \(\hat S(k,l)\) is \(\sigma^2\) at every frequency. With
+      \(w = 1\) and one block, equation (3) is equation (2), except that
+      (3) subtracts the mean.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def better_spec_anal(x):
+    """This function estimates the power spectral density by averaging 25 blocks.
+
+    x        (H, W) float64 tensor with H, W &gt;= 320
+    returns  (64, 64) float64 tensor, the estimate of equation (3),
+             centered to match freq_grid(64)
+    """</pre>
+    </div>
+    <p>Three requirements.</p>
+    <ul>
+      <li>The 1-D window is
+          <code>torch.hamming_window(64, periodic=False, dtype=torch.float64)</code>,
+          and the 2-D window is its outer product with itself.</li>
+      <li>The function returns the estimate itself, not its log, so that
+          Step 4 can check it.</li>
+      <li>The 25 blocks are cut out with <code>reshape</code> and
+          <code>permute</code>, and one call to <code>torch.fft.fft2</code>
+          transforms all of them. There is no loop over blocks.</li>
+    </ul>
+    <p>
+      <b>Task 3a.</b> Run <code>better_spec_anal</code> on
+      <code>img04g.png</code> and plot the natural log of the result with
+      <code>plot_log_psd</code>. Compare it with the plots of D1.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 4: The Parseval Check</h3>
+    <p>
+      Parseval's relation for the DFT of an \(N \times N\) array says
+      \(\sum_{k,l} |Z_b(k,l)|^2 = N^2 \sum_{m,n} |w(m,n) z_b(m,n)|^2\).
+      Apply it to equation (3). The mean of the estimate over all
+      \(64^2\) frequencies must then equal a weighted sample variance of
+      the region:
+    </p>
+    $$
+    \frac{1}{64^2} \sum_{k,l} \hat S(k,l)
+      = \frac{1}{25} \sum_{b=1}^{25}
+        \frac{\sum_{m,n} w(m,n)^2 \, z_b(m,n)^2}{\sum_{m,n} w(m,n)^2} \ .
+    \tag{4}
+    $$
+    <p>
+      <b>Task 4a.</b> Compute the right side of (4) directly from the image
+      blocks, without any FFT. Report both sides of (4) and the relative
+      error, which is the absolute difference divided by the right side.
+      Also report the ordinary sample variance of the \(320 \times 320\)
+      region.
+    </p>
+    <div class="tip">
+      <b>Reading the check.</b> The relative error should be at the level
+      of round-off. If it is off by a factor of \(64^2\), the DFT
+      normalization is wrong. If it is off by another constant factor, the
+      estimate and the check divide by different window sums. The two
+      variances differ, because the window gives the most weight to the
+      center of each block.
+    </div>
+    <div class="handin" id="D2">
+      <span class="tag">HAND IN &middot; D2</span>
+      <p>
+        The plot of the log of the averaged estimate for
+        <code>img04g.png</code>, the two sides of (4), the relative error,
+        and the ordinary sample variance of the region.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 2: Power Spectral Density of a 2-D AR Process
+    <span class="note">Steps 5 to 10. Generate white noise, filter it, derive the PSD by hand, compare it with your estimate, and answer the questions.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 5: White Noise</h3>
+    <p>
+      Generate a \(512 \times 512\) image \(x\) whose pixels are
+      independent and uniformly distributed on \([-0.5, 0.5]\). Use exactly
+      these lines, so that everyone has the same \(x\):
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>g = torch.Generator().manual_seed(0)
+x = torch.rand(512, 512, generator=g, dtype=torch.float64) - 0.5</pre>
+    </div>
+    <p>
+      <b>Task 5a.</b> Display \(x + 0.5\), whose values are in \([0,1]\),
+      as a grayscale image with a colorbar.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 6: The AR Process</h3>
+    <p>
+      Filter \(x\) with the 2-D IIR filter whose transfer function is
+    </p>
+    $$
+    H(z_1, z_2) = \frac{3}{1 - 0.99 z_1^{-1} - 0.99 z_2^{-1}
+                           + 0.9801 z_1^{-1} z_2^{-1}} \ ,
+    \tag{5}
+    $$
+    <p>
+      where \(z_1\) goes with \(m\) and \(z_2\) goes with \(n\). Call the
+      output \(y\). The output is a 2-D autoregressive process, because each
+      output pixel is a weighted sum of earlier outputs plus new noise.
+    </p>
+    <p>
+      <b>Task 6a.</b> Write the difference equation that (5) defines. Then
+      show that the denominator factors as
+      \(\big(1 - 0.99 z_1^{-1}\big)\big(1 - 0.99 z_2^{-1}\big)\).
+    </p>
+    <p>
+      <b>Task 6b.</b> This is the same form as the IIR filter of Lab 3,
+      with the pole \(0.9\) replaced by \(a = 0.99\) and the gain \(0.01\)
+      replaced by \(3\). Generalize your <code>iir_separable</code> from
+      Lab 3 so that it takes the pole and the gain as arguments. The first
+      recursion runs down each column,
+      \(u(m,n) = x(m,n) + a\, u(m-1,n)\), and the second runs along each
+      row, \(y(m,n) = \mbox{gain} \cdot u(m,n) + a\, y(m,n-1)\). Values
+      outside the image are zero.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def iir_separable(x, a, gain):
+    """This function applies the filter gain / ((1 - a z1^-1)(1 - a z2^-1)).
+
+    Each step of each recursion updates a whole row or a whole column.
+    Values outside the image are zero.
+
+    x        (C, H, W) float64 tensor
+    a        float, the pole, with |a| &lt; 1
+    gain     float
+    returns  (C, H, W) float64 tensor
+    """</pre>
+    </div>
+    <p>
+      <b>Task 6c. The impulse check.</b> The point spread function of this
+      filter is \(h(m,n) = \mbox{gain} \cdot a^m a^n\) for \(m, n \ge 0\).
+      Make a \(1 \times 64 \times 64\) image that is 1 at \((0,0)\) and 0
+      elsewhere. Filter it with \(a = 0.99\) and gain 3, and report the
+      largest absolute difference from \(h(m,n)\).
+    </p>
+    <p>
+      <b>Task 6d.</b> Compute <code>y = iir_separable(x[None], 0.99, 3.0)[0]</code>.
+      Display \(y/255 + 0.5\) as a grayscale image with a colorbar, and
+      report the percentage of displayed values that fall outside
+      \([0,1]\).
+    </p>
+    <div class="tip">
+      <b>Why \(y/255 + 0.5\)?</b> The steady state standard deviation of
+      \(y\) is about 44, much larger than the range of an image. Dividing by 255
+      shows \(y\) as if it were an image on the 0 to 255 scale, and adding
+      0.5 puts \(y = 0\) at middle gray. Only a tiny fraction of the
+      pixels is clipped.
+    </div>
+    <div class="handin" id="D3">
+      <span class="tag">HAND IN &middot; D3</span>
+      <p>
+        The image \(x + 0.5\), the difference equation and the
+        factorization, the impulse check error, the image \(y/255 + 0.5\),
+        and the percentage of clipped values.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 7: The Theoretical PSD</h3>
+    <p>
+      When white noise with variance \(\sigma_x^2\) passes through a filter
+      with frequency response \(H(e^{j\mu}, e^{j\nu})\), the output has PSD
+    </p>
+    $$
+    S_y(e^{j\mu}, e^{j\nu}) = \sigma_x^2 \, \big| H(e^{j\mu}, e^{j\nu}) \big|^2 \ .
+    \tag{6}
+    $$
+    <p>
+      <b>Task 7a.</b> Show that a random variable uniformly distributed on
+      \([-0.5, 0.5]\) has variance \(\sigma_x^2 = 1/12\).
+    </p>
+    <p>
+      <b>Task 7b.</b> Use the factorization of Task 6a to derive, by hand,
+      a closed form for \(S_y(e^{j\mu}, e^{j\nu})\) that is a real function
+      of \(\cos\mu\) and \(\cos\nu\). Call it equation (7). Evaluate it at
+      \((\mu,\nu) = (0,0)\) and at \((\pi,\pi)\).
+    </p>
+    <p>
+      <b>Task 7c.</b> Write the function below so that it evaluates
+      equation (7). Plot \(\log S_y\) on the grid <code>freq_grid(64)</code>
+      with <code>plot_log_psd</code>, so that the plot uses the same
+      frequencies as the estimate in Step 8.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def ar_psd(mu, nu, a, gain, var_x):
+    """This function returns the theoretical PSD of the AR process.
+
+    mu, nu   float64 tensors of the same shape, in radians per sample
+    a        float, the pole
+    gain     float
+    var_x    float, the variance of the white noise input
+    returns  float64 tensor of the same shape, S_y of equation (7)
+    """</pre>
+    </div>
+    <div class="handin" id="D4">
+      <span class="tag">HAND IN &middot; D4</span>
+      <p>
+        Your derivation of \(\sigma_x^2\) and of \(S_y\), its values at
+        \((0,0)\) and \((\pi,\pi)\), and the plot of \(\log S_y\).
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 8: Estimate the PSD and Compare</h3>
+    <p>
+      <b>Task 8a.</b> Run <code>better_spec_anal(y)</code> and plot the log
+      of the result with <code>plot_log_psd</code>.
+    </p>
+    <p>
+      <b>Task 8b. Compare with the theory.</b> Let \(\hat S_y\) be the
+      estimate and \(S_y\) the theory, both on <code>freq_grid(64)</code>.
+      Compute the mean of the ratio \(\hat S_y / S_y\) and the mean of
+      \(\log \hat S_y - \log S_y\). Compute each over two sets of
+      frequencies: all \(64^2\) frequencies, and only the frequencies with
+      \(|\mu| \ge \pi/8\) and \(|\nu| \ge \pi/8\). For the second set, also
+      compute the root mean square (RMS) of \(\log \hat S_y - \log S_y\).
+    </p>
+    <div class="tip">
+      <b>Reading the check.</b> Away from the axes, the mean ratio should
+      be within about 10 percent of 1. Over all frequencies the agreement
+      is worse, because \(S_y\) has a very narrow peak at zero frequency.
+      Question 4 asks you to explain this.
+    </div>
+    <p>
+      The recursion starts from zero at the top and left edges of \(y\), so
+      \(y\) has not reached its steady state near those edges. This is
+      called the startup transient of the filter. The center region used by
+      <code>better_spec_anal</code> starts 96 pixels from the top and left
+      edges, which keeps the blocks away from most of the transient.
+      Question 5 asks how much of it remains.
+    </p>
+    <div class="handin" id="D5">
+      <span class="tag">HAND IN &middot; D5</span>
+      <p>
+        The plot of the log of the estimated PSD of \(y\), and a table of
+        the mean ratio and the mean log difference over the two sets of
+        frequencies, with the RMS log difference for the second set.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 9: Your Specification</h3>
+    <p>
+      Over the two modules you directed your AI assistant to write the
+      bodies of three functions: <code>better_spec_anal</code>,
+      <code>iir_separable</code>, and <code>ar_psd</code>.
+    </p>
+    <div class="handin" id="D6">
+      <span class="tag">HAND IN &middot; D6</span>
+      <p>
+        The specification you gave your AI assistant, quoted. If you
+        corrected it during the build, show the correction and say what was
+        wrong.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 10: Questions to Answer</h3>
+    <p>
+      Answer each in a few sentences, using your own plots and numbers as
+      evidence. Point to the specific figure or number you are relying on.
+    </p>
+    <ol>
+      <li>The one-block estimates in D1 stay noisy as the block size grows
+          from 64 to 256. Explain why a larger block does not reduce the
+          fluctuation of the estimate at each frequency. What does a larger
+          block change?</li>
+      <li>Averaging \(K\) independent one-block estimates divides the
+          variance of the estimate at each frequency by \(K\). By what factor
+          does it divide the standard deviation for \(K = 25\)? For small
+          errors, the standard deviation of \(\log \hat S\) is about
+          \(1/\sqrt{K}\). Compare this with the RMS log difference you
+          reported in D5.</li>
+      <li>What does the Hamming window change, compared with no window?
+          Answer in terms of leakage, which is power from strong frequencies
+          that appears at weak ones, and of frequency resolution. Then run
+          the average of equation (3) on \(y\) once more with \(w = 1\), and
+          report the mean ratio over the second set of frequencies of D5.
+          Explain the difference.</li>
+      <li>Why is \(S_y\) concentrated at low frequencies? What does the
+          value \(a = 0.99\) do to the height and width of the peak at zero
+          frequency, and to the appearance of \(y\) in D3? Use your answer
+          to explain why the estimate disagrees with the theory near
+          \(\mu = 0\) and \(\nu = 0\), where the frequency spacing of the
+          estimate is \(2\pi/64\).</li>
+      <li>Use \(h(m,n)\) from Task 6c to show that the variance of \(y(m,n)\)
+          is \(\big(1 - a^{2(m+1)}\big)\big(1 - a^{2(n+1)}\big)\) times its
+          steady state value. Evaluate this factor at \((96, 96)\), the
+          corner of the center region, and at \((256, 256)\). Do you expect
+          the startup transient to change the numbers in D5 by much?</li>
+    </ol>
+    <div class="handin" id="D7">
+      <span class="tag">HAND IN &middot; D7</span>
+      <p>
+        Your answers to the five questions above.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Deliverables
+    <span class="note">What to submit, and where each item comes from.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What to Hand In</h3>
+    <p>Submit two files through Brightspace.</p>
+    <ol>
+      <li>A report, as a single <b>PDF</b>, labeled "Lab 4", containing the
+          items listed below in this order.</li>
+      <li>Your <code>lab4.py</code>, as a plain <code>.py</code> file. Do
+          not paste the code into the report and do not send a zip
+          file.</li>
+    </ol>
+    <p>
+      Also commit your code to your <code>image-processing-labs</code>
+      repository under <code>lab4</code> and push it before you submit.
+    </p>
+    <ol class="handin-list">
+      <li><span class="dnum"></span>
+          Your name and the link to your GitHub repository.</li>
+      <li><span class="dnum"><a href="#D1">D1</a></span>
+          <code>img04g.png</code> and the three one-block log PSD plots, for
+          \(N = 64\), \(128\), and \(256\).</li>
+      <li><span class="dnum"><a href="#D2">D2</a></span>
+          The log of the averaged estimate for <code>img04g.png</code>, the
+          two sides of the Parseval check, the relative error, and the
+          ordinary sample variance.</li>
+      <li><span class="dnum"><a href="#D3">D3</a></span>
+          The image \(x + 0.5\), the difference equation and its
+          factorization, the impulse check error, the image
+          \(y/255 + 0.5\), and the percentage of clipped values.</li>
+      <li><span class="dnum"><a href="#D4">D4</a></span>
+          The derivations of \(\sigma_x^2\) and \(S_y\), the values of
+          \(S_y\) at \((0,0)\) and \((\pi,\pi)\), and the plot of
+          \(\log S_y\).</li>
+      <li><span class="dnum"><a href="#D5">D5</a></span>
+          The log of the estimated PSD of \(y\) and the table comparing it
+          with the theory.</li>
+      <li><span class="dnum"><a href="#D6">D6</a></span>
+          The specification you gave your AI assistant, quoted, with any
+          corrections you made during the build.</li>
+      <li><span class="dnum"><a href="#D7">D7</a></span>
+          Your answers to the five questions.</li>
+    </ol>
+    <p>
+      Concise and clear beats long.
+    </p>
+  </div>
+
+  <div class="card">
+    <p>
+      You have now estimated the power spectral density of an image and of
+      a 2-D random process, and checked the estimate against theory.
+    </p>
+    <p>
+      <a href="../../index.html">Back to the laboratory index</a> &middot;
+      <a href="https://charlesbouman.org/ece63700/">ECE 63700 course notes</a>
+    </p>
+  </div>
+
+  </div>
+</details>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  var text = btn.nextElementSibling.innerText;
+  function done() {
+    var old = btn.textContent;
+    btn.textContent = "Copied";
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done);
+  } else {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    done();
+  }
+}
+
+function toggleAll(btn) {
+  var open = btn.textContent.indexOf("Open") === 0;
+  var list = document.querySelectorAll("details.module");
+  for (var i = 0; i < list.length; i++) { list[i].open = open; }
+  btn.textContent = open ? "Close all" : "Open all";
+}
+
+function revealHash() {
+  if (!location.hash) { return; }
+  var el = document.querySelector(location.hash);
+  if (!el) { return; }
+  var p = el.parentElement;
+  while (p) {
+    if (p.tagName === "DETAILS") { p.open = true; }
+    p = p.parentElement;
+  }
+  el.scrollIntoView();
+}
+window.addEventListener("load", revealHash);
+window.addEventListener("hashchange", revealHash);
+</script>
+
+</body>
+</html>

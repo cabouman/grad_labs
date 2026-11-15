@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 3: Image Filtering</title>
+<style>
+  html { background: #faf8f4; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         background: #faf8f4; color: #222; line-height: 1.5; }
+  .band { background: #cfb991; border-bottom: 4px solid #000;
+          padding: 24px 16px 18px 16px; text-align: center; }
+  .band h2 { margin: 0 0 6px 0; font-size: 1.0em; font-weight: normal; color: #3d3324; }
+  .band h1 { margin: 0; font-size: 1.5em; color: #000; }
+  .band a { color: #000; }
+  .container { max-width: 760px; margin: 28px auto; padding: 0 16px; }
+  .section { border: 2px solid #cfb991; border-radius: 14px;
+             background: #f4efe3; padding: 18px 16px 2px 16px; margin-bottom: 22px; }
+  .section > h2 { margin: 0 0 16px 8px; font-size: 1.3em; color: #3d3324; }
+  .card { background: #fff; border: 1px solid #e3dccb; border-radius: 10px;
+          padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; color: #000; border-bottom: 2px solid #cfb991; padding-bottom: 6px; }
+  a { color: #8a6d1d; text-decoration: none; }
+  a:hover { color: #000; text-decoration: underline; }
+  ul, ol { margin: 8px 0; }
+  li { padding: 3px 0; }
+  code { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 4px;
+         padding: 1px 5px; font-size: 0.95em; }
+  pre { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 6px;
+        padding: 12px 14px; overflow-x: auto; font-size: 0.92em; line-height: 1.4; }
+  .tip { background: #f6f3ea; border-left: 4px solid #cfb991; padding: 10px 14px;
+         margin: 12px 0; font-size: 0.97em; }
+  .codeblock { position: relative; }
+  .codeblock pre { padding-right: 76px; }
+  .copy { position: absolute; top: 8px; right: 8px; background: #cfb991; color: #000;
+          border: 1px solid #b9ac8e; border-radius: 4px; padding: 2px 10px;
+          font-size: 0.8em; font-family: inherit; cursor: pointer; }
+  .copy:hover { background: #b9ac8e; }
+  .kernelfig { text-align: center; margin: 16px 0 4px 0; }
+  .kernelfig img { border: 1px solid #e3dccb; }
+  .kernelfig .caption { font-size: 0.9em; color: #555; margin-top: 6px; }
+  table.kernel { border-collapse: collapse; margin: 12px auto; }
+  table.kernel td { border: 1px solid #b9ac8e; padding: 6px 14px; text-align: center;
+                    font-family: "Times New Roman", serif; }
+  .source { font-size: 0.9em; color: #5b5b5b; margin: 4px 0 0 0; }
+  table.runs { border-collapse: collapse; margin: 12px 0; font-size: 0.92em; width: 100%; }
+  table.runs th, table.runs td { border: 1px solid #e3dccb; padding: 5px 9px; text-align: left; }
+  table.runs th { background: #f4efe3; }
+  table.runs td.grp { background: #faf8f4; font-weight: bold; white-space: nowrap; }
+  details.module { border: 2px solid #cfb991; border-radius: 14px; background: #f4efe3;
+                   margin-bottom: 22px; }
+  details.module > summary { cursor: pointer; list-style: none; padding: 16px 18px;
+                             font-size: 1.2em; font-weight: bold; color: #3d3324; }
+  details.module > summary::-webkit-details-marker { display: none; }
+  details.module > summary::before { content: "\25B8"; color: #8a6d1d; margin-right: 10px; }
+  details.module[open] > summary::before { content: "\25BE"; }
+  details.module > summary:hover { color: #000; }
+  details.module .modulebody { padding: 0 16px 2px 16px; }
+  summary .note { display: block; font-weight: normal; font-size: 0.78em;
+                  color: #6b5c42; margin: 4px 0 0 26px; }
+  .allbtn { display: block; margin: 0 0 16px auto; background: #f4efe3; color: #3d3324;
+            border: 1px solid #cfb991; border-radius: 4px; padding: 3px 12px;
+            font-size: 0.85em; font-family: inherit; cursor: pointer; }
+  .allbtn:hover { background: #e8e0cd; }
+  .handin { border: 1px solid #cfb991; border-left: 7px solid #cfb991;
+            border-radius: 8px; background: #fffdf5;
+            padding: 12px 16px 4px 16px; margin: 18px 0; }
+  .handin .tag { display: inline-block; background: #cfb991; color: #000;
+                 border-radius: 4px; padding: 1px 9px; font-size: 0.82em;
+                 font-weight: bold; letter-spacing: 0.4px; }
+  .handin p:first-of-type { margin-top: 8px; }
+  ol.handin-list { list-style: none; padding-left: 0; margin: 10px 0; }
+  ol.handin-list li { position: relative; padding: 4px 0 4px 2.9em; }
+  ol.handin-list .dnum { position: absolute; left: 0; width: 2.9em;
+                         font-weight: bold; color: #8a6d1d; }
+  .band .nav { margin: 10px 0 0 0; font-size: 0.9em; }
+  .band .nav a { text-decoration: underline; }
+</style>
+<script>
+  MathJax = { tex: { inlineMath: [['\\(', '\\)']], tags: 'ams' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+
+<div class="band">
+  <h2>ECE 63700: Digital Image Processing I</h2>
+  <h1>Lab 3: Image Filtering</h1>
+  <p class="nav">
+    <a href="https://charlesbouman.org/ece63700/">ECE 63700 course notes</a> &middot;
+    <a href="../../index.html">Laboratory index</a>
+  </p>
+</div>
+
+<div class="container">
+
+<button class="allbtn" onclick="toggleAll(this)">Open all</button>
+
+<details class="module">
+  <summary>Overview
+    <span class="note">What the lab is about, the data, and the ground rules.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What This Lab Is About</h3>
+    <p><b>Due: Friday, Jan. 29, 2027.</b></p>
+    <p>
+      In this lab you filter color images with three 2-D filters. Two are
+      FIR filters: a low-pass averaging filter and a sharpening filter
+      called an unsharp mask. The third is an IIR filter defined by a 2-D
+      difference equation. For each filter you derive the frequency
+      response by hand, plot it, apply the filter to an image, and check
+      your code against the FFT.
+    </p>
+    <p>
+      You will not hand-write the implementation. This page states the
+      math and the exact signature of every function you need. Your job is
+      to direct Claude, or another agentic AI, to write the PyTorch code
+      from that specification. Then you run the experiments yourself,
+      produce the required images and numbers, and explain what you see.
+      You are graded on the specification you give, the checks you run to
+      confirm the code is right, and your reading of the results.
+    </p>
+    <p>
+      The work is in three modules, one for each filter. Open them below.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>The Data</h3>
+    <p>Download both images, in <code>lab3-data.zip</code>, before you start.</p>
+    <ul>
+      <li>
+        <b>img03.png</b>,
+        a color image 512 pixels wide and 768 pixels tall, 621 KB.
+      </li>
+      <li>
+        <b>imgblur.png</b>,
+        a blurred version of <code>img03.png</code>, the same size, 433 KB.
+      </li>
+    </ul>
+    <p class="source">
+      Both are provided images. Each is stored in lossless PNG format with
+      8 bits for each of the red, green, and blue channels.
+    </p>
+    <p>
+      From the shell, which is easier than saving from the browser:
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>wget https://charlesbouman.org/ece63700/labs/lab3-data.zip
+unzip lab3-data.zip</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Ground Rules</h3>
+    <ul>
+      <li>All filtering code is in <b>PyTorch</b>, in a single file named
+          <code>lab3.py</code>. Use the <code>labs</code> conda environment
+          you built in Lab 2. You may use NumPy and matplotlib for
+          plotting.</li>
+      <li><code>lab3.py</code> holds functions and nothing else. Run your
+          experiments from a separate script that imports it.</li>
+      <li>Every function has the exact signature given on this page, and a
+          docstring that says what it does, what its inputs are, and what
+          it returns. Keep the docstrings short.</li>
+      <li>Read each image and scale it to the range \([0,1]\) by dividing
+          by 255. Do all arithmetic in <code>float64</code>.</li>
+      <li>A color image is a tensor of shape \((3, H, W)\): the red, green,
+          and blue channels, each \(H\) rows by \(W\) columns. Every filter
+          is applied to each channel separately.</li>
+      <li>The index \(m\) counts rows, from top to bottom, and the index
+          \(n\) counts columns, from left to right.</li>
+      <li>Pixels outside the image are zero. This is called a <b>free
+          boundary</b> condition.</li>
+      <li>A filter output can fall outside \([0,1]\). Keep the values as
+          they are for computation, and clip them to \([0,1]\) only when
+          you display or save an image.</li>
+      <li>No Python <code>for</code> loop over pixels, except in the one
+          function in Module 3 that asks for one.</li>
+    </ul>
+    <div class="tip">
+      <b>How to direct the AI.</b> Give it the equations from this page,
+      the array shapes, the index convention, the boundary condition, and
+      the signatures of the functions you want. Then run the checks in
+      Steps 3, 5, 8, and 9 <em>before</em> you look at any filtered image.
+      A filter with a mistake in it often still produces a plausible
+      picture.
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Parameters for the Experiments
+    <span class="note">The settings for every hand-in item, in one place.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Parameters for Every Experiment</h3>
+    <p>
+      The table lists the settings for each hand-in item. Every experiment
+      below points back to this table by its deliverable number, so you do
+      not have to search the text for a number.
+    </p>
+    <table class="runs">
+      <tr>
+        <th>Item</th><th>Experiment</th><th>Input</th><th>Filter and settings</th>
+      </tr>
+      <tr><td class="grp">D1</td><td>Low-pass response (Step 2)</td>
+          <td>&mdash;</td><td>9 by 9 average, plot over \([-\pi,\pi]^2\)</td></tr>
+      <tr><td class="grp">D2</td><td>FIR checks (Step 3)</td>
+          <td>21 by 21 impulse at \((10,10)\)</td>
+          <td>9 by 9 average and a 3 by 3 test kernel; FFT size 256</td></tr>
+      <tr><td class="grp">D3</td><td>Low-pass filtering (Step 4)</td>
+          <td><code>img03.png</code></td><td>9 by 9 average</td></tr>
+      <tr><td class="grp">D4</td><td>Unsharp mask responses (Step 5)</td>
+          <td>&mdash;</td><td>5 by 5 average; \(\lambda = 1.5\); FFT size 256</td></tr>
+      <tr><td class="grp">D5</td><td>Sharpening (Step 6)</td>
+          <td><code>imgblur.png</code></td><td>\(\lambda = 0.2,\ 0.8,\ 1.5\)</td></tr>
+      <tr><td class="grp">D6</td><td>IIR response (Step 7)</td>
+          <td>&mdash;</td><td>equation (6), plot over \([-\pi,\pi]^2\)</td></tr>
+      <tr><td class="grp">D7</td><td>Point spread function (Step 8)</td>
+          <td>256 by 256 impulse at \((127,127)\)</td><td>equation (6), displayed as \(100\,h\); FFT size 256</td></tr>
+      <tr><td class="grp">D8</td><td>IIR filtering (Step 8)</td>
+          <td><code>img03.png</code></td><td>equation (6)</td></tr>
+      <tr><td class="grp">D9</td><td>Separable form and timing (Step 9)</td>
+          <td>impulse of D7 and <code>img03.png</code></td><td>equation (6), both implementations</td></tr>
+    </table>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 1: An FIR Low-Pass Filter
+    <span class="note">Steps 1 to 4. Set up the code, derive the frequency response, build an FIR filter, and check it.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 1: Set Up <code>lab3.py</code></h3>
+    <p>
+      Copy these helpers into <code>lab3.py</code>. Reading and writing
+      files is not the point of this lab, and the two frequency helpers fix
+      the frequency grid so that everyone's numbers can be compared.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>import numpy as np
+import torch
+import torch.nn.functional as F
+from PIL import Image
+
+
+def load_image(path):
+    """This function reads an 8-bit image file and returns it as a tensor.
+
+    path     path to a PNG or TIFF file
+    returns  (C, H, W) float64 tensor with values in [0, 1]
+    """
+    a = np.asarray(Image.open(path), dtype=np.float64) / 255.0
+    if a.ndim == 2:
+        a = a[:, :, None]
+    return torch.from_numpy(a).permute(2, 0, 1).contiguous()
+
+
+def save_image(x, path):
+    """This function clips an image to [0, 1] and writes it as an 8-bit PNG.
+
+    x        (C, H, W) tensor with C = 1 or C = 3
+    path     output file name, ending in .png
+    """
+    a = (x.clamp(0.0, 1.0) * 255.0).round().to(torch.uint8)
+    a = a.permute(1, 2, 0).numpy()
+    if a.shape[2] == 1:
+        a = a[:, :, 0]
+    Image.fromarray(a).save(path)
+
+
+def box_kernel(p):
+    """This function returns the (2p+1) by (2p+1) averaging kernel.
+
+    Every entry equals 1 / (2p+1)^2, so the entries sum to 1.
+    """
+    k = 2 * p + 1
+    return torch.full((k, k), 1.0 / k**2, dtype=torch.float64)
+
+
+def freq_grid(n):
+    """This function returns an n by n grid of frequencies in [-pi, pi).
+
+    mu varies down the rows and nu varies across the columns.  The grid
+    matches the order of the output of fft_magnitude.
+    """
+    w = 2 * torch.pi * (torch.arange(n, dtype=torch.float64) - n // 2) / n
+    return torch.meshgrid(w, w, indexing="ij")
+
+
+def fft_magnitude(h, n):
+    """This function returns |FFT| of a kernel zero padded to n by n.
+
+    h        (K, L) tensor with K, L &lt;= n
+    returns  (n, n) float64 tensor, centered so that frequency zero is at
+             row n // 2 and column n // 2, matching freq_grid(n)
+    """
+    return torch.fft.fftshift(torch.fft.fft2(h, s=(n, n))).abs()</pre>
+    </div>
+    <p>
+      <code>PIL</code> is the Pillow package. It is installed with
+      matplotlib, so the <code>labs</code> environment already has it.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Step 2: The Frequency Response</h3>
+    <p>
+      The low-pass filter in this module is the \(9 \times 9\) average,
+      with point spread function
+    </p>
+    $$
+    h(m,n) = \left\{ \begin{array}{ll}
+      1/81 & \mbox{for } |m| \le 4 \mbox{ and } |n| \le 4 \\
+      0 & \mbox{otherwise} \ .
+    \end{array} \right.
+    \tag{1}
+    $$
+    <p>
+      The frequency response of a filter is the discrete space Fourier
+      transform (DSFT) of its point spread function,
+    </p>
+    $$
+    H(e^{j\mu}, e^{j\nu}) = \sum_{m=-\infty}^{\infty} \sum_{n=-\infty}^{\infty}
+      h(m,n) \, e^{-j(\mu m + \nu n)} \ ,
+    \tag{2}
+    $$
+    <p>
+      where \(\mu\) is the frequency along \(m\) (down the rows) and
+      \(\nu\) is the frequency along \(n\) (across the columns). Both are in
+      radians per sample.
+    </p>
+    <p>
+      <b>Task 2a.</b> Derive a closed form expression for
+      \(H(e^{j\mu}, e^{j\nu})\) of the filter (1) by hand. The sum in (2)
+      separates into a sum over \(m\) times a sum over \(n\), and each of
+      those is a finite geometric series. Your answer should be a real
+      function of \(\mu\) and \(\nu\). State its value at
+      \(\mu = \nu = 0\).
+    </p>
+    <p>
+      <b>Task 2b.</b> Write the function below so that it evaluates your
+      answer to Task 2a for the \((2p+1) \times (2p+1)\) average of
+      <code>box_kernel(p)</code>. The filter (1) is the case \(p = 4\).
+      Watch the points where your formula divides zero by zero. The
+      function must return the correct limit there.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def box_response(mu, nu, p):
+    """This function returns H(e^{j mu}, e^{j nu}) of box_kernel(p).
+
+    mu, nu   float64 tensors of the same shape, in radians per sample
+    p        int, the half width of the kernel
+    returns  float64 tensor of the same shape, the real frequency response
+    """</pre>
+    </div>
+    <p>
+      <b>Task 2c.</b> Plot \(|H(e^{j\mu}, e^{j\nu})|\) over
+      \([-\pi,\pi] \times [-\pi,\pi]\), using <code>freq_grid</code> for
+      the frequencies. A surface plot or an image with a colorbar are both
+      fine. Label both frequency axes with \(\mu\) and \(\nu\) and their
+      units.
+    </p>
+    <div class="handin" id="D1">
+      <span class="tag">HAND IN &middot; D1</span>
+      <p>
+        Your derivation of \(H(e^{j\mu}, e^{j\nu})\) for the filter (1),
+        including its value at \(\mu = \nu = 0\), and the plot of
+        \(|H(e^{j\mu}, e^{j\nu})|\).
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 3: The FIR Filter and Its Checks</h3>
+    <p>
+      An FIR filter with point spread function \(h\) computes the 2-D
+      convolution
+    </p>
+    $$
+    y(m,n) = \sum_{k} \sum_{l} h(k,l) \, x(m-k, n-l) \ ,
+    \tag{3}
+    $$
+    <p>
+      with \(x(m,n) = 0\) outside the image. Store the kernel as an array
+      of odd size \(K \times L\) whose center entry,
+      <code>h[K//2, L//2]</code>, holds \(h(0,0)\).
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def fir_filter(x, h):
+    """This function filters each channel of an image with an FIR kernel.
+
+    x        (C, H, W) float64 tensor
+    h        (K, L) float64 tensor, K and L odd, h[K//2, L//2] = h(0, 0)
+    returns  (C, H, W) float64 tensor, the convolution of equation (3)
+    """</pre>
+    </div>
+    <p>Three requirements.</p>
+    <ul>
+      <li>Zero padding, so that the boundary is free as stated in the
+          ground rules.</li>
+      <li>The output has the same shape as the input.</li>
+      <li>Built from <code>torch.nn.functional.conv2d</code>, with no loop
+          over pixels. Treat the channels as a batch, so that one call
+          filters all three.</li>
+    </ul>
+    <div class="tip">
+      <b><code>conv2d</code> does not compute convolution.</b> It computes
+      correlation, which is equation (3) with \(h(k,l)\) replaced by
+      \(h(-k,-l)\). To get (3) you must flip the kernel in both axes before
+      you pass it to <code>conv2d</code>. Every kernel in this lab is
+      symmetric, so this mistake would not change any result here. It
+      would change the result for the next kernel you use, so get it right
+      now.
+    </div>
+    <p>
+      <b>Task 3a. The impulse check.</b> The output of a filter for an
+      impulse input is its point spread function. Make a \(1 \times 21
+      \times 21\) image that is 1 at \((10,10)\) and 0 elsewhere. Filter it
+      with <code>box_kernel(4)</code> and compare the output with the
+      kernel placed at the center of a \(21 \times 21\) array of zeros.
+      Report the largest absolute difference. Then repeat the test with the
+      nonsymmetric kernel below, which is the test that catches a missing
+      flip.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>h_test = torch.arange(1, 10, dtype=torch.float64).reshape(3, 3)</pre>
+    </div>
+    <p>
+      <b>Task 3b. The FFT check.</b> The DFT of \(h\) zero padded to
+      \(N \times N\) equals the DSFT (2) sampled at the frequencies
+      \(\mu = 2\pi k/N\) and \(\nu = 2\pi l/N\). The zero padding puts
+      \(h(0,0)\) at a corner of the array rather than at its center. That
+      shift changes only the phase of the DFT, so the magnitudes still
+      agree. Compute
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>mu, nu = freq_grid(256)
+fft_err = (fft_magnitude(box_kernel(4), 256)
+           - box_response(mu, nu, 4).abs()).abs().max()</pre>
+    </div>
+    <p>
+      and report it. This number tests your hand derivation, not just your
+      code.
+    </p>
+    <div class="tip">
+      <b>Reading the checks.</b> The three numbers should all be at the
+      level of round-off. If the impulse check passes for the box but fails
+      for <code>h_test</code>, the kernel is not flipped. If the output of
+      the impulse check is shifted by one pixel, the padding is wrong. If
+      the FFT check fails, the error is most likely in your derivation in
+      Task 2a or in the limit at zero frequency.
+    </div>
+    <div class="handin" id="D2">
+      <span class="tag">HAND IN &middot; D2</span>
+      <p>
+        The two impulse check errors (box kernel and <code>h_test</code>)
+        and the FFT check error.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 4: Filter the Image</h3>
+    <p>
+      Filter <code>img03.png</code> with <code>box_kernel(4)</code>, then
+      clip and save the result. Display the input and the output side by
+      side at the same size.
+    </p>
+    <div class="handin" id="D3">
+      <span class="tag">HAND IN &middot; D3</span>
+      <p>
+        The input image <code>img03.png</code> and the filtered color
+        image. Add one sentence saying what happened near the borders of
+        the filtered image, and why.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 2: The Unsharp Mask
+    <span class="note">Steps 5 and 6. Derive the response of a sharpening filter and apply it to a blurred image.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 5: The Frequency Response of the Unsharp Mask</h3>
+    <p>
+      An unsharp mask sharpens an image by removing part of its unsharp,
+      or low frequency, content. Let \(h\) be the \(5 \times 5\) average,
+      which is <code>box_kernel(2)</code>:
+    </p>
+    $$
+    h(m,n) = \left\{ \begin{array}{ll}
+      1/25 & \mbox{for } |m| \le 2 \mbox{ and } |n| \le 2 \\
+      0 & \mbox{otherwise} \ .
+    \end{array} \right.
+    \tag{4}
+    $$
+    <p>
+      Then \(x - h * x\) is the part of the image that the low-pass filter
+      removes. The unsharp mask adds \(\lambda\) times that part back to
+      the image. Its point spread function is
+    </p>
+    $$
+    g(m,n) = \delta(m,n) + \lambda \big( \delta(m,n) - h(m,n) \big) \ ,
+    \tag{5}
+    $$
+    <p>
+      where \(\delta(m,n)\) is 1 at \((0,0)\) and 0 elsewhere, and
+      \(\lambda > 0\) sets the amount of sharpening.
+    </p>
+    <p>
+      <b>Task 5a.</b> Derive \(H(e^{j\mu}, e^{j\nu})\) for the filter (4)
+      and \(G(e^{j\mu}, e^{j\nu})\) for the filter (5) by hand. Your result
+      from Step 2 does most of the work.
+    </p>
+    <p>
+      <b>Task 5b.</b> Write these two functions. <code>unsharp_kernel</code>
+      returns \(g\) as a \(5 \times 5\) array with \(g(0,0)\) at the
+      center, so that it can be passed to <code>fir_filter</code>.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def unsharp_kernel(lam):
+    """This function returns the 5 by 5 unsharp mask kernel g of (5).
+
+    lam      float, the sharpening parameter lambda
+    returns  (5, 5) float64 tensor with g(0, 0) at the center
+    """
+
+
+def unsharp_response(mu, nu, lam):
+    """This function returns G(e^{j mu}, e^{j nu}) of the unsharp mask.
+
+    mu, nu   float64 tensors of the same shape, in radians per sample
+    lam      float, the sharpening parameter lambda
+    returns  float64 tensor of the same shape, the real frequency response
+    """</pre>
+    </div>
+    <p>
+      <b>Task 5c.</b> Plot \(|H(e^{j\mu}, e^{j\nu})|\) for the filter (4)
+      and \(|G(e^{j\mu}, e^{j\nu})|\) for \(\lambda = 1.5\), over
+      \([-\pi,\pi]^2\), with labeled axes as in Step 2. Run the FFT check
+      of Task 3b on \(g\) with \(\lambda = 1.5\), using
+      <code>unsharp_kernel</code> and <code>unsharp_response</code> in
+      place of the box functions. Also report the largest value of
+      \(|G|\) on the grid.
+    </p>
+    <div class="handin" id="D4">
+      <span class="tag">HAND IN &middot; D4</span>
+      <p>
+        Your derivations of \(H\) and \(G\), the plots of \(|H|\) and of
+        \(|G|\) for \(\lambda = 1.5\), the FFT check error for \(g\), and
+        the largest value of \(|G|\).
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 6: Sharpen the Blurred Image</h3>
+    <p>
+      Filter <code>imgblur.png</code> with the unsharp mask for
+      \(\lambda = 0.2\), \(0.8\), and \(1.5\). Show the input and the three
+      outputs at the same size. Then show the same small region of all four
+      images, for example a \(200 \times 200\) region around the eyes, so
+      that the differences are visible. For each output, also report the
+      percentage of values that fall outside \([0,1]\) before clipping.
+    </p>
+    <div class="handin" id="D5">
+      <span class="tag">HAND IN &middot; D5</span>
+      <p>
+        The input image, the three sharpened images, the four close-up
+        regions, and the three clipping percentages. Add two or three
+        sentences comparing the results: what improves as \(\lambda\)
+        grows, and what gets worse.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 3: An IIR Filter
+    <span class="note">Steps 7 to 11. Derive the response, compute the point spread function, compare a pixel loop with a separable form, and answer the questions.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 7: The Frequency Response of the IIR Filter</h3>
+    <p>
+      An IIR filter is defined by a difference equation. Its output at
+      each pixel depends on output values it has already computed. The
+      filter in this module is
+    </p>
+    $$
+    y(m,n) = 0.01\, x(m,n) + 0.9 \big( y(m-1,n) + y(m,n-1) \big)
+             - 0.81\, y(m-1,n-1) \ ,
+    \tag{6}
+    $$
+    <p>
+      with \(x\) the input and \(y\) the output. Pixels outside the image
+      are zero, for \(y\) as well as for \(x\), so the recursion starts at
+      the top left corner from \(y = 0\). Let \(h(m,n)\) be the point
+      spread function of the filter.
+    </p>
+    <p>
+      <b>Task 7a.</b> Take the 2-D Z-transform of (6) and derive the
+      transfer function \(H(z_1, z_2) = Y(z_1,z_2) / X(z_1,z_2)\), where
+      \(z_1\) goes with \(m\) and \(z_2\) goes with \(n\). Then set
+      \(z_1 = e^{j\mu}\) and \(z_2 = e^{j\nu}\) to get
+      \(H(e^{j\mu}, e^{j\nu})\).
+    </p>
+    <p>
+      <b>Task 7b.</b> Show that the denominator factors:
+    </p>
+    $$
+    1 - 0.9 z_1^{-1} - 0.9 z_2^{-1} + 0.81 z_1^{-1} z_2^{-1}
+      = \big( 1 - 0.9 z_1^{-1} \big) \big( 1 - 0.9 z_2^{-1} \big) \ .
+    \tag{7}
+    $$
+    <p>
+      Use (7) to write \(h(m,n)\) in closed form, and to compute the gain
+      at zero frequency, \(H(e^{j0}, e^{j0})\).
+    </p>
+    <p>
+      <b>Task 7c.</b> Write the function below and plot
+      \(|H(e^{j\mu}, e^{j\nu})|\) over \([-\pi,\pi]^2\), with labeled axes
+      as in Step 2.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def iir_response(mu, nu):
+    """This function returns H(e^{j mu}, e^{j nu}) of the IIR filter (6).
+
+    mu, nu   float64 tensors of the same shape, in radians per sample
+    returns  complex128 tensor of the same shape
+    """</pre>
+    </div>
+    <div class="handin" id="D6">
+      <span class="tag">HAND IN &middot; D6</span>
+      <p>
+        Your derivation of \(H(e^{j\mu}, e^{j\nu})\), the factorization
+        (7), the closed form for \(h(m,n)\), the gain at zero frequency,
+        and the plot of \(|H|\).
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 8: The Direct Recursion and the Point Spread Function</h3>
+    <p>
+      The direct way to compute (6) is to visit the pixels in raster order,
+      row by row from the top and left to right within each row. When a
+      pixel is visited, the three outputs on the right side of (6) are
+      already known. This is the one function in the lab that loops over
+      pixels.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def iir_direct(x):
+    """This function applies the IIR filter (6) with a loop over pixels.
+
+    Pixels are visited in raster order.  Outputs outside the image
+    are zero.
+
+    x        (C, H, W) float64 tensor
+    returns  (C, H, W) float64 tensor
+    """</pre>
+    </div>
+    <div class="tip">
+      <b>Pixel loops in Python are slow.</b> Reading one element of a
+      PyTorch tensor at a time is especially slow. The loop may convert the
+      input to a NumPy array first and convert the result back to a tensor.
+      It should still finish on <code>img03.png</code> in well under a
+      minute.
+    </div>
+    <p>
+      <b>Task 8a. The point spread function.</b> Make a \(1 \times 256
+      \times 256\) image that is 1 at \((127,127)\) and 0 elsewhere, and
+      filter it with <code>iir_direct</code>. The output is
+      \(h(m-127, n-127)\). Its largest value is 0.01, so display and save
+      \(100\,h\), clipped to \([0,1]\), as a grayscale image with a
+      colorbar and labeled axes. Report the sum of all the values of the
+      output, and compare the output with your closed form from Task 7b.
+    </p>
+    <p>
+      <b>Task 8b. The FFT check.</b> Run the FFT check of Task 3b with the
+      point spread function from Task 8a in place of the kernel and
+      <code>iir_response</code> in place of <code>box_response</code>. This
+      error will be small, but it will not be at the level of round-off.
+      Question 4 in Step 11 asks why.
+    </p>
+    <div class="handin" id="D7">
+      <span class="tag">HAND IN &middot; D7</span>
+      <p>
+        The image of \(100\,h\), the sum of the point spread function, and
+        the FFT check error.
+      </p>
+    </div>
+    <p>
+      <b>Task 8c.</b> Filter <code>img03.png</code> with
+      <code>iir_direct</code>, then clip and save the result.
+    </p>
+    <div class="handin" id="D8">
+      <span class="tag">HAND IN &middot; D8</span>
+      <p>
+        The filtered color image, next to <code>img03.png</code>.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 9: The Separable Form</h3>
+    <p>
+      The factorization (7) says the filter is two 1-D recursions applied
+      one after the other. The first recursion runs down each column:
+    </p>
+    $$
+    u(m,n) = x(m,n) + 0.9\, u(m-1,n) \ .
+    \tag{8}
+    $$
+    <p>
+      The second runs along each row:
+    </p>
+    $$
+    y(m,n) = 0.01\, u(m,n) + 0.9\, y(m,n-1) \ .
+    \tag{9}
+    $$
+    <p>
+      Each recursion is a loop over one index only. Recursion (8) loops
+      over \(m\), and each step computes a whole row of \(u\) at once,
+      for all columns and all channels. Recursion (9) loops over \(n\),
+      and each step computes a whole column of \(y\) at once. So the
+      separable form loops \(H + W\) times, where the direct form loops
+      \(3HW\) times. These row and column loops are allowed. A loop over
+      pixels is not.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def iir_separable(x):
+    """This function applies the IIR filter (6) as recursions (8) and (9).
+
+    Each step of each recursion updates a whole row or a whole column.
+    Values outside the image are zero.
+
+    x        (C, H, W) float64 tensor
+    returns  (C, H, W) float64 tensor
+    """</pre>
+    </div>
+    <p>
+      <b>Task 9a. Check that the two forms agree.</b> Report the largest
+      absolute difference between <code>iir_direct</code> and
+      <code>iir_separable</code>, first on the impulse image of Task 8a and
+      then on <code>img03.png</code>. Both differences should be at the
+      level of round-off.
+    </p>
+    <p>
+      <b>Task 9b. Time them.</b> Measure the wall-clock time of each
+      function on <code>img03.png</code> with
+      <code>time.perf_counter()</code>. Run the separable form a few times
+      and report the shortest time. Report both times and the speedup,
+      which is the direct time divided by the separable time.
+    </p>
+    <div class="handin" id="D9">
+      <span class="tag">HAND IN &middot; D9</span>
+      <p>
+        The two differences from Task 9a, the two times, the speedup, and
+        one sentence on how your <code>iir_direct</code> loop indexes the
+        image (tensor, NumPy array, or Python list).
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 10: Your Specification</h3>
+    <p>
+      Over the three modules you directed your AI assistant to write the
+      bodies of seven functions: <code>box_response</code>,
+      <code>fir_filter</code>, <code>unsharp_kernel</code>,
+      <code>unsharp_response</code>, <code>iir_response</code>,
+      <code>iir_direct</code>, and <code>iir_separable</code>.
+    </p>
+    <div class="handin" id="D10">
+      <span class="tag">HAND IN &middot; D10</span>
+      <p>
+        The specification you gave your AI assistant, quoted. If you
+        corrected it during the build, show the correction and say what was
+        wrong.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 11: Questions to Answer</h3>
+    <p>
+      Answer each in a few sentences, using your own plots and numbers as
+      evidence. Point to the specific figure or number you are relying on.
+    </p>
+    <ol>
+      <li>The unsharp mask makes the noise in an image more visible. Use
+          your plot of \(|G|\) to explain why. If the input is white noise
+          with variance \(\sigma^2\), the output variance is
+          \(\sigma^2 \sum_{m,n} g(m,n)^2\). Compute this factor for
+          \(\lambda = 1.5\).</li>
+      <li>What is \(G(e^{j0}, e^{j0})\), and why does it not depend on
+          \(\lambda\)? What happens to \(|G|\) at high frequencies as
+          \(\lambda\) grows? Relate your answer to the clipping
+          percentages you reported in D5.</li>
+      <li>The IIR filter (6) has infinitely many nonzero values in its
+          point spread function. Show that it is stable by computing
+          \(\sum_{m,n} |h(m,n)|\). What is its gain at zero frequency, and
+          how does the sum you reported in D7 confirm it?</li>
+      <li>The FFT check in Task 8b does not reach round-off, while the one
+          in Task 3b does. Explain why. Estimate the size of the error from
+          your closed form for \(h(m,n)\).</li>
+      <li>The point spread function is zero above and to the left of the
+          impulse. What does that do to an edge in the filtered image of
+          D8? Describe a way to use <code>iir_separable</code> to build a
+          smoothing filter whose point spread function is symmetric about
+          its center.</li>
+    </ol>
+    <div class="handin" id="D11">
+      <span class="tag">HAND IN &middot; D11</span>
+      <p>
+        Your answers to the five questions above.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Deliverables
+    <span class="note">What to submit, and where each item comes from.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What to Hand In</h3>
+    <p>Submit two files through Brightspace.</p>
+    <ol>
+      <li>A report, as a single <b>PDF</b>, labeled "Lab 3", containing the
+          items listed below in this order.</li>
+      <li>Your <code>lab3.py</code>, as a plain <code>.py</code> file. Do
+          not paste the code into the report and do not send a zip
+          file.</li>
+    </ol>
+    <p>
+      Also commit your code to your <code>image-processing-labs</code>
+      repository under <code>lab3</code> and push it before you submit.
+    </p>
+    <ol class="handin-list">
+      <li><span class="dnum"></span>
+          Your name and the link to your GitHub repository.</li>
+      <li><span class="dnum"><a href="#D1">D1</a></span>
+          The derivation of \(H\) for the \(9 \times 9\) average, its value
+          at zero frequency, and the plot of \(|H|\).</li>
+      <li><span class="dnum"><a href="#D2">D2</a></span>
+          The two impulse check errors and the FFT check error.</li>
+      <li><span class="dnum"><a href="#D3">D3</a></span>
+          <code>img03.png</code> and the low-pass filtered image, with one
+          sentence on the borders.</li>
+      <li><span class="dnum"><a href="#D4">D4</a></span>
+          The derivations of \(H\) and \(G\) for the unsharp mask, the plots
+          of \(|H|\) and \(|G|\), the FFT check error for \(g\), and the
+          largest value of \(|G|\).</li>
+      <li><span class="dnum"><a href="#D5">D5</a></span>
+          <code>imgblur.png</code>, the three sharpened images, the four
+          close-up regions, the clipping percentages, and your
+          comparison.</li>
+      <li><span class="dnum"><a href="#D6">D6</a></span>
+          The derivation of \(H\) for the IIR filter, the factorization, the
+          closed form for \(h\), the gain at zero frequency, and the plot
+          of \(|H|\).</li>
+      <li><span class="dnum"><a href="#D7">D7</a></span>
+          The image of \(100\,h\), the sum of the point spread function, and
+          the FFT check error.</li>
+      <li><span class="dnum"><a href="#D8">D8</a></span>
+          The IIR filtered image next to <code>img03.png</code>.</li>
+      <li><span class="dnum"><a href="#D9">D9</a></span>
+          The two differences between the direct and separable forms, the
+          two times, the speedup, and how your loop indexes the image.</li>
+      <li><span class="dnum"><a href="#D10">D10</a></span>
+          The specification you gave your AI assistant, quoted, with any
+          corrections you made during the build.</li>
+      <li><span class="dnum"><a href="#D11">D11</a></span>
+          Your answers to the five questions.</li>
+    </ol>
+    <p>
+      Concise and clear beats long.
+    </p>
+  </div>
+
+  <div class="card">
+    <p>
+      You have now designed three 2-D filters on paper, built them in
+      PyTorch, and checked each one against the FFT.
+    </p>
+    <p>
+      <a href="../../index.html">Back to the laboratory index</a> &middot;
+      <a href="https://charlesbouman.org/ece63700/">ECE 63700 course notes</a>
+    </p>
+  </div>
+
+  </div>
+</details>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  var text = btn.nextElementSibling.innerText;
+  function done() {
+    var old = btn.textContent;
+    btn.textContent = "Copied";
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done);
+  } else {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    done();
+  }
+}
+
+function toggleAll(btn) {
+  var open = btn.textContent.indexOf("Open") === 0;
+  var list = document.querySelectorAll("details.module");
+  for (var i = 0; i < list.length; i++) { list[i].open = open; }
+  btn.textContent = open ? "Close all" : "Open all";
+}
+
+function revealHash() {
+  if (!location.hash) { return; }
+  var el = document.querySelector(location.hash);
+  if (!el) { return; }
+  var p = el.parentElement;
+  while (p) {
+    if (p.tagName === "DETAILS") { p.open = true; }
+    p = p.parentElement;
+  }
+  el.scrollIntoView();
+}
+window.addEventListener("load", revealHash);
+window.addEventListener("hashchange", revealHash);
+</script>
+
+</body>
+</html>
