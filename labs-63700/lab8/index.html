@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 8: Introduction to Colorimetry</title>
+<style>
+  html { background: #faf8f4; }
+  body { margin: 0; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         background: #faf8f4; color: #222; line-height: 1.5; }
+  .band { background: #cfb991; border-bottom: 4px solid #000;
+          padding: 24px 16px 18px 16px; text-align: center; }
+  .band h2 { margin: 0 0 6px 0; font-size: 1.0em; font-weight: normal; color: #3d3324; }
+  .band h1 { margin: 0; font-size: 1.5em; color: #000; }
+  .band a { color: #000; }
+  .container { max-width: 760px; margin: 28px auto; padding: 0 16px; }
+  .section { border: 2px solid #cfb991; border-radius: 14px;
+             background: #f4efe3; padding: 18px 16px 2px 16px; margin-bottom: 22px; }
+  .section > h2 { margin: 0 0 16px 8px; font-size: 1.3em; color: #3d3324; }
+  .card { background: #fff; border: 1px solid #e3dccb; border-radius: 10px;
+          padding: 20px 26px; margin-bottom: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h3 { margin-top: 0; color: #000; border-bottom: 2px solid #cfb991; padding-bottom: 6px; }
+  a { color: #8a6d1d; text-decoration: none; }
+  a:hover { color: #000; text-decoration: underline; }
+  ul, ol { margin: 8px 0; }
+  li { padding: 3px 0; }
+  code { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 4px;
+         padding: 1px 5px; font-size: 0.95em; }
+  pre { background: #f4efe3; border: 1px solid #e3dccb; border-radius: 6px;
+        padding: 12px 14px; overflow-x: auto; font-size: 0.92em; line-height: 1.4; }
+  .tip { background: #f6f3ea; border-left: 4px solid #cfb991; padding: 10px 14px;
+         margin: 12px 0; font-size: 0.97em; }
+  .codeblock { position: relative; }
+  .codeblock pre { padding-right: 76px; }
+  .copy { position: absolute; top: 8px; right: 8px; background: #cfb991; color: #000;
+          border: 1px solid #b9ac8e; border-radius: 4px; padding: 2px 10px;
+          font-size: 0.8em; font-family: inherit; cursor: pointer; }
+  .copy:hover { background: #b9ac8e; }
+  .kernelfig { text-align: center; margin: 16px 0 4px 0; }
+  .kernelfig img { border: 1px solid #e3dccb; }
+  .kernelfig .caption { font-size: 0.9em; color: #555; margin-top: 6px; }
+  table.kernel { border-collapse: collapse; margin: 12px auto; }
+  table.kernel td { border: 1px solid #b9ac8e; padding: 6px 14px; text-align: center;
+                    font-family: "Times New Roman", serif; }
+  .source { font-size: 0.9em; color: #5b5b5b; margin: 4px 0 0 0; }
+  table.runs { border-collapse: collapse; margin: 12px 0; font-size: 0.92em; width: 100%; }
+  table.runs th, table.runs td { border: 1px solid #e3dccb; padding: 5px 9px; text-align: left; }
+  table.runs th { background: #f4efe3; }
+  table.runs td.grp { background: #faf8f4; font-weight: bold; white-space: nowrap; }
+  details.module { border: 2px solid #cfb991; border-radius: 14px; background: #f4efe3;
+                   margin-bottom: 22px; }
+  details.module > summary { cursor: pointer; list-style: none; padding: 16px 18px;
+                             font-size: 1.2em; font-weight: bold; color: #3d3324; }
+  details.module > summary::-webkit-details-marker { display: none; }
+  details.module > summary::before { content: "\25B8"; color: #8a6d1d; margin-right: 10px; }
+  details.module[open] > summary::before { content: "\25BE"; }
+  details.module > summary:hover { color: #000; }
+  details.module .modulebody { padding: 0 16px 2px 16px; }
+  summary .note { display: block; font-weight: normal; font-size: 0.78em;
+                  color: #6b5c42; margin: 4px 0 0 26px; }
+  .allbtn { display: block; margin: 0 0 16px auto; background: #f4efe3; color: #3d3324;
+            border: 1px solid #cfb991; border-radius: 4px; padding: 3px 12px;
+            font-size: 0.85em; font-family: inherit; cursor: pointer; }
+  .allbtn:hover { background: #e8e0cd; }
+  .handin { border: 1px solid #cfb991; border-left: 7px solid #cfb991;
+            border-radius: 8px; background: #fffdf5;
+            padding: 12px 16px 4px 16px; margin: 18px 0; }
+  .handin .tag { display: inline-block; background: #cfb991; color: #000;
+                 border-radius: 4px; padding: 1px 9px; font-size: 0.82em;
+                 font-weight: bold; letter-spacing: 0.4px; }
+  .handin p:first-of-type { margin-top: 8px; }
+  ol.handin-list { list-style: none; padding-left: 0; margin: 10px 0; }
+  ol.handin-list li { position: relative; padding: 4px 0 4px 2.9em; }
+  ol.handin-list .dnum { position: absolute; left: 0; width: 2.9em;
+                         font-weight: bold; color: #8a6d1d; }
+  .band .nav { margin: 10px 0 0 0; font-size: 0.9em; }
+  .band .nav a { text-decoration: underline; }
+</style>
+<script>
+  MathJax = { tex: { inlineMath: [['\\(', '\\)']], tags: 'ams' } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+
+<div class="band">
+  <h2>ECE 63700: Digital Image Processing I</h2>
+  <h1>Lab 8: Introduction to Colorimetry</h1>
+  <p class="nav">
+    <a href="https://charlesbouman.org/ece63700/">ECE 63700 course notes</a> &middot;
+    <a href="../../index.html">Laboratory index</a>
+  </p>
+</div>
+
+<div class="container">
+
+<button class="allbtn" onclick="toggleAll(this)">Open all</button>
+
+
+<details class="module">
+  <summary>Overview
+    <span class="note">The goal, the data, and the ground rules.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What This Lab Is About</h3>
+    <p><b>Due: Friday, Mar. 12, 2027.</b></p>
+    <p>
+      In order to understand natural images, one needs to understand how
+      objects reflect light and how humans perceive that reflected light as
+      color. This lab introduces <b>colorimetry</b>, the quantitative
+      measurement and manipulation of color. There are three major
+      components to understanding color: how light is reflected from a
+      natural scene, how humans perceive reflected light, and how a display,
+      such as a monitor, produces light.
+    </p>
+    <p>
+      You direct Claude, or another agentic AI, to write the code from the
+      definitions and signatures on this page. You run the experiments and
+      explain the results. You are graded on your specification, the checks
+      you run, and your reading of the results.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>The Data</h3>
+    <p>
+      <a href="https://charlesbouman.org/ece63700/labs/lab8-data.zip"><b>lab8-data.zip</b></a>
+      (6 MB) unzips to a folder <code>data</code> with three files:
+    </p>
+    <ul>
+      <li><b>data/data.mat</b> holds the \(XYZ\) color matching functions
+          <code>x</code>, <code>y</code>, <code>z</code> and two
+          illuminants: <code>illum1</code>, the D<sub>65</sub> illuminant
+          (noon daylight), and <code>illum2</code>, a fluorescent lamp. Each
+          is sampled at the 31 wavelengths 400, 410, &hellip;, 700 nm.</li>
+      <li><b>data/reflect.mat</b> holds <code>R</code>, a 170 by 256 by 31
+          array. <code>R[m, n, k]</code> is the reflectance of pixel
+          \((m, n)\) at the \(k\)-th wavelength.</li>
+      <li><b>data/img.png</b> is the 170 by 256 RGB image from which the
+          reflectances were computed. It is used only for the check in
+          Step 5.</li>
+    </ul>
+    <p>
+      <code>scipy.io.loadmat</code> reads the <code>.mat</code> files. From
+      the shell, in the folder that holds <code>lab8.py</code>:
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>wget https://charlesbouman.org/ece63700/labs/lab8-data.zip
+unzip lab8-data.zip</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Ground Rules</h3>
+    <ul>
+      <li>All code is in one file, <code>lab8.py</code>, which holds
+          functions and nothing else. Run experiments from a separate script
+          that imports it. Use the <code>labs</code> conda environment from
+          Lab 2, with NumPy, not PyTorch, and matplotlib for plotting.</li>
+      <li>Every function has the exact signature given here and a short
+          docstring.</li>
+      <li><b>A color is the last axis of an array</b>, with 3 entries. An
+          image of \((X, Y, Z)\) values is an \((H, W, 3)\) array. A spectrum
+          is a \((31,)\) array, and the three color matching functions form a
+          \((3, 31)\) array with one function per row.</li>
+      <li>No Python <code>for</code> loop over pixels or wavelengths. Every
+          sum over wavelength is a matrix product.</li>
+      <li>Plot spectra against wavelength in nm, with labeled axes and a
+          legend. Show RGB images as <code>uint8</code> arrays with labeled
+          axes.</li>
+    </ul>
+    <div class="tip">
+      <b>How to direct the AI.</b> Give it the equations, the array shapes,
+      which axis holds the color, the order of clipping and gamma
+      correction, and the signatures. Run the checks in Steps 2 to 5 and 7
+      <em>before</em> you interpret any image. A transposed matrix or a
+      missing white point scaling still produces a plausible color image.
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Parameters for the Experiments
+    <span class="note">The settings for every hand-in item, in one place.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Parameters for Every Experiment</h3>
+    <table class="runs">
+      <tr>
+        <th>Item</th><th>Experiment</th><th>Input</th><th>Function and settings</th>
+      </tr>
+      <tr><td class="grp">D1</td><td>Color matching functions and illuminants (Step 2)</td>
+          <td><code>data.mat</code></td>
+          <td><code>lms_cmfs</code> with \(A^{-1}\) of equation (5);
+              <code>chromaticity</code></td></tr>
+      <tr><td class="grp">D2</td><td>Chromaticity diagram (Step 3)</td>
+          <td><code>data.mat</code></td>
+          <td>CIE 1931 and Rec. 709 primaries of equations (10) and (11);
+              D<sub>65</sub> and equal energy white points of equations (12)
+              and (13)</td></tr>
+      <tr><td class="grp">D3</td><td>The matrix \(M_{709\_D65}\) (Step 4)</td>
+          <td>none</td>
+          <td><code>rgb_to_xyz_matrix</code> with the Rec. 709 primaries and
+              the D<sub>65</sub> white point</td></tr>
+      <tr><td class="grp">D4</td><td>Image under D<sub>65</sub> (Step 5)</td>
+          <td><code>reflect.mat</code>, <code>illum1</code>;
+              <code>img.png</code> for the check</td>
+          <td><code>reflectance_to_xyz</code>, <code>xyz_to_rgb</code> with
+              \(M_{709\_D65}\), <code>to_display</code> with
+              \(\gamma = 2.2\)</td></tr>
+      <tr><td class="grp">D5</td><td>Image under fluorescent light (Step 6)</td>
+          <td><code>reflect.mat</code>, <code>illum2</code></td>
+          <td>as D4, with the same \(M_{709\_D65}\) and \(\gamma = 2.2\)</td></tr>
+      <tr><td class="grp">D6</td><td>Color chromaticity diagram (Step 7)</td>
+          <td>none</td>
+          <td><code>fill_chromaticity</code> with <code>step = 0.005</code>
+              and \(M_{709}\), all \(\kappa = 1\); <code>to_display</code>
+              with \(\gamma = 2.2\)</td></tr>
+    </table>
+    <p>
+      The lab uses a display gamma of \(\gamma = 2.2\) throughout, the gamma
+      of the sRGB standard.
+    </p>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 1: Color Matching Functions and Chromaticity
+    <span class="note">Steps 1 to 3. Set up the code, plot the color matching functions and the illuminants, and draw a chromaticity diagram with two sets of primaries and two white points.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 1: Set Up <code>lab8.py</code></h3>
+    <p>
+      Copy these constants and helpers into <code>lab8.py</code>. The
+      constants are the numbers of equations (5) and (10) to (13).
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>import numpy as np
+from PIL import Image
+from scipy.io import loadmat
+
+#: The 31 wavelengths in nm.
+WAVELENGTHS = np.arange(400, 701, 10)
+
+#: The matrix A^(-1) that maps XYZ to LMS, equation (5).
+A_INV = np.array([[0.2430, 0.8560, -0.0440],
+                  [-0.3910, 1.1650, 0.0870],
+                  [0.0100, -0.0080, 0.5630]])
+
+#: Chromaticities (x, y, z) of the CIE 1931 primaries, one row each for R, G, B.
+PRIMARIES_CIE1931 = np.array([[0.73467, 0.26533, 0.0],
+                              [0.27376, 0.71741, 0.00883],
+                              [0.16658, 0.00886, 0.82456]])
+
+#: Chromaticities (x, y, z) of the Rec. 709 primaries, one row each for R, G, B.
+PRIMARIES_709 = np.array([[0.640, 0.330, 0.030],
+                          [0.300, 0.600, 0.100],
+                          [0.150, 0.060, 0.790]])
+
+#: Chromaticity (x, y, z) of the D65 white point.
+WHITE_D65 = np.array([0.3127, 0.3290, 0.3583])
+
+#: Chromaticity (x, y, z) of the equal energy white point.
+WHITE_EE = np.array([1.0, 1.0, 1.0]) / 3.0
+
+
+def load_spectra(path="data/data.mat"):
+    """Return cmf (3, 31) with rows x0, y0, z0, and the (31,) illuminants S_d65 and S_fl."""
+    d = loadmat(path)
+    cmf = np.stack([d["x"].ravel(), d["y"].ravel(), d["z"].ravel()]).astype(np.float64)
+    return cmf, d["illum1"].ravel().astype(np.float64), d["illum2"].ravel().astype(np.float64)
+
+
+def load_reflectance(path="data/reflect.mat"):
+    """Return R (170, 256, 31); R[m, n, k] is the reflectance of pixel (m, n) at WAVELENGTHS[k]."""
+    return np.asarray(loadmat(path)["R"], dtype=np.float64)
+
+
+def load_rgb(path):
+    """Read an 8-bit RGB PNG as an (H, W, 3) uint8 array."""
+    return np.asarray(Image.open(path).convert("RGB"), dtype=np.uint8)
+
+
+def save_rgb(img, path):
+    """Write an (H, W, 3) uint8 array as an 8-bit RGB PNG."""
+    Image.fromarray(np.asarray(img, dtype=np.uint8)).save(path)</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 2: Color Matching Functions and Illuminants</h3>
+    <p>
+      <b>Reflection of light.</b> The color that one sees is a function of
+      both the reflectance of a surface and the spectral distribution of the
+      light source, or <b>illuminant</b>. Let \(S(\lambda)\) be the spectral
+      energy density of the illuminant at wavelength \(\lambda\), and let
+      \(R(\lambda)\) be the fraction of that energy reflected toward the
+      viewer. The viewer sees light with the spectral distribution
+    </p>
+    $$
+    I(\lambda) = R(\lambda) \, S(\lambda) \ .
+    \tag{1}
+    $$
+    <p>
+      So the perceived color of an object can depend on the illuminant. We
+      are concerned with wavelengths from 400 to 700 nm, the range that is
+      most visible. A simple model of an illuminant is the <b>equal
+      energy</b> white \(S_{EE}(\lambda) = 1\). A more common model is the
+      standard <b>D<sub>65</sub></b> illuminant, a tabulated set of
+      measurements that approximates noon sunlight.
+    </p>
+    <p>
+      <b>Human perception of color.</b> Humans have three types of color
+      receptors, or <b>cones</b>, called long, medium, and short for the
+      wavelengths they are most sensitive to. Their measured responses
+      \(l_0(\lambda)\), \(m_0(\lambda)\), and \(s_0(\lambda)\) are the
+      cones' <b>color matching functions</b>. The total response of each
+      cone is
+    </p>
+    $$
+    L = \int I(\lambda)\, l_0(\lambda)\, d\lambda \ , \qquad
+    M = \int I(\lambda)\, m_0(\lambda)\, d\lambda \ , \qquad
+    S = \int I(\lambda)\, s_0(\lambda)\, d\lambda \ .
+    \tag{2}
+    $$
+    <p>
+      So while the spectrum of light may be very complex, the response of
+      the visual system is limited to three dimensions. This is the
+      <b>tristimulus</b> model of color vision. With the spectra sampled at
+      \(\lambda = 400, 410, \dots, 700\) nm, the integrals become inner
+      products,
+    </p>
+    $$
+    \begin{bmatrix} L \\ M \\ S \end{bmatrix}
+    = \begin{bmatrix} l_0 \\ m_0 \\ s_0 \end{bmatrix} I \ ,
+    \tag{3}
+    $$
+    <p>
+      where \(l_0\), \(m_0\), and \(s_0\) are \(1 \times 31\) row vectors and
+      \(I\) is a \(31 \times 1\) column vector.
+    </p>
+    <p>
+      <b>The XYZ color space.</b> The most standard representation of
+      tristimulus values is the CIE 1931 \(XYZ\) system, related to \(LMS\)
+      by
+    </p>
+    $$
+    \begin{bmatrix} X \\ Y \\ Z \end{bmatrix}
+    = A \begin{bmatrix} L \\ M \\ S \end{bmatrix} \ ,
+    \qquad
+    \begin{bmatrix} x_0 \\ y_0 \\ z_0 \end{bmatrix}
+    = A \begin{bmatrix} l_0 \\ m_0 \\ s_0 \end{bmatrix} \ ,
+    \tag{4}
+    $$
+    <p>
+      where the inverse of \(A\) is approximately
+    </p>
+    $$
+    A^{-1} =
+    \begin{bmatrix}
+      0.2430 & 0.8560 & -0.0440 \\
+      -0.3910 & 1.1650 & 0.0870 \\
+      0.0100 & -0.0080 & 0.5630
+    \end{bmatrix} \ .
+    \tag{5}
+    $$
+    <p>
+      The color of a spectrum \(I\) is then
+    </p>
+    $$
+    \begin{bmatrix} X \\ Y \\ Z \end{bmatrix}
+    = \begin{bmatrix} x_0 \\ y_0 \\ z_0 \end{bmatrix} I \ .
+    \tag{6}
+    $$
+    <p>
+      The functions \(x_0\), \(y_0\), and \(z_0\) are positive for all
+      wavelengths. For the equal energy spectrum
+      \(I_{EE} = [1, 1, \dots, 1]^t\), \((X, Y, Z) = (1, 1, 1)\), so each of
+      \(x_0\), \(y_0\), and \(z_0\) sums to 1. The \(Y\) component is closely
+      associated with perceived brightness and is called the
+      <b>luminance</b>.
+    </p>
+    <p>
+      <b>Chromaticity.</b> Changes in the length of the vector \((X, Y, Z)\)
+      change the brightness of the color. Changes in its direction change
+      the hue and saturation, which together are the <b>chromaticity</b>.
+      The chromaticity \((x, y, z)\) is \((X, Y, Z)\) scaled by its sum,
+    </p>
+    $$
+    x = \frac{X}{X+Y+Z} \ , \qquad
+    y = \frac{Y}{X+Y+Z} \ , \qquad
+    z = \frac{Z}{X+Y+Z} \ .
+    \tag{7}
+    $$
+    <p>
+      Geometrically, the chromaticity is the intersection of the vector
+      \((X, Y, Z)\) with the plane \(X + Y + Z = 1\). Since \(x + y + z = 1\),
+      often only \((x, y)\) is given.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def lms_cmfs(cmf):
+    """Return the (3, 31) LMS color matching functions l0, m0, s0 = A_INV @ cmf."""
+
+
+def chromaticity(XYZ):
+    """Return (..., 3) chromaticities (X, Y, Z) / (X + Y + Z) of a (..., 3) array with X + Y + Z &gt; 0."""</pre>
+    </div>
+    <p>
+      <b>Task 2a.</b> Plot \(x_0(\lambda)\), \(y_0(\lambda)\), and
+      \(z_0(\lambda)\) against wavelength on one graph, with a legend.
+    </p>
+    <p>
+      <b>Task 2b.</b> Compute \(l_0\), \(m_0\), and \(s_0\) with
+      <code>lms_cmfs</code>, and plot them in the same way.
+    </p>
+    <p>
+      <b>Task 2c.</b> Plot the D<sub>65</sub> and fluorescent illuminants
+      against wavelength on one graph.
+    </p>
+    <p>
+      <b>Task 2d. Check.</b> Report the largest of \(|\sum_\lambda x_0 - 1|\),
+      \(|\sum_\lambda y_0 - 1|\), and \(|\sum_\lambda z_0 - 1|\), which must be
+      below \(10^{-12}\). Compute the chromaticity of the D<sub>65</sub>
+      illuminant itself with equations (6) and (7). Its \((x, y)\) must be
+      within 0.001 of the D<sub>65</sub> white point \((0.3127, 0.3290)\) of
+      equation (12). Report the chromaticity of the fluorescent illuminant in
+      the same way.
+    </p>
+    <div class="handin" id="D1">
+      <span class="tag">HAND IN &middot; D1</span>
+      <p>
+        The three plots, the sum check, and the chromaticities of the two
+        illuminants with the difference from the D<sub>65</sub> white
+        point.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 3: Chromaticity Diagram</h3>
+    <p>
+      A <b>chromaticity diagram</b> shows colors by their \((x, y)\)
+      chromaticity. Combinations of any two colors always fall along the
+      straight line between their two points.
+    </p>
+    <p>
+      The most saturated colors come from spectra with energy at a single
+      wavelength. The \(XYZ\) coordinates of such a pure spectral source at
+      wavelength \(\lambda_0\) are
+    </p>
+    $$
+    \begin{bmatrix} X \\ Y \\ Z \end{bmatrix}
+    = \begin{bmatrix}
+        \int \delta(\lambda - \lambda_0)\, x_0(\lambda)\, d\lambda \\
+        \int \delta(\lambda - \lambda_0)\, y_0(\lambda)\, d\lambda \\
+        \int \delta(\lambda - \lambda_0)\, z_0(\lambda)\, d\lambda
+      \end{bmatrix}
+    = \begin{bmatrix} x_0(\lambda_0) \\ y_0(\lambda_0) \\ z_0(\lambda_0) \end{bmatrix} \ .
+    \tag{8}
+    $$
+    <p>
+      Their chromaticities form a boundary for all visible colors. With the
+      sampled data, they are the chromaticities of the 31 columns of the
+      \((3, 31)\) array of color matching functions,
+    </p>
+    $$
+    (x, y, z)(\lambda_0) =
+    \frac{\big(x_0(\lambda_0),\ y_0(\lambda_0),\ z_0(\lambda_0)\big)}
+         {x_0(\lambda_0) + y_0(\lambda_0) + z_0(\lambda_0)} \ .
+    \tag{9}
+    $$
+    <p>
+      <b>Standard RGB primaries.</b> One important set of RGB primaries is
+      specified in the CIE 1931 standard, with the chromaticities
+    </p>
+    $$
+    \begin{aligned}
+    R_{CIE\_1931} &amp;= (0.73467,\ 0.26533,\ 0.0) \\
+    G_{CIE\_1931} &amp;= (0.27376,\ 0.71741,\ 0.00883) \\
+    B_{CIE\_1931} &amp;= (0.16658,\ 0.00886,\ 0.82456) \ .
+    \end{aligned}
+    \tag{10}
+    $$
+    <p>
+      These are useful for laboratory measurements, but not practical for
+      displays. A more common set for displays is the Rec. 709 standard,
+    </p>
+    $$
+    \begin{aligned}
+    R_{709} &amp;= (0.640,\ 0.330,\ 0.030) \\
+    G_{709} &amp;= (0.300,\ 0.600,\ 0.100) \\
+    B_{709} &amp;= (0.150,\ 0.060,\ 0.790) \ .
+    \end{aligned}
+    \tag{11}
+    $$
+    <p>
+      <b>White points.</b> A <b>white point</b> is the chromaticity of a
+      &ldquo;white light&rdquo; spectrum. The D<sub>65</sub> and equal
+      energy white points are
+    </p>
+    $$
+    (x_{wp}, y_{wp}, z_{wp})_{D65} = (0.3127,\ 0.3290,\ 0.3583) \ ,
+    \tag{12}
+    $$
+    $$
+    (x_{wp}, y_{wp}, z_{wp})_{EE} = (0.3333,\ 0.3333,\ 0.3333) \ .
+    \tag{13}
+    $$
+    <p>
+      <b>Task 3a.</b> Plot the chromaticities \((x, y)\) of the pure spectral
+      sources of equation (9) as a solid line from 400 to 700 nm. Close the
+      curve with a straight line from 700 nm back to 400 nm. Label a few
+      points with their wavelengths.
+    </p>
+    <p>
+      <b>Task 3b.</b> On the same diagram, plot the three CIE 1931 primaries,
+      connect them with straight lines to show the range of colors they can
+      produce, and label each point. Do the same for the Rec. 709
+      primaries.
+    </p>
+    <p>
+      <b>Task 3c.</b> Plot and label the D<sub>65</sub> and equal energy
+      white points. Use equal scales on the two axes
+      (<code>ax.set_aspect("equal")</code>).
+    </p>
+    <p>
+      <b>Task 3d. Check.</b> Compute the chromaticity of \(I_{EE}\) with
+      equations (6) and (7). Its largest difference from
+      \((1/3, 1/3, 1/3)\) must be below \(10^{-12}\).
+    </p>
+    <div class="handin" id="D2">
+      <span class="tag">HAND IN &middot; D2</span>
+      <p>
+        The labeled chromaticity diagram, with x and y both from 0 to 1 and
+        equal scales on the two axes, and the result of the check.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 2: Rendering an Image under Two Illuminants
+    <span class="note">Steps 4 to 6. Compute the matrix from RGB to XYZ for Rec. 709 primaries with a D65 white point, then render the reflectance image under daylight and under fluorescent light.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 4: The Matrix from RGB to XYZ</h3>
+    <p>
+      <b>Color primary transformations.</b> Most displays produce colors by
+      adding three primaries. Let \(\vec R\), \(\vec G\), and \(\vec B\) hold
+      the \(XYZ\) values of the primaries. Then
+    </p>
+    $$
+    \begin{bmatrix} X \\ Y \\ Z \end{bmatrix}
+    = r \vec R + g \vec G + b \vec B
+    = M \begin{bmatrix} r \\ g \\ b \end{bmatrix} \ ,
+    \qquad
+    M = \begin{bmatrix} X_r &amp; X_g &amp; X_b \\ Y_r &amp; Y_g &amp; Y_b \\ Z_r &amp; Z_g &amp; Z_b \end{bmatrix} \ ,
+    \tag{14}
+    $$
+    <p>
+      and the \((r, g, b)\) needed for a color \((X, Y, Z)\) is
+    </p>
+    $$
+    \begin{bmatrix} r \\ g \\ b \end{bmatrix}
+    = M^{-1} \begin{bmatrix} X \\ Y \\ Z \end{bmatrix} \ .
+    \tag{15}
+    $$
+    <p>
+      For almost all primaries, some visible colors give a negative \(r\),
+      \(g\), or \(b\). A display can only produce positive quantities of each
+      primary, so it cannot produce all visible colors.
+    </p>
+    <p>
+      <b>Chromaticity and white point of the primaries.</b> Primaries are
+      usually specified by their chromaticities and a white point. The
+      chromaticities give only the direction of each vector. The \(XYZ\)
+      values are the chromaticities scaled by constants \(\kappa_r\),
+      \(\kappa_g\), and \(\kappa_b\):
+    </p>
+    $$
+    M =
+    \begin{bmatrix} x_r &amp; x_g &amp; x_b \\ y_r &amp; y_g &amp; y_b \\ z_r &amp; z_g &amp; z_b \end{bmatrix}
+    \begin{bmatrix} \kappa_r &amp; 0 &amp; 0 \\ 0 &amp; \kappa_g &amp; 0 \\ 0 &amp; 0 &amp; \kappa_b \end{bmatrix} \ .
+    \tag{16}
+    $$
+    <p>
+      For a display, the white point is the chromaticity produced at
+      \((r, g, b) = (1, 1, 1)\), or \((255, 255, 255)\) in 8 bits. (This
+      definition differs slightly from the one in Step 3, but the same term
+      is used for both.) Assume the brightest output has \(Y = 1\). Then the
+      white point in \(XYZ\) is \((x_{wp}/y_{wp},\ 1,\ z_{wp}/y_{wp})\), and
+      the constants are
+    </p>
+    $$
+    \begin{bmatrix} \kappa_r \\ \kappa_g \\ \kappa_b \end{bmatrix}
+    =
+    \begin{bmatrix} x_r &amp; x_g &amp; x_b \\ y_r &amp; y_g &amp; y_b \\ z_r &amp; z_g &amp; z_b \end{bmatrix}^{-1}
+    \begin{bmatrix} x_{wp}/y_{wp} \\ 1 \\ z_{wp}/y_{wp} \end{bmatrix} \ .
+    \tag{17}
+    $$
+    <p>
+      The rows of <code>PRIMARIES_709</code> are the chromaticities of R, G,
+      and B, so the matrix of chromaticities in equations (16) and (17) is
+      its transpose.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def rgb_to_xyz_matrix(primaries, white=None):
+    """Return M (3, 3), column j = kappa_j * chromaticity of primary j (rows of primaries); kappa from equation (17) if white is given, else all 1."""</pre>
+    </div>
+    <p>
+      <b>Task 4a.</b> Assume your display uses the Rec. 709 primaries and a
+      D<sub>65</sub> white point. Compute
+      <code>M = rgb_to_xyz_matrix(PRIMARIES_709, WHITE_D65)</code>, the
+      matrix \(M_{709\_D65}\). Print it to 4 decimal places, with
+      \(\kappa_r\), \(\kappa_g\), and \(\kappa_b\).
+    </p>
+    <p>
+      <b>Task 4b. Check.</b> Report the largest entry of
+      \(|M [1, 1, 1]^t - (x_{wp}/y_{wp},\ 1,\ z_{wp}/y_{wp})|\), and the
+      largest difference between the chromaticities of the columns of \(M\)
+      and the Rec. 709 primaries. Both must be below \(10^{-12}\).
+    </p>
+    <div class="handin" id="D3">
+      <span class="tag">HAND IN &middot; D3</span>
+      <p>
+        \(M_{709\_D65}\), the three constants \(\kappa\), and the two
+        checks.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 5: Rendering the Image under D<sub>65</sub></h3>
+    <p>
+      You display a calibrated color image from a known illuminant spectrum
+      and the reflectance at each pixel:
+    </p>
+    <ol>
+      <li>Compute the reflected spectrum \(I\) of each pixel with equation
+          (1), an \((H, W, 31)\) array.</li>
+      <li>Compute the \(XYZ\) values of each pixel with equation (6), an
+          \((H, W, 3)\) array.</li>
+      <li>Transform each pixel to linear \((r, g, b)\) with equation (15)
+          and \(M_{709\_D65}\).</li>
+      <li>Clip \(r\), \(g\), \(b\) to \([0, 1]\). Values outside this range
+          are colors the display cannot produce.</li>
+      <li>Gamma correct for \(\gamma = 2.2\) and scale to 8 bits:</li>
+    </ol>
+    $$
+    v = \mathrm{round}\left( 255 \cdot \mathrm{clip}(r, 0, 1)^{1/\gamma} \right) \ ,
+    \tag{18}
+    $$
+    <p>
+      and the same for \(g\) and \(b\). Clip before the gamma correction.
+    </p>
+    <p>
+      The reflectances are scaled so that a white surface under
+      D<sub>65</sub> has \(Y \approx 1\), so the values of <code>R</code> are
+      near 0.01. A white surface in this scaling has constant reflectance
+      \(R(\lambda) = 1/Y_{65}\), where \(Y_{65} = y_0 \, S_{65}\) is the
+      luminance of the D<sub>65</sub> illuminant.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def reflectance_to_xyz(R, S, cmf):
+    """Return (H, W, 3) XYZ of I = R * S, from R (H, W, 31), illuminant S (31,), and cmf (3, 31)."""
+
+
+def xyz_to_rgb(XYZ, M):
+    """Return (..., 3) linear (r, g, b) = M^(-1) (X, Y, Z), not clipped."""
+
+
+def to_display(rgb, gamma):
+    """Return (..., 3) uint8 round(255 * clip(rgb, 0, 1) ** (1 / gamma))."""</pre>
+    </div>
+    <p>
+      The color is the last axis, so an \((H, W, 3)\) array
+      <code>XYZ</code> times \(M^{-1}\) is <code>XYZ @ inv(M).T</code>.
+    </p>
+    <p>
+      <b>Task 5a.</b> Render the image under D<sub>65</sub>
+      (<code>illum1</code>). Show it and save it with
+      <code>save_rgb</code>. Report the fractions of pixels with a linear
+      component below 0, above 1, and either. Count a component as outside
+      only if it is outside by more than \(10^{-9}\).
+    </p>
+    <p>
+      <b>Task 5b. Check.</b> Send a \((1, 1, 31)\) white surface with every
+      entry \(1/Y_{65}\) through <code>reflectance_to_xyz</code> under
+      D<sub>65</sub> and <code>xyz_to_rgb</code>. Report its \((r, g, b)\),
+      which must be within 0.005 of \((1, 1, 1)\).
+    </p>
+    <p>
+      <b>Task 5c. Check.</b> Compare your image with
+      <code>load_rgb("data/img.png")</code>. Report the number of the
+      \(170 \times 256 \times 3\) values that differ and the largest
+      difference, which must be at most 1 gray level.
+    </p>
+    <div class="tip">
+      <b>Reading the check.</b> \((r, g, b)\) near 99 in Task 5b means the
+      white surface is \(R = 1\) instead of \(1/Y_{65}\). Unequal values far
+      from 1 mean \(M\) lacks the white point scaling, or
+      <code>xyz_to_rgb</code> omits the transpose or uses \(M\) instead of
+      \(M^{-1}\).
+    </div>
+    <div class="handin" id="D4">
+      <span class="tag">HAND IN &middot; D4</span>
+      <p>
+        The image under D<sub>65</sub>, the three clipping fractions, and
+        the two checks.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 6: Rendering the Image under Fluorescent Light</h3>
+    <p>
+      Now change only the light source. Use the same \(M_{709\_D65}\),
+      because the display does not change.
+    </p>
+    <p>
+      <b>Task 6a.</b> Render the image under fluorescent light
+      (<code>illum2</code>). Show it next to the D<sub>65</sub> image of D4,
+      and save it.
+    </p>
+    <p>
+      <b>Task 6b.</b> Report the three clipping fractions of Task 5a. For
+      both images, report the mean linear \((r, g, b)\) before clipping and
+      the chromaticity \((x, y)\) of the mean \(XYZ\).
+    </p>
+    <p>
+      <b>Task 6c.</b> Describe how the colors of the two images differ, and
+      where the differences are largest.
+    </p>
+    <div class="handin" id="D5">
+      <span class="tag">HAND IN &middot; D5</span>
+      <p>
+        The fluorescent image next to the D<sub>65</sub> image, the clipping
+        fractions, the means for both images, and your description.
+      </p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Module 3: Color Chromaticity Diagram
+    <span class="note">Steps 7 to 9. Fill the chromaticity diagram with the colors that Rec. 709 primaries can produce, then give your specification and answer the questions.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>Step 7: Color Chromaticity Diagram</h3>
+    <p>
+      You make a chromaticity diagram like that of Step 3 that also shows
+      the colors your display can produce: the color of every point of the
+      plane \(X + Y + Z = 1\) that the display can reproduce. Assume the
+      Rec. 709 primaries lie exactly on this plane, so \(M_{709}\) is given
+      by equations (11) and (16) with \(\kappa_r = \kappa_g = \kappa_b = 1\),
+      which is <code>rgb_to_xyz_matrix(PRIMARIES_709)</code>.
+    </p>
+    <div class="codeblock">
+      <button class="copy" onclick="copyCode(this)">Copy</button>
+<pre>def fill_chromaticity(step, M):
+    """Map grid x = j * step, y = i * step (0 to 1), z = 1 - x - y to (r, g, b) = M^(-1) (x, y, z); set all three to 1 where any is negative.
+
+    returns  rgb, (N, N, 3) with N = round(1 / step) + 1; inside, (N, N) bool, True where r, g, b are all &gt;= 0
+    """</pre>
+    </div>
+    <p>
+      Build the grid with <code>np.meshgrid</code>, so that \(x\) increases
+      with the column and \(y\) with the row. A point where \(r\), \(g\),
+      <b>or</b> \(b\) is negative cannot be produced by these primaries, and
+      it is shown as white.
+    </p>
+    <p>
+      <b>Task 7a.</b> Compute <code>fill_chromaticity(0.005, M709)</code> and
+      apply <code>to_display</code> with \(\gamma = 2.2\). Show it with
+      <code>ax.imshow(img, origin="lower", extent=(-0.0025, 1.0025, -0.0025, 1.0025))</code>,
+      so that pixel \((i, j)\) is centered at \((x, y) = (0.005 j, 0.005 i)\).
+      Label the axes \(x\) and \(y\).
+    </p>
+    <p>
+      <b>Task 7b.</b> On the same axes, plot the chromaticities of the pure
+      spectral sources from Step 3. The axes must be scaled correctly for the
+      two to line up. The result should be a color filled triangle inside the
+      pure spectral source outline, with its corners at the Rec. 709
+      primaries.
+    </p>
+    <p>
+      <b>Task 7c. Check.</b> Report the number of grid points inside the
+      triangle times \(0.005^2\), and the area of the triangle with corners
+      at the three Rec. 709 primaries. The two must agree within 0.001.
+      Apply \(M_{709}^{-1}\) to the three primaries and report the largest
+      difference from the identity matrix, which must be below
+      \(10^{-12}\).
+    </p>
+    <div class="handin" id="D6">
+      <span class="tag">HAND IN &middot; D6</span>
+      <p>
+        The color chromaticity diagram with the pure spectral source
+        outline, and the two checks.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 8: Your Specification</h3>
+    <p>
+      You directed your AI assistant to write seven functions:
+      <code>lms_cmfs</code>, <code>chromaticity</code>,
+      <code>rgb_to_xyz_matrix</code>, <code>reflectance_to_xyz</code>,
+      <code>xyz_to_rgb</code>, <code>to_display</code>, and
+      <code>fill_chromaticity</code>.
+    </p>
+    <div class="handin" id="D7">
+      <span class="tag">HAND IN &middot; D7</span>
+      <p>
+        The specification you gave your AI assistant, quoted. Show any
+        correction you made during the build and say what was wrong.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Step 9: Questions to Answer</h3>
+    <p>
+      Answer each in a few sentences, citing your own figures and numbers.
+    </p>
+    <ol>
+      <li>Why does the image look different under the two illuminants,
+          although the reflectances are the same? Use the illuminant plot of
+          D1, the illuminant chromaticities, and the mean \((r, g, b)\) of
+          D5. How would a person looking at the real scene under fluorescent
+          light see it differently from the rendered image?</li>
+      <li>Why do some colors fall outside the RGB triangle and get clipped?
+          Use the diagrams of D2 and D6 and the clipping fractions of D4 and
+          D5. Which colors are clipped under fluorescent light, and what does
+          clipping do to them?</li>
+      <li>Why does the chromaticity diagram of D2 have its shape? Why do the
+          pure spectral sources form the curved boundary, why is the edge
+          between 400 and 700 nm straight, and why does every visible color
+          lie inside?</li>
+      <li>What does the white point scaling of equation (17) do? Compare
+          \(M_{709\_D65}\) of D3 with \(M_{709}\) of D6. What chromaticity
+          does each produce for \((r, g, b) = (1, 1, 1)\), and what would
+          happen to the image of D4 if rendered with \(M_{709}\)?</li>
+      <li>Ask one question of your own about color, and answer it with a
+          short experiment using the functions of this lab.</li>
+    </ol>
+    <div class="handin" id="D8">
+      <span class="tag">HAND IN &middot; D8</span>
+      <p>Your answers to the five questions.</p>
+    </div>
+  </div>
+
+  </div>
+</details>
+
+<details class="module">
+  <summary>Deliverables
+    <span class="note">What to submit, and where each item comes from.</span>
+  </summary>
+  <div class="modulebody">
+
+  <div class="card">
+    <h3>What to Hand In</h3>
+    <p>Submit two files through Brightspace:</p>
+    <ol>
+      <li>A report, as a single <b>PDF</b>, labeled "Lab 8", with the items
+          below in this order.</li>
+      <li>Your <code>lab8.py</code>, as a plain <code>.py</code> file.</li>
+    </ol>
+    <p>
+      Do not paste the code into the report, and do not send a zip file.
+      Commit <code>lab8.py</code> to your
+      <code>image-processing-labs</code> repository under <code>lab8</code>
+      and push it before you submit.
+    </p>
+    <ol class="handin-list">
+      <li><span class="dnum"></span>
+          Your name and the link to your GitHub repository.</li>
+      <li><span class="dnum"><a href="#D1">D1</a></span>
+          Plots of the \(XYZ\) and \(LMS\) color matching functions and the
+          illuminants, the sum check, and the illuminant chromaticities.</li>
+      <li><span class="dnum"><a href="#D2">D2</a></span>
+          The chromaticity diagram and the equal energy check.</li>
+      <li><span class="dnum"><a href="#D3">D3</a></span>
+          \(M_{709\_D65}\), the constants \(\kappa\), and the two checks.</li>
+      <li><span class="dnum"><a href="#D4">D4</a></span>
+          The D<sub>65</sub> image, the clipping fractions, and the two
+          checks.</li>
+      <li><span class="dnum"><a href="#D5">D5</a></span>
+          The two images side by side, the clipping fractions, the means,
+          and your description.</li>
+      <li><span class="dnum"><a href="#D6">D6</a></span>
+          The color chromaticity diagram and the two checks.</li>
+      <li><span class="dnum"><a href="#D7">D7</a></span>
+          Your specification.</li>
+      <li><span class="dnum"><a href="#D8">D8</a></span>
+          Answers to the questions.</li>
+    </ol>
+    <p>Concise and clear beats long.</p>
+  </div>
+
+  <div class="card">
+    <p>
+      <a href="../../index.html">Back to the laboratory index</a> &middot;
+      <a href="https://charlesbouman.org/ece63700/">ECE 63700 course notes</a>
+    </p>
+  </div>
+
+  </div>
+</details>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  var text = btn.nextElementSibling.innerText;
+  function done() {
+    var old = btn.textContent;
+    btn.textContent = "Copied";
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done);
+  } else {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    done();
+  }
+}
+
+function toggleAll(btn) {
+  var open = btn.textContent.indexOf("Open") === 0;
+  var list = document.querySelectorAll("details.module");
+  for (var i = 0; i < list.length; i++) { list[i].open = open; }
+  btn.textContent = open ? "Close all" : "Open all";
+}
+
+function revealHash() {
+  if (!location.hash) { return; }
+  var el = document.querySelector(location.hash);
+  if (!el) { return; }
+  var p = el.parentElement;
+  while (p) {
+    if (p.tagName === "DETAILS") { p.open = true; }
+    p = p.parentElement;
+  }
+  el.scrollIntoView();
+}
+window.addEventListener("load", revealHash);
+window.addEventListener("hashchange", revealHash);
+</script>
+
+</body>
+</html>

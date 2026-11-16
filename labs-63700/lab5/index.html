@@ -106,52 +106,32 @@
     <h3>What This Lab Is About</h3>
     <p><b>Due: Friday, Feb. 12, 2027.</b></p>
     <p>
-      In this lab you find sets of connected pixels in an image. First you
-      grow the set of pixels that are connected to one seed pixel. Then you
-      segment the whole image into connected components, and you keep the
-      large ones.
+      This laboratory illustrates the concepts of pixel neighborhoods and
+      connected pixel sets. You compute the set of all pixels connected to a
+      seed pixel. Then you use it to segment the image into connected
+      components.
     </p>
     <p>
       This is the one lab in the course that uses C. Region growing visits
-      one pixel at a time, and each step depends on the steps before it, so
-      it cannot be written as a few array operations. In Module 1 you write
-      it in pure Python and time it. In Module 2 you write the same function
-      in C and call it from Python, once for each component. Then you write a
-      second C function that segments the whole image in one call. You check
-      that all three versions agree, and you time them. You will see when
-      compiled code pays off and when it does not.
+      one pixel at a time, and each step depends on the steps before it. In
+      Module 1 you write it in Python. In Module 2 you write it in C, check
+      that all versions agree, and time them.
     </p>
     <p>
-      You will not hand-write the implementation. This page states the
-      definitions and the exact signature of every function you need. Your
-      job is to direct Claude, or another agentic AI, to write the code from
-      that specification. Then you run the experiments yourself, produce the
-      required images and numbers, and explain what you see. You also read
-      the C code and explain how it works. You are graded on the
-      specification you give, the checks you run to confirm the code is
-      right, and your reading of the results.
+      You direct Claude, or another agentic AI, to write the code from the
+      definitions and signatures on this page. You run the experiments,
+      explain the results, and explain how the C code works. You are graded
+      on your specification, your checks, and your reading of the results.
     </p>
   </div>
 
   <div class="card">
     <h3>The Data</h3>
     <p>
-      Download the data before you start. The file
-      <a href="https://charlesbouman.org/ece63700/labs/lab5-data.zip"><b>lab5-data.zip</b></a>,
-      190 KB, holds one image.
-    </p>
-    <ul>
-      <li>
-        <b>img22g.png</b>, a grayscale image 768 pixels wide and 512 pixels
-        tall.
-      </li>
-    </ul>
-    <p class="source">
-      This is a provided image. It is stored in lossless PNG format with
-      8 bits per pixel.
-    </p>
-    <p>
-      From the shell, in the folder that holds <code>lab5.py</code>:
+      <a href="https://charlesbouman.org/ece63700/labs/lab5-data.zip"><b>lab5-data.zip</b></a>
+      (190 KB) holds <b>img22g.png</b>, an 8-bit grayscale PNG, 768 pixels
+      wide and 512 pixels tall. In the folder that holds
+      <code>lab5.py</code>:
     </p>
     <div class="codeblock">
       <button class="copy" onclick="copyCode(this)">Copy</button>
@@ -163,35 +143,27 @@ unzip lab5-data.zip</pre>
   <div class="card">
     <h3>Ground Rules</h3>
     <ul>
-      <li>The Python code is in a single file named <code>lab5.py</code>,
-          and the C code is in a single file named <code>connect.c</code>.
-          Use the <code>labs</code> conda environment you built in Lab 2.
-          This lab uses NumPy, not PyTorch. You may use matplotlib for
-          plotting.</li>
-      <li><code>lab5.py</code> holds functions and nothing else. Run your
-          experiments from a separate script that imports it.</li>
-      <li>Every function has the exact signature given on this page, and a
-          docstring that says what it does, what its inputs are, and what
-          it returns. Keep the docstrings short.</li>
-      <li><b>This lab works in integer gray levels from 0 to 255</b>, unlike
-          Labs 3 and 4. Read the image as a <code>uint8</code> array and do
-          not scale it. The thresholds \(T = 1, 2, 3\) are in gray
-          levels.</li>
-      <li>The index \(m\) counts rows, from top to bottom, and the index
-          \(n\) counts columns, from left to right. A pixel is written
-          \((m, n)\), row first, and the upper left pixel is \((0, 0)\).</li>
-      <li><code>connected_set</code> in Module 1 is pure Python. It loops
-          over pixels one at a time and uses no vectorized NumPy
-          operations.</li>
+      <li>Python code goes in <code>lab5.py</code> and C code in
+          <code>connect.c</code>. Use the <code>labs</code> conda
+          environment from Lab 2, with NumPy (not PyTorch) and
+          matplotlib.</li>
+      <li><code>lab5.py</code> holds only functions. Run experiments from a
+          separate script that imports it.</li>
+      <li>Use the exact signatures on this page, each with a short
+          docstring.</li>
+      <li><b>Gray levels are integers from 0 to 255.</b> Read the image as
+          <code>uint8</code> and do not scale it. The thresholds
+          \(T = 1, 2, 3\) are in gray levels.</li>
+      <li>Pixel \((m, n)\) is row \(m\), column \(n\). The upper left pixel
+          is \((0, 0)\).</li>
+      <li><code>connected_set</code> in Module 1 is pure Python, with no
+          vectorized NumPy operations.</li>
     </ul>
     <div class="tip">
-      <b>How to direct the AI.</b> Give it the definitions from this page,
-      the array types and shapes, the index convention, the algorithm with
-      its list of unsearched pixels, and the signatures of the functions you
-      want. For the C function, also give it the prototype and the memory
-      layout of the arrays. Then run the checks in Steps 3 and 8
-      <em>before</em> you interpret any image. A region growing function with
-      a wrong neighbor test still produces a plausible set of pixels.
+      Give the AI the definitions, array types and shapes, index convention,
+      algorithm, and signatures. For C, also give the prototypes and the
+      memory layout. Run the checks in Steps 3 and 8 <em>before</em> you
+      interpret any image.
     </div>
   </div>
 
@@ -200,17 +172,12 @@ unzip lab5-data.zip</pre>
 
 <details class="module">
   <summary>Parameters for the Experiments
-    <span class="note">The settings for every hand-in item, in one place.</span>
+    <span class="note">The settings for every hand-in item.</span>
   </summary>
   <div class="modulebody">
 
   <div class="card">
     <h3>Parameters for Every Experiment</h3>
-    <p>
-      The table lists the settings for each hand-in item. Every experiment
-      below points back to this table by its deliverable number, so you do
-      not have to search the text for a number.
-    </p>
     <table class="runs">
       <tr>
         <th>Item</th><th>Experiment</th><th>Input</th><th>Function and settings</th>
@@ -251,10 +218,6 @@ unzip lab5-data.zip</pre>
     <h3>Step 1: Set Up <code>lab5.py</code></h3>
     <p>
       Copy these helpers into <code>lab5.py</code>.
-      <code>load_image</code> and <code>save_image</code> read and write
-      8-bit images as <code>uint8</code> arrays. <code>save_label_image</code>
-      writes a label image with a random color for each label, so that
-      neighboring components are easy to tell apart.
     </p>
     <div class="codeblock">
       <button class="copy" onclick="copyCode(this)">Copy</button>
@@ -266,32 +229,17 @@ from PIL import Image
 
 
 def load_image(path):
-    """This function reads an 8-bit grayscale image file and returns it as an array.
-
-    path     path to a PNG or TIFF file
-    returns  (H, W) uint8 NumPy array with integer gray levels 0 to 255
-    """
+    """Read an 8-bit grayscale image as an (H, W) uint8 array."""
     return np.ascontiguousarray(np.asarray(Image.open(path).convert("L"), dtype=np.uint8))
 
 
 def save_image(x, path):
-    """This function writes an (H, W) uint8 array as an 8-bit grayscale PNG.
-
-    x        (H, W) uint8 NumPy array
-    path     output file name, ending in .png
-    """
+    """Write an (H, W) uint8 array as an 8-bit grayscale PNG."""
     Image.fromarray(np.asarray(x, dtype=np.uint8)).save(path)
 
 
 def save_label_image(labels, path):
-    """This function writes a label image as a color PNG with random colors.
-
-    Label 0 is black.  Each label k &gt; 0 gets a random color, and the colors
-    come from a fixed seed, so the same labels always get the same colors.
-
-    labels   (H, W) integer NumPy array of labels 0 to K
-    path     output file name, ending in .png
-    """
+    """Write a label image as a color PNG: label 0 black, others fixed random colors."""
     k = int(labels.max())
     colors = np.random.default_rng(0).integers(40, 256, size=(k + 1, 3), dtype=np.uint8)
     colors[0] = 0
@@ -302,40 +250,37 @@ def save_label_image(labels, path):
   <div class="card">
     <h3>Step 2: Neighborhoods and Connected Sets</h3>
     <p>
-      Let \(S\) be the set of pixel locations, and let \(x_s\) be the gray
-      level at the pixel \(s = (m, n)\). This lab uses the 4-point
-      neighborhood, so the neighbors of \(s\) are
+      Let \(x_s\) be the pixel value at the lattice point \(s = (m, n)\).
+      We use a 4 point neighborhood, so the neighbors of \(s\) are
     </p>
     $$
     \partial s = \big\{ (m-1, n), \ (m+1, n), \ (m, n-1), \ (m, n+1) \big\} \ .
     \tag{1}
     $$
     <p>
-      The boundary is free. A neighbor that falls outside the image does not
-      exist, so a pixel on the edge of the image has fewer than 4 neighbors.
-    </p>
-    <p>
-      Two neighbors are <b>connected neighbors</b> if their gray levels
-      differ by at most a threshold \(T\). The connected neighbors of \(s\)
-      are
+      We also use a free boundary, so pixels along the boundary of the image
+      have fewer than 4 neighbors each. Two neighboring lattice points
+      \(r \in \partial s\) are <b>connected neighbors</b> if
+      \(|x_s - x_r| \le T\), where \(T\) is a fixed threshold. We denote
+      the connected neighbors of \(s\) by the set
     </p>
     $$
     c(s) = \big\{ r \in \partial s \ : \ |x_s - x_r| \le T \big\} \ .
     \tag{2}
     $$
     <p>
-      Two pixels \(s\) and \(r\) are <b>connected</b> if there is a path
-      from \(s\) to \(r\) in which each pixel is a connected neighbor of the
-      one before it. The set of all pixels connected to a seed pixel
-      \(s_0\) is the <b>connected set</b> of \(s_0\). A <b>connected
-      component</b> of the image is a set of pixels that is the connected set
-      of each of its pixels.
+      Pixels \(s\) and \(r\) are <b>connected</b> if there is a sequence of
+      pixels from \(s\) to \(r\) in which each pixel is a connected neighbor
+      of the one before it. The <b>connected set</b> of a seed \(s_0\) is
+      the set of all pixels connected to it.
+      A <b>connected component</b> is a set that is the connected set of each
+      of its pixels.
     </p>
     <p>
-      The connected set is found by <b>region growing</b>. The algorithm
-      keeps a list \(B\) of pixels that are known to be in the set but whose
-      neighbors have not been checked yet. It also keeps a label image \(Y\),
-      which marks the pixels that are known to be in the set.
+      The connected set may be found by maintaining 1) a list of pixels
+      \(B\) which are known to be connected to \(s_0\) but have not yet been
+      searched, and 2) a segmentation image \(Y\) which marks the pixels
+      known to be connected to \(s_0\).
     </p>
     <div class="tip">
       <b>Region growing from the seed \(s_0\).</b>
@@ -351,29 +296,20 @@ def save_label_image(labels, path):
       </ol>
     </div>
     <p>
-      The set grows outward from the seed, and \(B\) holds the pixels on the
-      boundary of the region found so far. A pixel is labeled when it enters
-      \(B\), so it enters \(B\) at most once. The order in which pixels
-      leave \(B\) does not change the final set.
+      This type of algorithm is referred to as <b>region growing</b>, because
+      the segmented region grows out from the seed point \(s_0\). At each
+      step, \(B\) contains pixels at the boundary of the set whose neighbors
+      have not yet been checked. A pixel is labeled when it enters \(B\), so
+      it enters \(B\) at most once.
     </p>
   </div>
 
   <div class="card">
     <h3>Step 3: Grow the Connected Set of a Seed</h3>
-    <p>
-      Direct your AI assistant to write the body of this function in pure
-      Python.
-    </p>
     <div class="codeblock">
       <button class="copy" onclick="copyCode(this)">Copy</button>
 <pre>def connected_set(x, seed, T, label, seg):
-    """This function labels every pixel connected to the seed, in pure Python.
-
-    Two 4-point neighbors r and s are connected neighbors when
-    |x[s] - x[r]| &lt;= T.  The function keeps a list of pixels that are
-    connected to the seed but not yet searched.  It sets seg = label at
-    each connected pixel and treats a pixel whose seg already equals label
-    as already found.
+    """Set seg = label at every pixel connected to seed; return the pixel count.
 
     x        (H, W) uint8 NumPy array
     seed     (row, col) of the seed pixel
@@ -383,45 +319,41 @@ def save_label_image(labels, path):
     returns  int, the number of pixels connected to the seed
     """</pre>
     </div>
-    <p>Four requirements.</p>
+    <p>Requirements:</p>
     <ul>
-      <li>The function follows the algorithm of Step 2, with an explicit
-          Python list of unsearched pixels. It does not call itself
-          recursively.</li>
-      <li>It reads and writes the NumPy arrays one element at a time. It
-          does not convert the whole image to another type, because Step 4
-          calls it once for every component of the image.</li>
-      <li>It converts each gray level to a Python <code>int</code> before it
-          subtracts. The difference of two <code>uint8</code> values wraps
-          around, so \(3 - 5\) gives 254.</li>
-      <li>It changes only the pixels of <code>seg</code> that are in the
-          connected set.</li>
+      <li>Follow Step 2 with an explicit Python list of unsearched pixels,
+          not recursion. A pixel whose <code>seg</code> already equals
+          <code>label</code> counts as found.</li>
+      <li>Read and write the arrays one element at a time. Do not convert
+          the whole image, because Step 4 calls this function once per
+          component.</li>
+      <li>Convert gray levels to Python <code>int</code> before
+          subtracting. In <code>uint8</code>, \(3 - 5\) gives 254.</li>
+      <li>If a pixel is connected to the seed, set its <code>seg</code> to
+          <code>label</code>. Otherwise leave its value unchanged.</li>
     </ul>
     <p>
-      <b>Task 3a.</b> Load <code>img22g.png</code> and display it as a
-      grayscale image with a colorbar and labeled axes.
+      <b>Task 3a.</b> Display <code>img22g.png</code> in grayscale with a
+      colorbar and labeled axes.
     </p>
     <p>
       <b>Task 3b.</b> For \(T = 1\), \(2\), and \(3\), start from
       <code>seg = np.zeros(x.shape, dtype=np.int32)</code>, run
-      <code>connected_set</code> with the seed \((m, n) = (90, 134)\) and
-      label 1, and report the number of pixels in the set. Save an image with
-      the set in black and all other pixels in white:
+      <code>connected_set</code> with seed \((m, n) = (90, 134)\) and
+      label 1, and report the pixel count. Save the set in black on white:
       <code>save_image(np.where(seg == 1, 0, 255).astype(np.uint8), path)</code>.
     </p>
     <p>
-      <b>Task 3c. Check by hand.</b> Print the gray levels of the
-      \(5 \times 5\) block centered on the seed, <code>x[88:93, 132:137]</code>.
-      Use them to find, by hand, which neighbors of the seed are connected
-      neighbors for \(T = 1\). Confirm that your answer agrees with the set
-      of Task 3b.
+      <b>Task 3c. Check by hand.</b> Print <code>x[88:93, 132:137]</code>,
+      the \(5 \times 5\) block centered on the seed. Find by hand which
+      neighbors of the seed are connected neighbors for \(T = 1\), and
+      confirm that this agrees with Task 3b.
     </p>
     <div class="handin" id="D1">
       <span class="tag">HAND IN &middot; D1</span>
       <p>
-        The image <code>img22g.png</code>, the three images of the
-        connected set for \(T = 1\), \(2\), and \(3\), the three pixel
-        counts, and your check by hand.
+        <code>img22g.png</code>, the three connected set images, the three
+        pixel counts, and your check by hand.
       </p>
     </div>
   </div>
@@ -429,23 +361,18 @@ def save_label_image(labels, path):
   <div class="card">
     <h3>Step 4: Segment the Whole Image</h3>
     <p>
-      Every pixel belongs to exactly one connected component. To find all of
-      them, scan the pixels in raster order, which is row by row from the
-      top and left to right within a row. At each pixel that does not yet
-      have a label, call <code>connected_set</code> with the next unused
-      label. Then keep the components with more than 100 pixels, number them
-      1, 2, 3, and so on in the order the scan finds them, and set all other
-      pixels to 0.
+      Extract all the connected sets by indexing through the image in raster
+      order and applying <code>connected_set</code>, with the next unused
+      label, at each pixel that does not yet belong to a connected set. Then
+      generate a segmentation consisting of the connected sets with more
+      than 100 pixels. Number each of these large connected sets
+      sequentially starting at 1, in scan order. Label all remaining pixels
+      0. The relabeling may use NumPy array operations.
     </p>
     <div class="codeblock">
       <button class="copy" onclick="copyCode(this)">Copy</button>
 <pre>def segment(x, T, min_size, connected_set_fn):
-    """This function segments an image into connected components.
-
-    It scans the pixels in raster order and calls connected_set_fn at each
-    pixel that does not yet belong to a component.  Components with more
-    than min_size pixels get labels 1 to K in the order the scan finds
-    them, and all other pixels get label 0.
+    """Label connected components; keep those with more than min_size pixels.
 
     x                 (H, W) uint8 NumPy array
     T                 int, the threshold in gray levels
@@ -456,28 +383,21 @@ def save_label_image(labels, path):
     """</pre>
     </div>
     <p>
-      The argument <code>connected_set_fn</code> lets Module 2 run the same
-      segmentation with the C function. The relabeling at the end may use
-      NumPy array operations.
-    </p>
-    <p>
       <b>Task 4a.</b> For \(T = 1\), \(2\), and \(3\), run
       <code>segment(x, T, 100, connected_set)</code>. Report the number of
-      all components and the number of components with more than 100
-      pixels. Save each label image with <code>save_label_image</code>.
+      all components and of kept components. Save each label image with
+      <code>save_label_image</code>.
     </p>
     <p>
       <b>Task 4b.</b> Time each segmentation with
-      <code>time.perf_counter()</code>. Run it 3 times and report the
-      smallest time. Also report the model of your computer, so that the
-      times can be compared.
+      <code>time.perf_counter()</code>, smallest of 3 runs. Report your
+      computer model.
     </p>
     <div class="handin" id="D2">
       <span class="tag">HAND IN &middot; D2</span>
       <p>
-        The three color label images, a table of the number of all
-        components and the number of kept components for each \(T\), and
-        the three Python segmentation times.
+        The three color label images, a table of all and kept component
+        counts for each \(T\), and the three Python times.
       </p>
     </div>
   </div>
@@ -493,52 +413,38 @@ def save_label_image(labels, path):
 
   <div class="card">
     <h3>Step 5: Get a C Compiler</h3>
-    <p>
-      You need a C compiler that the shell finds as <code>cc</code>. Check
-      whether you already have one:
-    </p>
+    <p>Check whether the shell finds a compiler named <code>cc</code>:</p>
     <div class="codeblock">
       <button class="copy" onclick="copyCode(this)">Copy</button>
 <pre>cc --version</pre>
     </div>
-    <p>If the shell does not find <code>cc</code>, install a compiler.</p>
+    <p>If not, install one:</p>
     <ul>
-      <li><b>Mac.</b> Install Apple's Command Line Tools, which include the
-          <code>clang</code> compiler:
-          <code>xcode-select --install</code>.</li>
-      <li><b>Linux or WSL (Ubuntu).</b> Install the standard build tools:
+      <li><b>Mac:</b> <code>xcode-select --install</code> (Apple's Command
+          Line Tools, with <code>clang</code>).</li>
+      <li><b>Linux or WSL (Ubuntu):</b>
           <code>sudo apt update &amp;&amp; sudo apt install build-essential</code>.</li>
-      <li><b>Alternative.</b> conda can install a compiler into your
-          environment:
-          <code>conda install -n labs -c conda-forge c-compiler</code>.
-          Then run <code>conda deactivate</code> and
-          <code>conda activate labs</code>, so that the shell finds
-          <code>cc</code> in the environment.</li>
+      <li><b>conda:</b>
+          <code>conda install -n labs -c conda-forge c-compiler</code>, then
+          <code>conda deactivate</code> and
+          <code>conda activate labs</code>.</li>
     </ul>
   </div>
 
   <div class="card">
     <h3>Step 6: Write <code>connect.c</code></h3>
     <p>
-      Direct your AI assistant to write the bodies of these two C functions
-      in <code>connect.c</code>. <code>connected_set</code> is the same
-      algorithm as <code>connected_set</code> in Step 3, and it takes the
-      same inputs. <code>segment_image</code> does the same work as
-      <code>segment</code> in Step 4, and it produces the same label image,
-      but it runs entirely in C.
+      Direct your AI assistant to write these two functions.
+      <code>connected_set</code> is the algorithm of Step 3.
+      <code>segment_image</code> produces the same label image as
+      <code>segment</code> in Step 4, entirely in C.
     </p>
     <div class="codeblock">
       <button class="copy" onclick="copyCode(this)">Copy</button>
 <pre>#include &lt;stdlib.h&gt;
 
-/* This function labels every pixel connected to the seed pixel.
- *
- * Images are stored in row-major order: pixel (m, n) of an image with
- * width W is element m*W + n of the array.  Two 4-point neighbors r and s
- * are connected neighbors when |x[s] - x[r]| &lt;= T.  Each pixel connected
- * to the seed gets seg = label.  A pixel whose seg already equals label is
- * treated as already found.  The function returns the number of pixels it
- * labeled, or -1 if it cannot allocate memory.
+/* Label every pixel connected to the seed; pixel (m, n) is element m*W + n.
+ * Returns the number of pixels labeled, or -1 if memory allocation fails.
  */
 int connected_set(const unsigned char *x, int height, int width,
                   int seed_row, int seed_col, int T, int label, int *seg)
@@ -546,68 +452,53 @@ int connected_set(const unsigned char *x, int height, int width,
 }
 
 
-/* This function segments an image into connected components in one call.
- *
- * It scans the pixels in raster order and grows a new component at each
- * pixel that does not yet have a label.  Components with more than
- * min_size pixels get labels 1 to K in the order the scan finds them, and
- * all other pixels get label 0.  The function writes every element of
- * labels, stores the number of all components in *n_all, and returns K,
- * or -1 if it cannot allocate memory.
+/* Segment the image in one call; kept components get labels 1 to K, others 0.
+ * Stores the number of all components in *n_all.  Returns K, or -1 if
+ * memory allocation fails.
  */
 int segment_image(const unsigned char *x, int height, int width, int T,
                   int min_size, int *labels, int *n_all)
 {
 }</pre>
     </div>
-    <p>Five requirements.</p>
+    <p>Requirements:</p>
     <ul>
-      <li>The region growing is written once, in a <code>static</code>
-          helper function that both public functions call. The helper takes
-          the list of unsearched pixels as an argument.</li>
-      <li>The list of unsearched pixels is an <code>int</code> array
-          allocated with <code>malloc</code>, and it is released with
-          <code>free</code> before the public function returns.
-          <code>segment_image</code> allocates the list once and uses it for
-          every component.</li>
-      <li>The list stores each pixel as its index <code>m*width + n</code>
-          in the row-major array.</li>
-      <li>The list is large enough for every pixel of the image, so it
-          cannot overflow. Explain in D5 why that size is enough.</li>
+      <li>Write the region growing once, in a <code>static</code> helper that
+          both functions call and that takes the list of unsearched pixels as
+          an argument.</li>
+      <li>The list is an <code>int</code> array from <code>malloc</code>,
+          freed before the public function returns.
+          <code>segment_image</code> allocates it once for all
+          components.</li>
+      <li>The list stores each pixel as <code>m*width + n</code>.</li>
+      <li>The list holds every pixel of the image, so it cannot overflow.
+          Explain in D5 why that size is enough.</li>
       <li>The functions do not print, read files, or call
           <code>exit</code>.</li>
     </ul>
     <p>
-      Compile <code>connect.c</code> into a shared library in the folder
-      that holds <code>lab5.py</code>. The same command works on a Mac, on
-      Linux, and on WSL:
+      Compile a shared library in the folder that holds
+      <code>lab5.py</code> (Mac, Linux, or WSL):
     </p>
     <div class="codeblock">
       <button class="copy" onclick="copyCode(this)">Copy</button>
 <pre>cc -O2 -shared -fPIC -o libconnect.so connect.c</pre>
     </div>
     <p>
-      The option <code>-O2</code> turns on the compiler's optimizations.
-      <code>-shared</code> makes a library that other programs load, in
-      place of a program with a <code>main</code> function.
-      <code>-fPIC</code> makes code that runs at any address in memory,
-      which a shared library needs. A Mac usually names a shared library
-      with <code>.dylib</code>, but Python loads a <code>.so</code> file on
-      a Mac just as well. Do not commit <code>libconnect.so</code> to
-      GitHub, because it is a compiled file that each computer builds for
-      itself.
+      <code>-O2</code> turns on optimization, <code>-shared</code> builds a
+      library instead of a program, and <code>-fPIC</code> makes code that a
+      shared library needs. Do not commit <code>libconnect.so</code>.
     </p>
   </div>
 
   <div class="card">
     <h3>Step 7: Call the C Function from Python</h3>
     <p>
-      Copy these three functions into <code>lab5.py</code>. Python's
-      <code>ctypes</code> module loads the library and calls the C functions.
+      Copy these functions into <code>lab5.py</code>. They use
+      <code>ctypes</code> to call the library.
       <code>connected_set_c</code> has the same signature as
-      <code>connected_set</code>, so <code>segment</code> can use either
-      one. <code>segment_c</code> returns the same values as
-      <code>segment</code>.
+      <code>connected_set</code>, and <code>segment_c</code> returns the
+      same values as <code>segment</code>.
     </p>
     <div class="codeblock">
       <button class="copy" onclick="copyCode(this)">Copy</button>
@@ -615,14 +506,7 @@ int segment_image(const unsigned char *x, int height, int width, int T,
 
 
 def load_connect_library(path=None):
-    """This function loads the compiled C library and declares its argument types.
-
-    The library is loaded once and kept for later calls.  The default path
-    is libconnect.so in the same folder as this file.
-
-    path     path to the shared library, or None for the default
-    returns  the ctypes library object
-    """
+    """Load libconnect.so (default: next to this file) once and declare its argument types."""
     global _LIB
     if _LIB is None:
         if path is None:
@@ -641,12 +525,7 @@ def load_connect_library(path=None):
 
 
 def connected_set_c(x, seed, T, label, seg):
-    """This function labels every pixel connected to the seed, using the C library.
-
-    It takes the same arguments and returns the same value as connected_set.
-    The NumPy arrays are passed to C as pointers to their data, so x must be
-    a C-contiguous uint8 array and seg a C-contiguous int32 array.
-    """
+    """Same as connected_set, using C; x is C-contiguous uint8, seg C-contiguous int32."""
     if x.dtype != np.uint8 or seg.dtype != np.int32 \
             or not x.flags.c_contiguous or not seg.flags.c_contiguous \
             or x.shape != seg.shape:
@@ -661,17 +540,7 @@ def connected_set_c(x, seed, T, label, seg):
 
 
 def segment_c(x, T, min_size):
-    """This function segments an image into connected components with one call to C.
-
-    It returns the same values as segment(x, T, min_size, connected_set_fn).
-    x must be a C-contiguous uint8 array.
-
-    x        (H, W) uint8 NumPy array
-    T        int, the threshold in gray levels
-    min_size int, a component is kept if it has more than min_size pixels
-    returns  (labels, K, n_all): (H, W) int32 label array, the number of kept
-             components, and the number of all components
-    """
+    """Same as segment(x, T, min_size, connected_set_fn), in one call to C."""
     if x.dtype != np.uint8 or not x.flags.c_contiguous:
         raise TypeError("x must be a C-contiguous uint8 array")
     lib = load_connect_library()
@@ -685,51 +554,39 @@ def segment_c(x, T, min_size):
     return labels, K, n_all.value</pre>
     </div>
     <p>
-      <code>x.ctypes.data</code> is the memory address of the first element
-      of <code>x</code>. C receives only that address. It does not receive
-      the shape or the type, which is why the wrapper checks them before the
-      call. A wrong type or a non-contiguous array would make C read the
-      wrong bytes without any error message. <code>segment_image</code>
-      returns the number of all components through the pointer
-      <code>n_all</code>, and <code>ctypes.byref(n_all)</code> passes the
-      address of a C integer that Python reads afterward.
+      C receives only the address <code>x.ctypes.data</code>, not the shape
+      or type. The wrappers check them, because a wrong type or
+      non-contiguous array makes C read the wrong bytes with no error.
     </p>
   </div>
 
   <div class="card">
     <h3>Step 8: Check C Against Python</h3>
     <p>
-      Correct implementations of the same algorithm must give the same
-      label image, pixel for pixel.
-    </p>
-    <p>
       <b>Task 8a.</b> Repeat Task 3b with <code>connected_set_c</code>. For
       each \(T\), report the pixel count and the number of pixels where the
-      two label images differ.
-    </p>
-    <p>
-      <b>Task 8b.</b> Repeat Task 4a with
-      <code>segment(x, T, 100, connected_set_c)</code>. For each \(T\),
-      report the two component counts and the number of pixels where the two
       label images differ.
     </p>
     <p>
+      <b>Task 8b.</b> Repeat Task 4a with
+      <code>segment(x, T, 100, connected_set_c)</code>. Report the two
+      component counts and the number of differing pixels.
+    </p>
+    <p>
       <b>Task 8c.</b> Repeat Task 4a with <code>segment_c(x, T, 100)</code>.
-      For each \(T\), report the two component counts and the number of
-      pixels where its label image differs from the label image of Task 4a.
+      Report the two component counts and the number of pixels that differ
+      from Task 4a.
     </p>
     <div class="tip">
-      <b>Reading the check.</b> Every difference count must be exactly 0,
-      and every count must match Module 1. A small nonzero difference is
-      still a bug, often a wrong neighbor at the edge of the image or a
-      wrong row length in the index <code>m*width + n</code>.
+      <b>Pass criterion.</b> Every difference count is exactly 0, and every
+      count matches Module 1. Any nonzero difference is a bug.
     </div>
     <div class="handin" id="D3">
       <span class="tag">HAND IN &middot; D3</span>
       <p>
-        A table with, for each \(T\), the number of differing pixels for the
-        connected set and for the two C segmentations, and the component
-        counts from both C segmentations.
+        A table, for each \(T\), of differing pixels for the connected set
+        and the two C segmentations, and the component counts of both C
+        segmentations.
       </p>
     </div>
   </div>
@@ -737,32 +594,29 @@ def segment_c(x, T, min_size):
   <div class="card">
     <h3>Step 9: Time Both Versions</h3>
     <p>
-      Call <code>load_connect_library()</code> once before you start timing,
-      so that loading the library is not part of any time. Start every run
-      from a new array of zeros for <code>seg</code>. A second run on the
-      same array would find the seed already labeled and stop at once.
+      Call <code>load_connect_library()</code> before timing. Start every run
+      from a new array of zeros for <code>seg</code>.
     </p>
     <p>
       <b>Task 9a.</b> Time <code>connected_set</code> and
-      <code>connected_set_c</code> on the seed \((90, 134)\) with \(T = 2\).
-      Run each 5 times and report the smallest time.
+      <code>connected_set_c</code> on seed \((90, 134)\) with \(T = 2\),
+      smallest of 5 runs.
     </p>
     <p>
-      <b>Task 9b.</b> Time the three segmentations for \(T = 1\), \(2\),
-      and \(3\): <code>segment</code> with <code>connected_set</code>,
+      <b>Task 9b.</b> For \(T = 1\), \(2\), and \(3\), time
+      <code>segment</code> with <code>connected_set</code>,
       <code>segment</code> with <code>connected_set_c</code>, and
-      <code>segment_c</code>. Run each 3 times and report the smallest
-      time.
+      <code>segment_c</code>, smallest of 3 runs.
     </p>
     <p>
-      <b>Task 9c.</b> Report the speedup of each C version, which is the
-      pure Python time divided by the time of the C version.
+      <b>Task 9c.</b> Report the speedup of each C version: Python time
+      divided by C time.
     </p>
     <div class="handin" id="D4">
       <span class="tag">HAND IN &middot; D4</span>
       <p>
-        A table of the times and speedups for the connected set of the seed
-        and for the three versions of the segmentation at each \(T\).
+        A table of times and speedups for the connected set and for the
+        three segmentations at each \(T\).
       </p>
     </div>
   </div>
@@ -770,35 +624,29 @@ def segment_c(x, T, min_size):
   <div class="card">
     <h3>Step 10: Read and Explain the C Code</h3>
     <p>
-      Read <code>connect.c</code> line by line, until you can explain every
-      line to a classmate. Ask your AI assistant about any line you do not
-      understand, but write the explanation yourself.
+      Read <code>connect.c</code> until you can explain every line. Ask the
+      AI about lines you do not understand, but write the explanation
+      yourself. Answer these questions:
     </p>
-    <p>Your explanation answers these questions.</p>
     <ul>
-      <li><b>Arrays and indexing.</b> How does the C code find the gray
-          level of pixel \((m, n)\)? Why must the NumPy arrays be
-          C-contiguous, and why must their types be <code>uint8</code> and
-          <code>int32</code>?</li>
-      <li><b>Memory allocation.</b> Which memory does each C function
-          allocate, how large is it, and where is it freed? Why can the list
-          of unsearched pixels never overflow? Which memory belongs to NumPy,
-          and why must C never free it?</li>
-      <li><b>The list of unsearched pixels.</b> How does the code add a
-          pixel to the list and remove one? In what order do pixels leave the
-          list? How does the code recover \(m\) and \(n\) from the index of a
-          pixel? How does it skip neighbors outside the image?</li>
-      <li><b>The segmentation.</b> How does <code>segment_image</code> keep
-          track of the size of each component, and how does it renumber the
-          kept components 1 to K at the end?</li>
+      <li><b>Arrays and indexing.</b> How does the code find the gray level
+          of pixel \((m, n)\)? Why must the arrays be C-contiguous
+          <code>uint8</code> and <code>int32</code>?</li>
+      <li><b>Memory allocation.</b> What does each function allocate, how
+          large, and where is it freed? Why can the list never overflow?
+          Which memory belongs to NumPy, and why must C never free it?</li>
+      <li><b>The list of unsearched pixels.</b> How are pixels added and
+          removed, and in what order do they leave? How are \(m\) and \(n\)
+          recovered from the index? How are neighbors outside the image
+          skipped?</li>
+      <li><b>The segmentation.</b> How does <code>segment_image</code> track
+          component sizes and renumber the kept components 1 to K?</li>
     </ul>
     <div class="handin" id="D5">
       <span class="tag">HAND IN &middot; D5</span>
       <p>
-        Your explanation of the C code, in your own words, covering arrays
-        and indexing, memory allocation, the list of unsearched pixels, and
-        the segmentation.
-        Refer to the lines of <code>connect.c</code> by line number.
+        Your explanation of the four topics, in your own words, citing lines
+        of <code>connect.c</code> by number.
       </p>
     </div>
   </div>
@@ -806,17 +654,15 @@ def segment_c(x, T, min_size):
   <div class="card">
     <h3>Step 11: Your Specification</h3>
     <p>
-      Over the two modules you directed your AI assistant to write the
-      bodies of four functions: <code>connected_set</code> and
-      <code>segment</code> in Python, and <code>connected_set</code> and
-      <code>segment_image</code> in C.
+      You directed your AI assistant to write four functions:
+      <code>connected_set</code> and <code>segment</code> in Python, and
+      <code>connected_set</code> and <code>segment_image</code> in C.
     </p>
     <div class="handin" id="D6">
       <span class="tag">HAND IN &middot; D6</span>
       <p>
-        The specification you gave your AI assistant, quoted. If you
-        corrected it during the build, show the correction and say what was
-        wrong.
+        The specification you gave your AI assistant, quoted, with any
+        corrections and what was wrong.
       </p>
     </div>
   </div>
@@ -824,46 +670,41 @@ def segment_c(x, T, min_size):
   <div class="card">
     <h3>Step 12: Questions to Answer</h3>
     <p>
-      Answer each in a few sentences, using your own images and numbers as
-      evidence. Point to the specific figure or number you are relying on.
+      Answer each in a few sentences. Cite your own images and numbers.
     </p>
     <ol>
-      <li>In Labs 3 and 4, one array operation computed every output pixel
-          at once. Explain why region growing cannot be written that way.
-          What does each step of the algorithm depend on?</li>
-      <li>Explain why the C function grows the region of Task 9a so much
-          faster than the Python function. What does the Python interpreter
-          do for each pixel that the compiled C code does not?</li>
-      <li>The Python loop that calls <code>connected_set_c</code> is only a
-          little faster than pure Python, but <code>segment_c</code> is much
-          faster. Explain why. Time 10000 calls of
-          <code>connected_set_c</code> on a component of one pixel, and
-          compute the time of one call. Multiply it by the number of
-          components from D2 and compare the result with the time of the
-          loop. What does <code>segment_c</code> avoid?</li>
-      <li>How do the size of the seed's connected set, the number of all
-          components, and the number of kept components change as \(T\)
-          goes from 1 to 3? Explain why the number of kept components does
-          not simply rise or fall with \(T\). Use the images of D1 and
-          D2.</li>
-      <li>Suppose the neighborhood were the 8-point neighborhood, which
-          adds the four diagonal neighbors. Can a connected set get smaller?
-          Can the number of components get larger? What new way of crossing
-          a boundary does it allow? You may test your answer by changing the
-          neighborhood in a copy of your code.</li>
-      <li><code>skimage.measure.label</code> labels the connected components
-          of pixels with equal values. Which value of \(T\) makes our problem
-          the same as its problem? Run
+      <li>In Labs 3 and 4, one array operation computed every output pixel.
+          Why can region growing not be written that way? What does each
+          step depend on?</li>
+      <li>Why does C grow the region of Task 9a so much faster than Python?
+          What does the interpreter do per pixel that compiled C does
+          not?</li>
+      <li>Why is the Python loop that calls <code>connected_set_c</code> only
+          a little faster than pure Python, while <code>segment_c</code> is
+          much faster? Time 10000 calls of <code>connected_set_c</code> on a
+          one-pixel component, compute the time per call, multiply by the
+          number of components from D2, and compare with the loop time. What
+          does <code>segment_c</code> avoid?</li>
+      <li>How do the seed's set size, the number of all components, and the
+          number of kept components change as \(T\) goes from 1 to 3? Why
+          does the number of kept components not simply rise or fall? Use
+          D1 and D2.</li>
+      <li>With the 8-point neighborhood, which adds the four diagonals, can
+          a connected set get smaller? Can the number of components get
+          larger? What new way of crossing a boundary does it allow? You may
+          test this in a copy of your code.</li>
+      <li><code>skimage.measure.label</code> labels components of equal
+          values. Which \(T\) makes our problem the same? Run
           <code>skimage.measure.label(x, connectivity=1, background=-1)</code>
-          and <code>segment_c</code> with that \(T\). Compare the number of
-          components and the run times.</li>
-      <li>Based on your timings and on Question 6, when is it worth writing
-          C code today?</li>
+          and <code>segment_c</code> with that \(T\), and compare component
+          counts and run times.</li>
+      <li>Based on your timings and Question 6, when is it worth writing C
+          code today?</li>
     </ol>
     <div class="handin" id="D7">
       <span class="tag">HAND IN &middot; D7</span>
       <p>
-        Your answers to the seven questions above.
+        Your answers to the seven questions.
       </p>
     </div>
   </div>
@@ -879,26 +720,25 @@ def segment_c(x, T, min_size):
 
   <div class="card">
     <h3>What to Hand In</h3>
-    <p>Submit three files through Brightspace.</p>
+    <p>Submit three files through Brightspace:</p>
     <ol>
-      <li>A report, as a single <b>PDF</b>, labeled "Lab 5", containing the
-          items listed below in this order.</li>
+      <li>A report, as a single <b>PDF</b>, labeled "Lab 5", with the items
+          below in this order.</li>
       <li>Your <code>lab5.py</code>, as a plain <code>.py</code> file.</li>
       <li>Your <code>connect.c</code>, as a plain <code>.c</code> file.</li>
     </ol>
     <p>
-      Do not paste the code into the report, do not send a zip file, and do
-      not send <code>libconnect.so</code>. Also commit
-      <code>lab5.py</code> and <code>connect.c</code> to your
-      <code>image-processing-labs</code> repository under <code>lab5</code>
-      and push them before you submit.
+      Do not paste code into the report, send a zip file, or send
+      <code>libconnect.so</code>. Commit and push <code>lab5.py</code> and
+      <code>connect.c</code> to your <code>image-processing-labs</code>
+      repository under <code>lab5</code> before you submit.
     </p>
     <ol class="handin-list">
       <li><span class="dnum"></span>
           Your name and the link to your GitHub repository.</li>
       <li><span class="dnum"><a href="#D1">D1</a></span>
-          <code>img22g.png</code>, the three images of the connected set
-          of the seed, the three pixel counts, and your check by hand.</li>
+          <code>img22g.png</code>, the three connected set images, the three
+          pixel counts, and your check by hand.</li>
       <li><span class="dnum"><a href="#D2">D2</a></span>
           The three color label images, the component counts, and the
           Python segmentation times.</li>
@@ -913,7 +753,7 @@ def segment_c(x, T, min_size):
           segmentation.</li>
       <li><span class="dnum"><a href="#D6">D6</a></span>
           The specification you gave your AI assistant, quoted, with any
-          corrections you made during the build.</li>
+          corrections.</li>
       <li><span class="dnum"><a href="#D7">D7</a></span>
           Your answers to the seven questions.</li>
     </ol>
@@ -924,10 +764,6 @@ def segment_c(x, T, min_size):
 
   <div class="card">
     <p>
-      You have now found connected components by region growing, in Python
-      and in C, and measured when compiled code pays off.
-    </p>
-    <p>
       <a href="../../index.html">Back to the laboratory index</a> &middot;
       <a href="https://charlesbouman.org/ece63700/">ECE 63700 course notes</a>
     </p>
@@ -935,7 +771,6 @@ def segment_c(x, T, min_size):
 
   </div>
 </details>
-
 </div>
 
 <script>
